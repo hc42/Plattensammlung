@@ -20,21 +20,43 @@ defmodule PlattensammlungWeb.StatsLive do
           id="kpi-albums"
           label="Alben"
           value={to_string(@stats.albums)}
+          navigate={~p"/"}
         />
-        <.stat_tile id="kpi-copies" label="Exemplare" value={to_string(@stats.copies)} />
-        <.stat_tile id="kpi-wishlist" label="Wunschliste" value={to_string(@stats.wishlist)} />
+        <.stat_tile
+          id="kpi-copies"
+          label="Exemplare"
+          value={to_string(@stats.copies)}
+          navigate={~p"/"}
+        />
+        <.stat_tile
+          id="kpi-wishlist"
+          label="Wunschliste"
+          value={to_string(@stats.wishlist)}
+          navigate={~p"/wishlist"}
+        />
         <.stat_tile id="kpi-artists" label="Künstler" value={to_string(@stats.artists)} />
       </div>
 
       <div class="grid gap-x-12 gap-y-10 md:grid-cols-2">
-        <.bar_chart id="chart-genres" title="Genres" entries={@stats.genres} />
-        <.bar_chart id="chart-decades" title="Jahrzehnte" entries={@stats.decades} />
-        <.bar_chart id="chart-artists" title="Meiste Alben" entries={@stats.top_artists} />
+        <.bar_chart id="chart-genres" title="Genres" entries={@stats.genres} href={&albums_path/1} />
+        <.bar_chart
+          id="chart-decades"
+          title="Jahrzehnte"
+          entries={@stats.decades}
+          href={&albums_path/1}
+        />
+        <.bar_chart
+          id="chart-artists"
+          title="Meiste Alben"
+          entries={@stats.top_artists}
+          href={&albums_path/1}
+        />
         <.bar_chart
           id="chart-conditions"
           title="Zustand der Platten"
           entries={@stats.conditions}
           unit={{"Exemplar", "Exemplare"}}
+          href={&albums_path/1}
         />
       </div>
 
@@ -71,4 +93,8 @@ defmodule PlattensammlungWeb.StatsLive do
      |> assign(:page_title, "Statistik")
      |> assign(:stats, Records.statistics!(actor: socket.assigns.current_user))}
   end
+
+  # The statistics describe the collection, so the drill-down lists owned albums
+  defp albums_path(%{filter: nil}), do: nil
+  defp albums_path(%{filter: filter}), do: ~p"/?#{filter}"
 end

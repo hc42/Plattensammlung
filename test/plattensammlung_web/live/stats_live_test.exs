@@ -24,6 +24,39 @@ defmodule PlattensammlungWeb.StatsLiveTest do
       assert has_element?(view, "#export-csv")
     end
 
+    test "a bar leads to its albums, the filter can be removed", %{conn: conn} do
+      Records.add_to_collection!("Kraftwerk", "Autobahn", %{genres: ["Electronic"]},
+        authorize?: false
+      )
+
+      {:ok, view, _html} = live(conn, ~p"/stats")
+
+      view |> element("#chart-genres a", "Rock") |> render_click()
+      assert_redirect(view, ~p"/?genre=Rock")
+
+      {:ok, view, _html} = live(conn, ~p"/?genre=Rock")
+      assert has_element?(view, "#active-filter-genre", "Rock")
+      assert has_element?(view, "#albums a", "Abbey Road")
+      refute has_element?(view, "#albums a", "Autobahn")
+
+      view |> element("#active-filter-genre") |> render_click()
+      assert_patch(view, ~p"/")
+      assert has_element?(view, "#albums a", "Autobahn")
+    end
+
+    test "search keeps the filters", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/?decade=1960")
+
+      view |> form("#search-form", %{q: "abbey"}) |> render_change()
+
+      assert_patch(view, ~p"/?decade=1960&q=abbey")
+    end
+
+    test "key figure tiles are links", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/stats")
+      assert has_element?(view, "a#kpi-wishlist[href='/wishlist']")
+    end
+
     test "downloads the CSV export", %{conn: conn} do
       conn = get(conn, ~p"/export/plattensammlung.csv")
 

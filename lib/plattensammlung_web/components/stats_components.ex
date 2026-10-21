@@ -10,30 +10,49 @@ defmodule PlattensammlungWeb.StatsComponents do
   """
   use Phoenix.Component
 
-  @doc "A key figure with a label and an optional note."
+  alias Phoenix.LiveView.JS
+
+  @doc "A key figure with a label and an optional note; with `navigate` it is a link."
   attr :id, :string, required: true
   attr :label, :string, required: true
   attr :value, :string, required: true
   attr :note, :string, default: nil
+  attr :navigate, :string, default: nil
 
   def stat_tile(assigns) do
     ~H"""
-    <div id={@id} class="rounded-lg border border-base-300 p-4">
-      <p class="text-sm opacity-70">{@label}</p>
-      <p class="mt-1 text-3xl font-semibold tabular-nums">{@value}</p>
-      <p :if={@note} class="mt-1 text-xs opacity-60">{@note}</p>
+    <.link
+      :if={@navigate}
+      id={@id}
+      navigate={@navigate}
+      class="block rounded-lg border border-base-300 p-4 transition hover:border-primary hover:bg-base-200"
+    >
+      <.tile_content label={@label} value={@value} note={@note} />
+    </.link>
+    <div :if={!@navigate} id={@id} class="rounded-lg border border-base-300 p-4">
+      <.tile_content label={@label} value={@value} note={@note} />
     </div>
+    """
+  end
+
+  defp tile_content(assigns) do
+    ~H"""
+    <p class="text-sm opacity-70">{@label}</p>
+    <p class="mt-1 text-3xl font-semibold tabular-nums">{@value}</p>
+    <p :if={@note} class="mt-1 text-xs opacity-60">{@note}</p>
     """
   end
 
   @doc """
   Horizontal bar chart for a list of `%{label: String.t(), count: integer}`.
   `unit` names one counted thing for the hover text, e.g. {"Album", "Alben"}.
+  With `href` (a function entry -> path or nil) each row links to its albums.
   """
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :entries, :list, required: true
   attr :unit, :any, default: {"Album", "Alben"}
+  attr :href, :any, default: nil
 
   def bar_chart(assigns) do
     assigns =
@@ -54,11 +73,20 @@ defmodule PlattensammlungWeb.StatsComponents do
         <tbody>
           <tr
             :for={entry <- @entries}
-            class="group"
+            class={["group", row_path(@href, entry) && "cursor-pointer"]}
             title={"#{entry.label}: #{entry.count} #{unit(@unit, entry.count)}"}
+            phx-click={row_path(@href, entry) && JS.navigate(row_path(@href, entry))}
           >
             <th scope="row" class="w-2/5 max-w-0 truncate py-1 pr-3 text-left font-normal">
-              {entry.label}
+              <%!-- The whole row is clickable; the link is there for keyboard and screen readers --%>
+              <.link
+                :if={row_path(@href, entry)}
+                navigate={row_path(@href, entry)}
+                class="group-hover:underline"
+              >
+                {entry.label}
+              </.link>
+              <span :if={!row_path(@href, entry)}>{entry.label}</span>
             </th>
             <td class="py-1">
               <%!-- 12px bar from a square baseline, 4px rounded data end --%>
@@ -79,6 +107,9 @@ defmodule PlattensammlungWeb.StatsComponents do
   # At least a sliver, so a count of 1 next to a large maximum stays visible
   defp bar_width(_count, 0), do: 0
   defp bar_width(count, max), do: max(count / max * 100, 2) |> Float.round(1)
+
+  defp row_path(nil, _entry), do: nil
+  defp row_path(href, entry), do: href.(entry)
 
   defp unit({one, _many}, 1), do: one
   defp unit({_one, many}, _count), do: many

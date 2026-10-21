@@ -132,10 +132,15 @@ defmodule Plattensammlung.Records.Album do
     read :search do
       description """
       Albums whose title or artist contains the query (case-insensitive),
-      optionally limited to the collection (owned) or the wishlist.
+      optionally limited to the collection (owned) or the wishlist and filtered
+      by genre, decade, artist or condition (see AlbumFilters).
       """
 
       argument :query, :ci_string
+      argument :genre, :string
+      argument :decade, :string
+      argument :artist, :ci_string
+      argument :condition, :string
 
       argument :status, :atom do
         # :other = neither owned nor wanted (e.g. after deleting the last copy)
@@ -154,6 +159,7 @@ defmodule Plattensammlung.Records.Album do
                  (^arg(:status) == :other and not exists(copies, true) and wanted == false)
              )
 
+      prepare Plattensammlung.Records.Preparations.AlbumFilters
       prepare build(sort: [title: :asc], load: [:artist])
     end
 

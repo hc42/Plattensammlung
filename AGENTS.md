@@ -182,6 +182,8 @@ Regeln:
   Downloads über den `ExportController` (`/export/plattensammlung.csv|.jsonld`).
 - Diagramme: `PlattensammlungWeb.StatsComponents` (`stat_tile`, `bar_chart`). Balken in einer
   Farbe, Werte immer als Text, Diagramm als `<table>`.
+- Drill-down: Statistik-Einträge haben `filter` (Argumente für `Album.search`: `genre`,
+  `decade`, `artist`, `condition`); die Albenliste liest sie aus der URL und zeigt sie als Chips.
 
 ## Betrieb (ADR 0011, `deploy/`)
 

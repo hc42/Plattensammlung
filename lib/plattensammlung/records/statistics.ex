@@ -43,25 +43,30 @@ defmodule Plattensammlung.Records.Statistics do
 
   defp owned_albums, do: Ash.Query.filter(Album, exists(copies, true))
 
-  # Each breakdown is a list of %{label, count}, ready for bars and for JSON
+  # Each breakdown is a list of %{label, count, filter}, ready for bars and for
+  # JSON. `filter` holds the Album.search arguments that list exactly these albums
+  # (nil for the folded "Andere" entry).
 
   defp genres(albums) do
     albums
     |> Enum.flat_map(& &1.genres)
     |> Enum.frequencies()
-    |> top_with_rest()
+    |> top_with_rest(&%{"genre" => &1})
   end
 
   defp decades(albums) do
     albums
     |> Enum.map(fn
-      %{year: nil} -> "Unbekannt"
-      %{year: year} -> "#{div(year, 10) * 10}er"
+      %{year: nil} -> :unknown
+      %{year: year} -> div(year, 10) * 10
     end)
     |> Enum.frequencies()
-    # Chronological, unknown last
-    |> Enum.sort_by(fn {label, _} -> {label == "Unbekannt", label} end)
-    |> to_entries()
+    # Chronological, unknown last (atoms sort after integers)
+    |> Enum.sort()
+    |> Enum.map(fn
+      {:unknown, count} -> entry("Unbekannt", count, %{"decade" => "unknown"})
+      {decade, count} -> entry("#{decade}er", count, %{"decade" => to_string(decade)})
+    end)
   end
 
   defp conditions(copies) do
@@ -70,7 +75,7 @@ defmodule Plattensammlung.Records.Statistics do
     # Goldmine order from best to worst, only grades that occur
     (Condition.values() ++ [nil])
     |> Enum.filter(&Map.has_key?(counts, &1))
-    |> Enum.map(&%{label: condition_label(&1), count: counts[&1]})
+    |> Enum.map(&entry(condition_label(&1), counts[&1], %{"condition" => condition_key(&1)}))
   end
 
   defp top_artists(albums) do
@@ -79,22 +84,26 @@ defmodule Plattensammlung.Records.Statistics do
     |> Enum.frequencies()
     |> Enum.sort_by(fn {name, count} -> {-count, name} end)
     |> Enum.take(@top)
-    |> to_entries()
+    |> Enum.map(fn {name, count} -> entry(name, count, %{"artist" => name}) end)
   end
 
   # Largest first; everything after the top entries is folded into "Andere"
-  defp top_with_rest(frequencies) do
+  defp top_with_rest(frequencies, filter) do
     {top, rest} =
       frequencies
       |> Enum.sort_by(fn {label, count} -> {-count, label} end)
       |> Enum.split(@top)
 
     rest_count = rest |> Enum.map(&elem(&1, 1)) |> Enum.sum()
-    to_entries(top) ++ if(rest_count > 0, do: [%{label: "Andere", count: rest_count}], else: [])
+
+    Enum.map(top, fn {label, count} -> entry(label, count, filter.(label)) end) ++
+      if(rest_count > 0, do: [entry("Andere", rest_count, nil)], else: [])
   end
 
-  defp to_entries(pairs),
-    do: Enum.map(pairs, fn {label, count} -> %{label: label, count: count} end)
+  defp entry(label, count, filter), do: %{label: label, count: count, filter: filter}
+
+  defp condition_key(nil), do: "none"
+  defp condition_key(condition), do: Atom.to_string(condition)
 
   defp condition_label(nil), do: "Ohne Angabe"
   defp condition_label(condition), do: Condition.description(condition)

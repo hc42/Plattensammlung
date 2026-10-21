@@ -56,19 +56,42 @@ defmodule Plattensammlung.StatisticsExportTest do
       stats = Records.statistics!(actor: user)
 
       assert stats.genres == [
-               %{label: "Rock", count: 2},
-               %{label: "Jazz", count: 1},
-               %{label: "Pop", count: 1}
+               %{label: "Rock", count: 2, filter: %{"genre" => "Rock"}},
+               %{label: "Jazz", count: 1, filter: %{"genre" => "Jazz"}},
+               %{label: "Pop", count: 1, filter: %{"genre" => "Pop"}}
              ]
 
-      assert stats.decades == [%{label: "1950er", count: 1}, %{label: "1960er", count: 2}]
+      assert stats.decades == [
+               %{label: "1950er", count: 1, filter: %{"decade" => "1950"}},
+               %{label: "1960er", count: 2, filter: %{"decade" => "1960"}}
+             ]
 
-      assert [%{label: "The Beatles", count: 2}, %{label: "Miles Davis", count: 1}] =
+      assert [%{label: "The Beatles", count: 2, filter: %{"artist" => "The Beatles"}}, _] =
                stats.top_artists
 
       # Goldmine order, best first; copies without a grade last
-      assert Enum.map(stats.conditions, & &1.label) ==
-               ["Very Good Plus (VG+)", "Good (G)", "Ohne Angabe"]
+      assert Enum.map(stats.conditions, &{&1.label, &1.filter}) == [
+               {"Very Good Plus (VG+)", %{"condition" => "very_good_plus"}},
+               {"Good (G)", %{"condition" => "good"}},
+               {"Ohne Angabe", %{"condition" => "none"}}
+             ]
+    end
+
+    test "each filter lists exactly the albums behind a bar", %{user: user} do
+      titles = fn filter ->
+        nil
+        |> Records.search_albums!(:collection, filter, actor: user)
+        |> Enum.map(&to_string(&1.title))
+      end
+
+      assert titles.(%{genre: "Rock"}) == ["Abbey Road", "Revolver"]
+      assert titles.(%{decade: "1960"}) == ["Abbey Road", "Revolver"]
+      assert titles.(%{decade: "unknown"}) == []
+      assert titles.(%{artist: "miles davis"}) == ["Kind of Blue"]
+      assert titles.(%{condition: "good"}) == ["Abbey Road"]
+      assert titles.(%{condition: "none"}) == ["Kind of Blue", "Revolver"]
+      # Unknown values are ignored instead of failing
+      assert length(titles.(%{decade: "abc", condition: "mint-ish"})) == 3
     end
 
     test "needs a signed-in user" do

@@ -57,3 +57,12 @@ einem offenen Format ([ADR 0006](0006-datenmodell.md) nennt schema.org als Vorbi
 
 Kaufpreis und Lagerort gibt es nicht mehr ([ADR 0006](0006-datenmodell.md)). Die Kachel
 „Kaufwert“ ist durch „Künstler“ ersetzt; CSV und JSON-LD enthalten die Felder nicht mehr.
+
+## Nachtrag (2026-10-21): Drill-down
+
+Kacheln und Balken sind klickbar und führen zur Sammlung, gefiltert auf die betroffenen
+Alben (`/?genre=Rock`, `/?decade=1970`, `/?artist=…`, `/?condition=very_good_plus|none`).
+Jeder Statistik-Eintrag liefert dafür ein `filter`-Feld; `Album.search` hat die passenden
+optionalen Argumente (Preparation `AlbumFilters`). Der zusammengefasste Eintrag „Andere“ ist
+nicht klickbar. Die ganze Zeile reagiert auf Klicks (`phx-click` + `JS.navigate`), der Link in
+der Beschriftung dient Tastatur und Screenreadern.

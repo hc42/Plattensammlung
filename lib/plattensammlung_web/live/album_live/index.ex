@@ -1,12 +1,16 @@
 defmodule PlattensammlungWeb.AlbumLive.Index do
   @moduledoc """
   Collection, wishlist and all albums as a searchable grid of covers.
-  Search term (`?q=`) and the filter of the all-albums view (`?show=unassigned`)
-  live in the URL, so results can be bookmarked.
+  Search term (`?q=`), the filter of the all-albums view (`?show=unassigned`)
+  and the drill-down filters from the statistics (`?genre=`, `?decade=`,
+  `?artist=`, `?condition=`) live in the URL, so every view can be bookmarked.
   """
   use PlattensammlungWeb, :live_view
 
   alias Plattensammlung.Records
+  alias Plattensammlung.Records.Condition
+
+  @filters ~w(genre decade artist condition)
 
   @impl true
   def render(assigns) do
@@ -47,11 +51,28 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       <div :if={@live_action == :all} class="join" id="album-filter">
         <.link
           :for={{value, label} <- [{nil, "Alle"}, {"unassigned", "Ohne Exemplar und Wunsch"}]}
-          patch={all_path(@query, value)}
+          patch={view_path(:all, Map.put(@params, "show", value))}
           class={["join-item btn btn-sm", @show == value && "btn-active"]}
           id={"filter-#{value || "all"}"}
         >
           {label}
+        </.link>
+      </div>
+
+      <div
+        :if={active_filters(@params) != []}
+        class="flex flex-wrap items-center gap-2"
+        id="active-filters"
+      >
+        <span class="text-sm opacity-70">Gefiltert:</span>
+        <.link
+          :for={{key, value} <- active_filters(@params)}
+          patch={view_path(@live_action, Map.delete(@params, key))}
+          class="badge badge-lg badge-primary gap-1"
+          id={"active-filter-#{key}"}
+          aria-label={"Filter #{filter_label(key, value)} entfernen"}
+        >
+          {filter_label(key, value)} <.icon name="hero-x-mark-micro" class="size-4" />
         </.link>
       </div>
 
@@ -62,7 +83,9 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       >
         <div class="col-span-full hidden py-16 text-center only:block" id="albums-empty">
           <.icon name="hero-musical-note" class="mx-auto size-10 opacity-30" />
-          <p class="mt-2 opacity-70">{empty_text(@live_action, @query)}</p>
+          <p class="mt-2 opacity-70">
+            {empty_text(@live_action, @query || (active_filters(@params) != [] && :filtered) || nil)}
+          </p>
           <.link :if={!@query} navigate={~p"/import"} class="btn btn-primary btn-sm mt-4">
             Platte erfassen
           </.link>
@@ -103,8 +126,11 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
     show = if params["show"] == "unassigned", do: "unassigned", else: nil
     action = socket.assigns.live_action
 
+    filters =
+      for key <- @filters, value = blank_to_nil(params[key]), into: %{}, do: {key, value}
+
     albums =
-      Records.search_albums!(query, status(action, show),
+      Records.search_albums!(query, status(action, show), filters,
         load: [:owned, :copy_count],
         actor: socket.assigns.current_user
       )
@@ -112,6 +138,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
     {:noreply,
      socket
      |> assign(:page_title, page_title(action))
+     |> assign(:params, Map.merge(filters, %{"q" => query, "show" => show}))
      |> assign(:query, query)
      |> assign(:show, show)
      |> assign(:count, length(albums))
@@ -121,24 +148,40 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
   @impl true
   def handle_event("search", %{"q" => q}, socket) do
-    path =
-      case socket.assigns.live_action do
-        :all -> all_path(blank_to_nil(q), socket.assigns.show)
-        :wishlist -> ~p"/wishlist" <> query_string(%{q: blank_to_nil(q)})
-        :collection -> ~p"/" <> query_string(%{q: blank_to_nil(q)})
-      end
+    params = Map.put(socket.assigns.params, "q", blank_to_nil(q))
 
-    {:noreply, push_patch(socket, to: path, replace: true)}
+    {:noreply,
+     push_patch(socket, to: view_path(socket.assigns.live_action, params), replace: true)}
   end
 
   defp status(:all, "unassigned"), do: :other
   defp status(:all, nil), do: nil
   defp status(action, _show), do: action
 
-  defp all_path(query, show), do: ~p"/albums" <> query_string(%{q: query, show: show})
+  # URL of a view with the given params (nil values are left out)
+  defp view_path(:all, params), do: ~p"/albums" <> query_string(params)
+  defp view_path(:wishlist, params), do: ~p"/wishlist" <> query_string(Map.delete(params, "show"))
+  defp view_path(:collection, params), do: ~p"/" <> query_string(Map.delete(params, "show"))
+
+  defp active_filters(params) do
+    for key <- @filters, value = params[key], do: {key, value}
+  end
+
+  defp filter_label("genre", genre), do: genre
+  defp filter_label("decade", "unknown"), do: "Ohne Jahr"
+  defp filter_label("decade", decade), do: "#{decade}er"
+  defp filter_label("artist", artist), do: artist
+  defp filter_label("condition", "none"), do: "Ohne Zustand"
+
+  defp filter_label("condition", value) do
+    case Condition.match(value) do
+      {:ok, grade} -> "Zustand: " <> Condition.description(grade)
+      _ -> value
+    end
+  end
 
   defp query_string(params) do
-    case params |> Enum.reject(fn {_key, value} -> is_nil(value) end) do
+    case params |> Enum.reject(fn {_key, value} -> is_nil(value) end) |> Enum.sort() do
       [] -> ""
       params -> "?" <> URI.encode_query(params)
     end
@@ -163,6 +206,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   defp count_text(:all, n), do: "#{n} Alben"
 
   defp empty_text(_action, query) when is_binary(query), do: "Nichts gefunden für „#{query}“."
+  defp empty_text(_action, :filtered), do: "Keine Alben mit diesen Filtern."
   defp empty_text(:collection, nil), do: "Noch keine Platten in der Sammlung."
   defp empty_text(:wishlist, nil), do: "Die Wunschliste ist leer."
   defp empty_text(:all, nil), do: "Keine Alben in dieser Ansicht."
