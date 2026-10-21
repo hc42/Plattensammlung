@@ -165,7 +165,14 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             visible={@visible}
             focus={@focus}
           >
-            <.input field={@form[:discogs_master_id]} type="number" label="Discogs-Master-ID" />
+            <%!-- An id, not a quantity: no number spinner, but a digit keypad on phones --%>
+            <.input
+              field={@form[:discogs_master_id]}
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              label="Discogs-Master-ID"
+            />
           </.optional_field>
 
           <.input

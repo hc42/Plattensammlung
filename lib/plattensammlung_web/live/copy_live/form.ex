@@ -203,10 +203,22 @@ defmodule PlattensammlungWeb.CopyLive.Form do
     """
   end
 
-  defp copy_input(%{field: field} = assigns)
-       when field in [:pressing_year, :discogs_release_id] do
+  defp copy_input(%{field: :pressing_year} = assigns) do
     ~H"""
-    <.input field={@form[@field]} type="number" label={@label} />
+    <.input field={@form[:pressing_year]} type="number" label={@label} />
+    """
+  end
+
+  # An id, not a quantity: no number spinner, but a digit keypad on phones
+  defp copy_input(%{field: :discogs_release_id} = assigns) do
+    ~H"""
+    <.input
+      field={@form[:discogs_release_id]}
+      type="text"
+      inputmode="numeric"
+      autocomplete="off"
+      label={@label}
+    />
     """
   end
 
