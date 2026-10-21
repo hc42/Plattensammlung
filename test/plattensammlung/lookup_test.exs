@@ -27,7 +27,7 @@ defmodule Plattensammlung.LookupTest do
       assert result.discogs_master_id == 24047
       assert result.discogs_release_id == 12_345_678
       assert result.label == "Apple Records"
-      assert result.format == "Vinyl, LP, Album"
+      assert result.format == ["Vinyl", "LP", "Album", "Reissue"]
       assert result.barcode == LookupStub.abbey_road_barcode()
     end
 
@@ -46,7 +46,7 @@ defmodule Plattensammlung.LookupTest do
       assert result.source == :musicbrainz
       assert result.musicbrainz_release_group_id == "9162580e-5df4-32de-80cc-f45a8d8a9b1d"
       assert result.label == "Apple"
-      assert result.format == "12\" Vinyl"
+      assert result.format == ["12\" Vinyl"]
     end
 
     test "falls back to MusicBrainz when Discogs fails", %{user: user} do

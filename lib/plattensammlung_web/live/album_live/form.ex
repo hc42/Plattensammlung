@@ -12,10 +12,11 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   use PlattensammlungWeb, :live_view
 
   import PlattensammlungWeb.OptionalFields
+  import PlattensammlungWeb.TagInput
 
   alias Plattensammlung.Records
   alias Plattensammlung.Records.Album
-  alias PlattensammlungWeb.OptionalFields
+  alias PlattensammlungWeb.{OptionalFields, TagInput}
 
   @fields [
     year: "Erscheinungsjahr",
@@ -116,47 +117,15 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             visible={@visible}
             focus={@focus}
           >
-            <div class="fieldset mb-2">
-              <span class="label mb-1">Genres</span>
-              <%!-- The list goes into the album form; the entry field belongs to #genre-entry --%>
-              <input type="hidden" name="album[genres][]" value="" />
-              <input :for={genre <- @genres} type="hidden" name="album[genres][]" value={genre} />
-              <div class="flex flex-wrap items-center gap-1.5" id="genre-tags">
-                <span
-                  :for={genre <- @genres}
-                  class="badge badge-lg gap-1"
-                  id={"genre-#{genre_id(genre)}"}
-                >
-                  {genre}
-                  <button
-                    type="button"
-                    phx-click="remove_genre"
-                    phx-value-genre={genre}
-                    class="opacity-60 hover:opacity-100"
-                    aria-label={"#{genre} entfernen"}
-                  >
-                    <.icon name="hero-x-mark-micro" class="size-4" />
-                  </button>
-                </span>
-                <input
-                  type="text"
-                  id={"genre-input-#{@genre_input_key}"}
-                  name="genre"
-                  form="genre-entry"
-                  list="genre-suggestions"
-                  placeholder={if @genres == [], do: "z. B. Rock", else: "weiteres Genre"}
-                  autocomplete="off"
-                  class="input input-sm w-40"
-                  phx-mounted={@genre_input_key > 0 && JS.focus()}
-                />
-                <button type="submit" form="genre-entry" class="btn btn-ghost btn-sm" id="add-genre">
-                  Hinzufügen
-                </button>
-              </div>
-              <datalist id="genre-suggestions">
-                <option :for={genre <- @genre_suggestions -- @genres} value={genre} />
-              </datalist>
-            </div>
+            <.tag_input
+              form_name="album"
+              field={:genres}
+              label="Genres"
+              tags={@tags}
+              keys={@tag_keys}
+              suggestions={@genre_suggestions}
+              placeholder="z. B. Rock"
+            />
           </.optional_field>
 
           <.optional_field
@@ -188,8 +157,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           </div>
         </.form>
 
-        <%!-- Own form for the genre entry: Enter adds a tag instead of saving the album --%>
-        <form id="genre-entry" phx-submit="add_genre"></form>
+        <.tag_entry_forms fields={[:genres]} />
       </div>
     </Layouts.app>
     """
@@ -206,7 +174,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
      socket
      |> assign(:artist_names, artist_names)
      |> assign(:genre_suggestions, genre_suggestions(socket.assigns.current_user))
-     |> assign(:genre_input_key, 0)
+     |> assign(:tag_keys, %{})
      |> assign(:duplicates, [])
      |> assign(:fields, @fields)
      |> assign(:focus, nil)
@@ -220,7 +188,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     |> assign(:page_title, "Platte erfassen")
     |> assign(:album, nil)
     |> assign(:visible, MapSet.new())
-    |> assign(:genres, [])
+    |> assign(:tags, %{genres: []})
     |> assign(:mode, mode)
     |> assign(:return_to, if(mode == "wishlist", do: ~p"/wishlist", else: ~p"/"))
     |> assign(:form, new_form(mode, socket.assigns.current_user))
@@ -241,7 +209,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     |> assign(:page_title, "Album bearbeiten")
     |> assign(:album, album)
     |> assign(:visible, OptionalFields.initially_visible(album, @fields))
-    |> assign(:genres, album.genres)
+    |> assign(:tags, %{genres: album.genres})
     |> assign(:mode, nil)
     |> assign(:return_to, ~p"/albums/#{album}")
     |> assign(:form, to_form(form))
@@ -253,30 +221,19 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   end
 
   def handle_event("hide_field", %{"field" => "genres"}, socket) do
-    {:noreply, socket |> assign(:genres, []) |> OptionalFields.hide("genres", @fields)}
+    {:noreply, socket |> TagInput.clear(:genres) |> OptionalFields.hide("genres", @fields)}
   end
 
   def handle_event("hide_field", %{"field" => field}, socket) do
     {:noreply, OptionalFields.hide(socket, field, @fields)}
   end
 
-  def handle_event("add_genre", %{"genre" => text}, socket) do
-    new =
-      text
-      |> String.split(",")
-      |> Enum.map(&normalize_genre(&1, socket.assigns.genre_suggestions))
-      |> Enum.reject(&(&1 == ""))
-
-    genres = Enum.uniq_by(socket.assigns.genres ++ new, &String.downcase/1)
-
-    {:noreply,
-     socket
-     |> update(:genre_input_key, &(&1 + 1))
-     |> put_genres(genres)}
+  def handle_event("add_tag", %{"field" => field, "tag" => text}, socket) do
+    {:noreply, TagInput.add(socket, field, text, tag_config(socket))}
   end
 
-  def handle_event("remove_genre", %{"genre" => genre}, socket) do
-    {:noreply, put_genres(socket, List.delete(socket.assigns.genres, genre))}
+  def handle_event("remove_tag", %{"field" => field, "tag" => tag}, socket) do
+    {:noreply, TagInput.remove(socket, field, tag, tag_config(socket))}
   end
 
   def handle_event("validate", %{"album" => params} = all_params, socket) do
@@ -333,20 +290,8 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   defp prepare_params(%{"genres" => ""} = params, _type), do: Map.put(params, "genres", [])
   defp prepare_params(params, _type), do: params
 
-  # Keeps the tags and the AshPhoenix form in sync
-  defp put_genres(socket, genres) do
-    form = socket.assigns.form.source
-    params = form |> AshPhoenix.Form.params() |> Map.put("genres", genres)
-
-    socket
-    |> assign(:genres, genres)
-    |> assign(:form, to_form(AshPhoenix.Form.validate(form, params)))
-  end
-
-  # "rock" becomes "Rock" if that genre already exists in the collection
-  defp normalize_genre(text, suggestions) do
-    text = String.trim(text)
-    Enum.find(suggestions, text, &(String.downcase(&1) == String.downcase(text)))
+  defp tag_config(socket) do
+    %{genres: %{multiple: true, suggestions: socket.assigns.genre_suggestions}}
   end
 
   defp genre_suggestions(actor) do
@@ -355,8 +300,6 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     |> Enum.uniq()
     |> Enum.sort()
   end
-
-  defp genre_id(genre), do: genre |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-")
 
   defp find_duplicates(%{"artist_name" => artist, "title" => title}, assigns)
        when artist != "" and title != "" do

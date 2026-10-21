@@ -20,7 +20,7 @@ collection = [
        label: "Apple Records",
        catalog_number: "PCS 7088",
        country: "UK",
-       format: "LP",
+       format: ["LP"],
        media_condition: :very_good_plus,
        sleeve_condition: :very_good,
        purchased_on: ~D[2019-05-03]
@@ -28,7 +28,7 @@ collection = [
    }},
   {"Pink Floyd", "The Dark Side of the Moon", %{year: 1973, genres: ["Rock"]}},
   {"Kraftwerk", "Trans Europa Express", %{year: 1977, genres: ["Electronic"]}},
-  {"Miles Davis", "Kind of Blue", %{year: 1959, genres: ["Jazz"], copy: %{format: "LP"}}}
+  {"Miles Davis", "Kind of Blue", %{year: 1959, genres: ["Jazz"], copy: %{format: ["LP"]}}}
 ]
 
 wishlist = [

@@ -299,7 +299,11 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   defp back_label(_album), do: "Alle Alben"
 
   defp copy_heading(copy) do
-    [copy.format, copy.label, copy.pressing_year && to_string(copy.pressing_year)]
+    [
+      Enum.join(copy.format, ", "),
+      copy.label,
+      copy.pressing_year && to_string(copy.pressing_year)
+    ]
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> "Exemplar"

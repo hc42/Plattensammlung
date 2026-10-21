@@ -63,7 +63,7 @@ defmodule Plattensammlung.RecordsTest do
 
     test "adding a copy removes the album from the wishlist", %{user: user} do
       album = Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
-      Records.add_copy!(album.id, %{format: "2LP"}, actor: user)
+      Records.add_copy!(album.id, %{format: ["2LP"]}, actor: user)
 
       assert Records.list_wishlist!(actor: user) == []
       assert [%{id: id}] = Records.list_collection!(actor: user)

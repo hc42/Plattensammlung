@@ -110,14 +110,18 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
   defp cover(nil, _size), do: nil
   defp cover(id, size), do: "https://coverartarchive.org/release-group/#{id}/front-#{size}"
 
-  defp format(nil), do: nil
+  defp format(nil), do: []
 
+  # One tag per kind of medium, with the count for sets: ["2× 12\" Vinyl"]
   defp format(media) do
-    case media |> Enum.map(& &1["format"]) |> Enum.reject(&is_nil/1) do
-      [] -> nil
-      [single] -> single
-      [first | _] = all -> "#{length(all)}× #{first}"
-    end
+    media
+    |> Enum.map(& &1["format"])
+    |> Enum.reject(&is_nil/1)
+    |> Enum.frequencies()
+    |> Enum.map(fn
+      {format, 1} -> format
+      {format, count} -> "#{count}× #{format}"
+    end)
   end
 
   defp year("" <> date) do

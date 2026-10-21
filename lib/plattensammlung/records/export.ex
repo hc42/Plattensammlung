@@ -72,7 +72,7 @@ defmodule Plattensammlung.Records.Export do
       album.title,
       album.year,
       Enum.join(album.genres, "; "),
-      copy_value.(:format),
+      copy && Enum.join(copy.format, "; "),
       copy_value.(:label),
       copy_value.(:catalog_number),
       copy_value.(:barcode),
@@ -132,7 +132,7 @@ defmodule Plattensammlung.Records.Export do
       "catalogNumber" => copy.catalog_number,
       "recordLabel" => copy.label && %{"@type" => "Organization", "name" => copy.label},
       "datePublished" => copy.pressing_year && to_string(copy.pressing_year),
-      "description" => copy.format,
+      "description" => Enum.join(copy.format, ", "),
       "identifier" =>
         copy.barcode &&
           %{"@type" => "PropertyValue", "propertyID" => "GTIN", "value" => copy.barcode},

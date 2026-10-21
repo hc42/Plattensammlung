@@ -116,7 +116,7 @@ Regeln:
 - „Besitze ich“ ist das Aggregate `owned` (existiert eine Copy?). Es wird nie gespeichert.
 - Eine Copy anzulegen setzt `wanted` am Album zurück (Change `RemoveFromWishlist`).
 - Ein Album ohne Copy und ohne `wanted` ist „nicht zugeordnet“ (Such-Status `:other`).
-- Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr.
+- Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr. `Copy.format` ist eine Liste.
 - Ein Album zu löschen löscht seine Copies. Ein Artist mit Alben kann nicht gelöscht werden.
 
 ## Import (`Plattensammlung.Lookup`)
@@ -210,8 +210,11 @@ Ecto-Contexts.
 - Optionale Formularfelder wie in Apples Kontakte-App: `PlattensammlungWeb.OptionalFields`
   (`optional_field`, `add_field_buttons`, `show/3`, `hide/3`). Ausgeblendete Felder werden als
   leerer Wert gesendet, "−" löscht also den Wert. Pflichtfelder bleiben immer sichtbar.
-- Genres im Album-Formular sind Tags: `album[genres][]` als Hidden-Inputs, Eingabe über das
-  separate Formular `#genre-entry` (Enter fügt hinzu statt zu speichern), Vorschläge aus der Sammlung.
+- Tag-Felder mit Vorschlägen: `PlattensammlungWeb.TagInput` (`tag_input`, `tag_entry_forms`,
+  `add/4`, `remove/4`, `clear/2`). `multiple: true` für Listen (Genres, Format), sonst genau ein
+  Wert (Label, Land). Die Eingabe gehört zu einem eigenen Formular `#<feld>-entry` außerhalb des
+  Hauptformulars, damit Enter einen Tag hinzufügt statt zu speichern. Listen kommen als
+  `form[feld][]` an und werden per `prepare_params` bereinigt.
 - Die Cover-URL wird nicht von Hand bearbeitet; das Formular zeigt nur eine Vorschau.
 - MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
 - Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.

@@ -102,13 +102,13 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
 
       # Enter in the tag field submits only the small genre form; "rock" takes
       # the spelling of the existing genre "Rock"
-      view |> element("#genre-entry") |> render_submit(%{genre: "rock, Pop"})
-      view |> element("#genre-entry") |> render_submit(%{genre: "Jazz"})
-      view |> element("#genre-jazz button") |> render_click()
+      view |> element("#genres-entry") |> render_submit(%{field: "genres", tag: "rock, Pop"})
+      view |> element("#genres-entry") |> render_submit(%{field: "genres", tag: "Jazz"})
+      view |> element("#genres-tag-jazz button") |> render_click()
 
-      assert has_element?(view, "#genre-rock")
-      assert has_element?(view, "#genre-pop")
-      refute has_element?(view, "#genre-jazz")
+      assert has_element?(view, "#genres-tag-rock")
+      assert has_element?(view, "#genres-tag-pop")
+      refute has_element?(view, "#genres-tag-jazz")
 
       view |> form("#album-form", album: %{year: "1969"}) |> render_submit()
 
@@ -153,17 +153,19 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       # Optional fields appear only after their "+" button
       refute has_element?(view, "#field-format")
       view |> element("#add-format") |> render_click()
+      # Format is a tag field: Enter in its entry adds the tag
+      view |> element("#format-entry") |> render_submit(%{field: "format", tag: "2LP, Gatefold"})
       view |> element("#add-media_condition") |> render_click()
 
       view
-      |> form("#copy-form", copy: %{format: "2LP", media_condition: "near_mint"})
+      |> form("#copy-form", copy: %{media_condition: "near_mint"})
       |> render_submit()
 
       assert_redirect(view, ~p"/albums/#{album}")
       album = Records.get_album!(album.id, load: [:owned, :copies], authorize?: false)
       assert album.owned
       refute album.wanted
-      assert [%{format: "2LP", media_condition: :near_mint}] = album.copies
+      assert [%{format: ["2LP", "Gatefold"], media_condition: :near_mint}] = album.copies
     end
 
     test "deletes a copy and the album", %{conn: conn} do

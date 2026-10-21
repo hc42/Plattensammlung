@@ -93,3 +93,8 @@ späterer Export ohne Umbau.
 - **Albenstatus „nicht zugeordnet“:** Ein Album ohne Exemplar und ohne `wanted` (z. B. nach
   dem Löschen des letzten Exemplars) bleibt erhalten und erscheint in der Ansicht „Alle Alben“
   (`/albums`, Filter `?show=unassigned`; Suche mit Status `:other`).
+- **Format als Liste:** `Copy.format` ist eine Liste von Tags (`["Vinyl", "LP", "Album"]`),
+  wie sie Discogs liefert. Vorhandene Texte wurden bei der Migration an „, “ aufgeteilt.
+- **Gegen Schreibvarianten:** Genres und Format (mehrere Tags) sowie Label und Land (genau
+  ein Tag) werden über eine Tag-Eingabe mit Vorschlägen aus der Sammlung erfasst; gleiche
+  Werte in anderer Schreibweise übernehmen die vorhandene.

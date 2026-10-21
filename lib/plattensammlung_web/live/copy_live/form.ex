@@ -6,10 +6,14 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   use PlattensammlungWeb, :live_view
 
   import PlattensammlungWeb.OptionalFields
+  import PlattensammlungWeb.TagInput
 
   alias Plattensammlung.Records
   alias Plattensammlung.Records.Copy
-  alias PlattensammlungWeb.OptionalFields
+  alias PlattensammlungWeb.{OptionalFields, TagInput}
+
+  # Picked from a list of earlier values to avoid spelling variants
+  @tag_fields [:format, :label, :country]
 
   @fields [
     format: "Format",
@@ -53,7 +57,18 @@ defmodule PlattensammlungWeb.CopyLive.Form do
             visible={@visible}
             focus={@focus}
           >
-            <.copy_input form={@form} field={field} label={label} />
+            <.tag_input
+              :if={field in @tag_fields}
+              form_name="copy"
+              field={field}
+              label={label}
+              tags={@tags}
+              keys={@tag_keys}
+              suggestions={@suggestions[field]}
+              multiple={field == :format}
+              placeholder={tag_placeholder(field)}
+            />
+            <.copy_input :if={field not in @tag_fields} form={@form} field={field} label={label} />
           </.optional_field>
 
           <div class="mt-3 border-t border-base-300 pt-3">
@@ -67,6 +82,9 @@ defmodule PlattensammlungWeb.CopyLive.Form do
             <.button navigate={~p"/albums/#{@album}"}>Abbrechen</.button>
           </div>
         </.form>
+
+        <%!-- Entry forms of the tag fields: Enter adds a tag instead of saving --%>
+        <.tag_entry_forms fields={@tag_fields} />
       </div>
     </Layouts.app>
     """
@@ -85,6 +103,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
       AshPhoenix.Form.for_create(Copy, :create,
         as: "copy",
         actor: actor,
+        prepare_params: &prepare_params/2,
         # The album is fixed by the URL, not by a form field
         transform_params: fn params, _type -> Map.put(params, "album_id", album.id) end
       )
@@ -99,7 +118,13 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   defp apply_action(socket, :edit, %{"id" => id}) do
     actor = socket.assigns.current_user
     copy = Records.get_copy!(id, load: [album: [:artist]], actor: actor)
-    form = AshPhoenix.Form.for_update(copy, :update, as: "copy", actor: actor)
+
+    form =
+      AshPhoenix.Form.for_update(copy, :update,
+        as: "copy",
+        actor: actor,
+        prepare_params: &prepare_params/2
+      )
 
     socket
     |> assign(:page_title, "Exemplar bearbeiten")
@@ -111,9 +136,50 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   defp assign_fields(socket, copy) do
     socket
     |> assign(:fields, @fields)
+    |> assign(:tag_fields, @tag_fields)
     |> assign(:visible, OptionalFields.initially_visible(copy, @fields))
     |> assign(:focus, nil)
+    |> assign(:tag_keys, %{})
+    |> assign(:tags, %{
+      format: (copy && copy.format) || [],
+      label: List.wrap(copy && copy.label),
+      country: List.wrap(copy && copy.country)
+    })
+    |> assign(:suggestions, suggestions(socket.assigns.current_user))
   end
+
+  # Values used so far in the collection, for consistent spelling
+  defp suggestions(actor) do
+    copies = Plattensammlung.Records.Copy |> Ash.read!(actor: actor)
+
+    %{
+      format: copies |> Enum.flat_map(& &1.format) |> distinct(),
+      label: copies |> Enum.map(& &1.label) |> distinct(),
+      country: copies |> Enum.map(& &1.country) |> distinct()
+    }
+  end
+
+  defp distinct(values),
+    do: values |> Enum.reject(&(&1 in [nil, ""])) |> Enum.uniq() |> Enum.sort()
+
+  defp tag_placeholder(:format), do: "z. B. LP"
+  defp tag_placeholder(:label), do: "z. B. Apple Records"
+  defp tag_placeholder(:country), do: "z. B. UK"
+
+  defp tag_config(socket) do
+    Map.new(@tag_fields, fn field ->
+      {field, %{multiple: field == :format, suggestions: socket.assigns.suggestions[field]}}
+    end)
+  end
+
+  # Formats arrive as copy[format][] (tags plus an empty marker) or as a single
+  # empty value when the field is hidden; the action expects a clean list
+  defp prepare_params(%{"format" => formats} = params, _type) when is_list(formats) do
+    Map.put(params, "format", formats |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")))
+  end
+
+  defp prepare_params(%{"format" => ""} = params, _type), do: Map.put(params, "format", [])
+  defp prepare_params(params, _type), do: params
 
   attr :form, :any, required: true
   attr :field, :atom, required: true
@@ -157,12 +223,6 @@ defmodule PlattensammlungWeb.CopyLive.Form do
     """
   end
 
-  defp copy_input(%{field: :format} = assigns) do
-    ~H"""
-    <.input field={@form[:format]} label={@label} placeholder="LP, 2LP, 7″ …" />
-    """
-  end
-
   defp copy_input(assigns) do
     ~H"""
     <.input field={@form[@field]} label={@label} />
@@ -175,7 +235,21 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   end
 
   def handle_event("hide_field", %{"field" => field}, socket) do
+    socket =
+      case Enum.find(@tag_fields, &(Atom.to_string(&1) == field)) do
+        nil -> socket
+        tag_field -> TagInput.clear(socket, tag_field)
+      end
+
     {:noreply, OptionalFields.hide(socket, field, @fields)}
+  end
+
+  def handle_event("add_tag", %{"field" => field, "tag" => text}, socket) do
+    {:noreply, TagInput.add(socket, field, text, tag_config(socket))}
+  end
+
+  def handle_event("remove_tag", %{"field" => field, "tag" => tag}, socket) do
+    {:noreply, TagInput.remove(socket, field, tag, tag_config(socket))}
   end
 
   def handle_event("validate", %{"copy" => params}, socket) do

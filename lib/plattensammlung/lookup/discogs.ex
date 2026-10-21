@@ -149,8 +149,9 @@ defmodule Plattensammlung.Lookup.Discogs do
   defp image(""), do: nil
   defp image(url), do: if(String.ends_with?(url, "spacer.gif"), do: nil, else: url)
 
-  defp format(nil), do: nil
-  defp format(formats), do: formats |> Enum.take(3) |> Enum.join(", ")
+  # Discogs format descriptions are already tags: ["Vinyl", "LP", "Album", "Reissue"]
+  defp format(nil), do: []
+  defp format(formats), do: Enum.uniq(formats)
 
   defp positive(id) when is_integer(id) and id > 0, do: id
   defp positive(_id), do: nil

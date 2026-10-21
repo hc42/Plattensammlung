@@ -96,8 +96,10 @@ defmodule Plattensammlung.Records.Copy do
     attribute :country, :string, public?: true
     attribute :pressing_year, :integer, public?: true
 
-    attribute :format, :string do
-      description "Free text, e.g. LP, 2LP, 7\", 10\""
+    attribute :format, {:array, :string} do
+      description "Format tags, e.g. [\"Vinyl\", \"LP\", \"Album\"] or [\"7\\\"\", \"Single\"]"
+      default []
+      allow_nil? false
       public? true
     end
 

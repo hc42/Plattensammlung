@@ -256,7 +256,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
   end
 
   defp copy_summary(copy) do
-    case Enum.reject([copy.format, copy.label, copy.barcode], &(&1 in [nil, ""])) do
+    case Enum.reject([Enum.join(copy.format, ", "), copy.label, copy.barcode], &(&1 in [nil, ""])) do
       [] -> ""
       parts -> " (" <> Enum.join(parts, " · ") <> ")"
     end

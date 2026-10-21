@@ -28,7 +28,7 @@ defmodule Plattensammlung.Records.LookupResult do
     attribute :catalog_number, :string, public?: true
     attribute :country, :string, public?: true
     attribute :pressing_year, :integer, public?: true
-    attribute :format, :string, public?: true
+    attribute :format, {:array, :string}, default: [], public?: true
     attribute :discogs_release_id, :integer, public?: true
     attribute :musicbrainz_release_id, :string, public?: true
   end

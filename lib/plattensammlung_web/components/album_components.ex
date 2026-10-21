@@ -142,7 +142,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
   defp source_label(:musicbrainz), do: "MusicBrainz"
 
   defp pressing_text(result) do
-    [result.format, result.label, result.catalog_number, result.country]
+    [Enum.join(result.format || [], ", "), result.label, result.catalog_number, result.country]
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
       [] -> nil

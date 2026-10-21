@@ -92,7 +92,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
             artist_name: "Kraftwerk",
             title: "Autobahn",
             year: 1974,
-            copy: %{format: "LP", media_condition: "very_good_plus"}
+            copy: %{format: ["LP"], media_condition: "very_good_plus"}
           }
         }
       }
@@ -104,7 +104,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
 
       album = Records.get_album!(body["data"]["id"], load: [:artist, :copies], authorize?: false)
       assert to_string(album.artist.name) == "Kraftwerk"
-      assert [%{format: "LP", media_condition: :very_good_plus}] = album.copies
+      assert [%{format: ["LP"], media_condition: :very_good_plus}] = album.copies
     end
 
     test "reports missing required fields", %{conn: conn} do
@@ -138,7 +138,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
       payload = %{
         data: %{
           type: "copy",
-          attributes: %{album_id: album.id, format: "2LP", notes: "Regal A"}
+          attributes: %{album_id: album.id, format: ["2LP"], notes: "Regal A"}
         }
       }
 
