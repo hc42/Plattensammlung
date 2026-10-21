@@ -68,6 +68,35 @@ defmodule Plattensammlung.StreamingLinksTest do
       assert album.musicbrainz_release_group_id == "9ce4b9ee-9ad4-3deb-95a4-4cb4e68c145e"
     end
 
+    test "a Discogs master unknown to MusicBrainz falls back to artist and title", %{
+      user: user
+    } do
+      # Discogs has side masters (e.g. reissues with all sidemen credited)
+      album =
+        Records.add_to_collection!("the beatles", "ABBEY ROAD", %{discogs_master_id: 1},
+          actor: user
+        )
+
+      assert album.musicbrainz_release_group_id == "9162580e-5df4-32de-80cc-f45a8d8a9b1d"
+      assert album.spotify_album_id == "0ETFjACtuP2ADo6LFhL6HN"
+
+      # Only the exact title counts, not "Abbey Road Revisited"
+      album =
+        Records.add_to_collection!("The Beatles", "Abbey", %{discogs_master_id: 1}, actor: user)
+
+      assert album.musicbrainz_release_group_id == nil
+      assert album.spotify_album_id == nil
+    end
+
+    test "the fallback also works for an existing album", %{user: user} do
+      album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
+
+      # Artist known only through artist_id here
+      album = Records.update_album!(album, %{discogs_master_id: 1}, actor: user)
+
+      assert album.spotify_album_id == "0ETFjACtuP2ADo6LFhL6HN"
+    end
+
     test "existing albums are filled on request", %{user: user} do
       album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
       assert album.spotify_album_id == nil

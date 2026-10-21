@@ -11,11 +11,12 @@ defmodule Plattensammlung.Records.Changes.FillStreamingLinks do
   use Ash.Resource.Change
 
   alias Plattensammlung.Lookup.StreamingLinks
+  alias Plattensammlung.Records
 
   @impl true
-  def change(changeset, opts, _context) do
+  def change(changeset, opts, context) do
     if run?(changeset, Keyword.get(opts, :when, :always)) do
-      Ash.Changeset.before_transaction(changeset, &fill/1)
+      Ash.Changeset.before_transaction(changeset, &fill(&1, Ash.Context.to_opts(context)))
     else
       changeset
     end
@@ -28,7 +29,7 @@ defmodule Plattensammlung.Records.Changes.FillStreamingLinks do
       Ash.Changeset.changing_attribute?(changeset, :discogs_master_id)
   end
 
-  defp fill(changeset) do
+  defp fill(changeset, opts) do
     current = %{
       spotify: Ash.Changeset.get_attribute(changeset, :spotify_album_id),
       tidal: Ash.Changeset.get_attribute(changeset, :tidal_album_id),
@@ -38,7 +39,11 @@ defmodule Plattensammlung.Records.Changes.FillStreamingLinks do
 
     if (is_nil(current.spotify) or is_nil(current.tidal)) and
          (current.musicbrainz || current.discogs) do
-      found = StreamingLinks.find(current)
+      found =
+        current
+        |> Map.put(:title, Ash.Changeset.get_attribute(changeset, :title))
+        |> Map.put(:artist, artist_name(changeset, opts))
+        |> StreamingLinks.find()
 
       changeset
       |> maybe_set(:spotify_album_id, current.spotify, found.spotify)
@@ -46,6 +51,18 @@ defmodule Plattensammlung.Records.Changes.FillStreamingLinks do
       |> maybe_set(:musicbrainz_release_group_id, current.musicbrainz, found.musicbrainz)
     else
       changeset
+    end
+  end
+
+  # On create the artist is only known by name (FindOrCreateArtist runs later)
+  defp artist_name(changeset, opts) do
+    with nil <- Ash.Changeset.get_argument(changeset, :artist_name),
+         id when not is_nil(id) <- Ash.Changeset.get_attribute(changeset, :artist_id),
+         {:ok, artist} <- Records.get_artist(id, opts) do
+      artist.name
+    else
+      {:error, _} -> nil
+      name -> name
     end
   end
 

@@ -187,7 +187,7 @@ Regeln:
 
 - `Album.spotify_album_id` / `tidal_album_id` speichern IDs; Links über `Records.Streaming`
   bzw. die Calculations `spotify_url` / `tidal_url`.
-- Suche: `Lookup.StreamingLinks.find/1` (Discogs→MusicBrainz, Wikidata, MusicBrainz-Releases),
+- Suche: `Lookup.StreamingLinks.find/1` (Discogs→MusicBrainz, sonst Künstler + Titel; Wikidata, MusicBrainz-Releases),
   ausgelöst vom Change `FillStreamingLinks` (Import, Abgleich, geänderte Verknüpfung,
   `Album.find_streaming_links`). Spotify-Links im Import: `Lookup.Spotify`.
 - Tests: `LookupStub` beantwortet Wikidata und MusicBrainz; er ist in DataCase/ConnCase

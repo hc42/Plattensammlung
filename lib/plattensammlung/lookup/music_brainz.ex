@@ -85,6 +85,36 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
   end
 
   @doc """
+  The release group (album) with exactly this title by this artist, or nil.
+  Only exact matches (ignoring case) count, studio albums before compilations,
+  so an album never gets linked to a merely similar one.
+  """
+  def release_group_for_name(artist, title) do
+    query =
+      "releasegroup:#{phrase(title)} AND artist:#{phrase(artist)} AND primarytype:album"
+
+    with {:ok, body} <- get("/release-group", query: query, limit: 10) do
+      {:ok,
+       (body || %{})
+       |> Map.get("release-groups", [])
+       |> Enum.filter(&(same?(&1["title"], title) and credited?(&1, artist)))
+       |> Enum.sort_by(&length(&1["secondary-types"] || []))
+       |> Enum.find_value(& &1["id"])}
+    end
+  end
+
+  # Lucene phrase: quotes and backslashes escaped
+  defp phrase(text), do: ~s(") <> String.replace(to_string(text), ~r/["\\]/, "\\\\\\0") <> ~s(")
+
+  defp same?(a, b) when is_binary(a),
+    do: String.downcase(String.trim(a)) == String.downcase(String.trim(to_string(b)))
+
+  defp same?(_a, _b), do: false
+
+  defp credited?(group, artist),
+    do: Enum.any?(group["artist-credit"] || [], &same?(&1["name"], artist))
+
+  @doc """
   Spotify and Tidal album ids linked to any release (pressing, digital edition)
   of the release group; the newest release with a link wins.
   """

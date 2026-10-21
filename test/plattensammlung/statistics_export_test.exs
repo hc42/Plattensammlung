@@ -143,6 +143,8 @@ defmodule Plattensammlung.StatisticsExportTest do
       # Spotify and Tidal were filled in automatically from Wikidata
       assert album["sameAs"] == [
                "https://www.discogs.com/master/24047",
+               # Linked by artist and title (the stub doesn't map master 24047)
+               "https://musicbrainz.org/release-group/9162580e-5df4-32de-80cc-f45a8d8a9b1d",
                "https://open.spotify.com/album/0ETFjACtuP2ADo6LFhL6HN",
                "https://tidal.com/album/55130630"
              ]

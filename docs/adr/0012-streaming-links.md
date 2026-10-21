@@ -52,3 +52,12 @@ der App) lassen sich nur über Spotifys angemeldete Schnittstelle entschlüsseln
 - Bis zu vier zusätzliche Anfragen beim Import oder Abgleich; MusicBrainz-Limit (1/s)
   wird über Req-Retries abgefangen.
 - Die Links erscheinen in API, CSV und als `sameAs` im JSON-LD.
+
+## Nachtrag (2026-10-21): Rückfall über Künstler und Titel
+
+Discogs hat zu manchen Alben Neben-Master (z. B. „Kind of Blue“, Master 886682 mit allen
+Begleitmusikern), die MusicBrainz nicht kennt. Findet MusicBrainz zum Discogs-Master keine
+Release Group, sucht `MusicBrainz.release_group_for_name/2` nach Künstler und Titel. Es
+zählen nur genaue Treffer (ohne Groß-/Kleinschreibung), Studioalben vor Kompilationen.
+Die gefundene Release Group wird als MusicBrainz-Verknüpfung gespeichert. Der Rückfall
+greift nur bei vorhandenem Discogs-Link, von Hand erfasste Alben bleiben offline.
