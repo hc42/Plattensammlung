@@ -24,6 +24,7 @@ defmodule Plattensammlung.Records do
       base_route "/albums", Plattensammlung.Records.Album do
         # Before `get`, so "lookup" is not taken for an album id
         route :get, "/lookup", :lookup
+        route :get, "/statistics", :statistics
         index :search
         get :read
         post :add_to_collection, route: "/collection"
@@ -62,6 +63,7 @@ defmodule Plattensammlung.Records do
       define :find_duplicates, action: :duplicates, args: [:artist_name, :title]
       define :find_by_barcode, action: :by_barcode, args: [:barcode]
       define :lookup_albums, action: :lookup, args: [:query]
+      define :statistics, action: :statistics
       define :list_collection, action: :collection
       define :list_wishlist, action: :wishlist
       define :update_album, action: :update

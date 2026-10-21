@@ -167,6 +167,11 @@ defmodule Plattensammlung.Records.Album do
       end
     end
 
+    action :statistics, :map do
+      description "Key figures and breakdowns (genres, decades, conditions, artists)."
+      run Plattensammlung.Records.Statistics
+    end
+
     read :duplicates do
       description "Albums with exactly this artist and title (case-insensitive)."
       argument :artist_name, :ci_string, allow_nil?: false

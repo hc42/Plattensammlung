@@ -14,3 +14,4 @@ Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md
 | [0007](0007-barcode-scan-und-import.md) | Barcode-Scan und Import aus Discogs und MusicBrainz | Angenommen |
 | [0008](0008-https-im-lan.md) | HTTPS im lokalen Netz für den Kamera-Scan | Angenommen |
 | [0009](0009-gestaltung-der-json-api.md) | Gestaltung der JSON-API | Angenommen |
+| [0010](0010-statistik-und-export.md) | Statistik und Export | Angenommen |

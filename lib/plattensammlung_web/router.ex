@@ -68,6 +68,7 @@ defmodule PlattensammlungWeb.Router do
       live "/albums/:id/edit", AlbumLive.Form, :edit
       live "/albums/:id/copies/new", CopyLive.Form, :new
       live "/copies/:id/edit", CopyLive.Form, :edit
+      live "/stats", StatsLive
       live "/account", AccountLive
     end
 
@@ -75,6 +76,9 @@ defmodule PlattensammlungWeb.Router do
       on_mount: [{PlattensammlungWeb.LiveUserAuth, :live_no_user}] do
       live "/sign-in", SignInLive
     end
+
+    get "/export/plattensammlung.csv", ExportController, :csv
+    get "/export/plattensammlung.jsonld", ExportController, :json_ld
 
     # Magic link callback (/auth/user/magic_link) and sign out
     auth_routes AuthController, Plattensammlung.Accounts.User, path: "/auth"

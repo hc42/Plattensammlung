@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Alle geplanten Kernfunktionen sind umgesetzt: Sammlung, Wunschliste, Import, Barcode-Scan, JSON-API sowie der Login per Passkey oder Magic Link. Als Nächstes kommen die Extras (Statistiken, Export).
+> **Status:** Der Fahrplan ist umgesetzt: Sammlung, Wunschliste, Import, Barcode-Scan, JSON-API, Login per Passkey oder Magic Link, Statistik und Export.
 
 ## Ziele
 
@@ -13,7 +13,7 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 - Sammlung durchsuchen und filtern, z. B. nach Artist, Genre oder Jahr
 - Zugriff über eine Weboberfläche **und** eine JSON-API
 - Anmeldung per Passkey
-- Später: Statistiken (Wert der Sammlung, Platten pro Genre), Export
+- Statistik (Umfang, Kaufwert, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
 
 ## Technik
 
@@ -47,7 +47,7 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 5. ✅ Barcode-Scan mit der Kamera im Browser (HTTPS im WLAN: [ADR 0008](docs/adr/0008-https-im-lan.md))
 6. ✅ JSON-API (AshJsonApi) mit OpenAPI-Doku ([ADR 0009](docs/adr/0009-gestaltung-der-json-api.md))
 7. ✅ Login per Passkey, Magic Link als Rückfallebene, API-Keys ([ADR 0005](docs/adr/0005-passkey-login.md))
-8. Extras: Statistiken, Export (JSON-LD / CSV)
+8. ✅ Statistik und Export als CSV und JSON-LD ([ADR 0010](docs/adr/0010-statistik-und-export.md))
 
 ## Entwicklung
 

@@ -192,6 +192,17 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     assert [%{"source" => "discogs", "title" => "Abbey Road", "year" => 1969}] = body
   end
 
+  test "GET /api/json/albums/statistics returns key figures", %{conn: conn} do
+    Records.add_to_collection!("The Beatles", "Abbey Road", %{genres: ["Rock"]},
+      authorize?: false
+    )
+
+    body = conn |> get(~p"/api/json/albums/statistics") |> json_response(200)
+
+    assert %{"albums" => 1, "copies" => 1, "genres" => [%{"label" => "Rock", "count" => 1}]} =
+             body
+  end
+
   test "the OpenAPI spec documents the routes", %{conn: conn} do
     # The spec is JSON but sent without a content-type header
     spec =

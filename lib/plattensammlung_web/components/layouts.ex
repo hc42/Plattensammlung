@@ -38,7 +38,7 @@ defmodule PlattensammlungWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="sticky top-0 z-10 border-b border-base-300 bg-base-100/90 backdrop-blur">
-      <nav class="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3 sm:px-6">
+      <nav class="mx-auto flex max-w-5xl items-center gap-1 px-4 py-3 sm:gap-2 sm:px-6">
         <.link navigate={~p"/"} class="mr-auto flex items-center gap-2 font-semibold">
           <span class="grid size-8 place-items-center rounded-full bg-base-content text-base-100">
             <span class="size-2 rounded-full bg-base-100"></span>
@@ -46,15 +46,23 @@ defmodule PlattensammlungWeb.Layouts do
           <span class="hidden sm:inline">Plattensammlung</span>
         </.link>
         <%= if @current_user do %>
-          <.link navigate={~p"/"} class="btn btn-ghost btn-sm" id="nav-collection">
+          <.link navigate={~p"/"} class="btn btn-ghost btn-sm px-2 sm:px-3" id="nav-collection">
             Sammlung
           </.link>
-          <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm" id="nav-wishlist">
+          <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm px-2 sm:px-3" id="nav-wishlist">
             Wunschliste
           </.link>
-          <.link navigate={~p"/import"} class="btn btn-primary btn-sm" id="nav-new">
+          <.link navigate={~p"/import"} class="btn btn-primary btn-sm px-2 sm:px-3" id="nav-new">
             <.icon name="hero-plus" class="size-4" />
             <span class="hidden sm:inline">Erfassen</span>
+          </.link>
+          <.link
+            navigate={~p"/stats"}
+            class="btn btn-ghost btn-sm btn-square"
+            id="nav-stats"
+            aria-label="Statistik"
+          >
+            <.icon name="hero-chart-bar" class="size-5" />
           </.link>
           <.link
             navigate={~p"/account"}

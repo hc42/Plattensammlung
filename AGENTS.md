@@ -67,6 +67,7 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
   - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: Passkeys, API-Keys)
   - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: Anmeldung
+  - `live/stats_live.ex` (`/stats`), `controllers/export_controller.ex`: Statistik und Export
   - `live/import_live.ex`: Import-Seite `/import` (Barcode oder Text, Ergebnis per Klick übernehmen)
   - `ash_json_api_router.ex`: JSON:API unter `/api/json`, Swagger-UI unter `/api/json/swaggerui`
   - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
@@ -155,6 +156,16 @@ Regeln:
   nur `@zxing/browser`.
 - esbuild baut ES-Module mit Code-Splitting. Große, selten gebrauchte Bibliotheken per
   `await import("…")` laden, damit sie in einem eigenen Chunk landen.
+
+## Statistik und Export (ADR 0010)
+
+- `Album.statistics` ist eine generische Action, implementiert in `Records.Statistics`
+  (`use Ash.Resource.Actions.Implementation`). Summen per `Ash.count/2` / `Ash.sum/3`,
+  Aufschlüsselungen als Listen von `%{label, count}`.
+- `Records.Export`: `csv/1` (alle Felder) und `json_ld/2` (schema.org, ohne private Felder).
+  Downloads über den `ExportController` (`/export/plattensammlung.csv|.jsonld`).
+- Diagramme: `PlattensammlungWeb.StatsComponents` (`stat_tile`, `bar_chart`). Balken in einer
+  Farbe, Werte immer als Text, Diagramm als `<table>`.
 
 ## Phoenix-Richtlinien
 
