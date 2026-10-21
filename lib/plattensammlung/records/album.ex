@@ -74,15 +74,37 @@ defmodule Plattensammlung.Records.Album do
     end
 
     read :search do
-      description "Albums whose title or artist contains the query (case-insensitive)."
+      description """
+      Albums whose title or artist contains the query (case-insensitive),
+      optionally limited to the collection (owned) or the wishlist.
+      """
+
       argument :query, :ci_string
+
+      argument :status, :atom do
+        constraints one_of: [:collection, :wishlist]
+      end
 
       filter expr(
                is_nil(^arg(:query)) or contains(title, ^arg(:query)) or
                  contains(artist.name, ^arg(:query))
              )
 
+      filter expr(
+               is_nil(^arg(:status)) or
+                 (^arg(:status) == :collection and exists(copies, true)) or
+                 (^arg(:status) == :wishlist and wanted == true)
+             )
+
       prepare build(sort: [title: :asc], load: [:artist])
+    end
+
+    read :duplicates do
+      description "Albums with exactly this artist and title (case-insensitive)."
+      argument :artist_name, :ci_string, allow_nil?: false
+      argument :title, :ci_string, allow_nil?: false
+
+      filter expr(title == ^arg(:title) and artist.name == ^arg(:artist_name))
     end
 
     read :collection do

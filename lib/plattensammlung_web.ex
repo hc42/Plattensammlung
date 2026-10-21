@@ -86,6 +86,7 @@ defmodule PlattensammlungWeb do
       import Phoenix.HTML
       # Core UI components
       import PlattensammlungWeb.CoreComponents
+      import PlattensammlungWeb.AlbumComponents
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

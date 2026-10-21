@@ -13,6 +13,7 @@ Begründungen für Entscheidungen in [docs/adr/](docs/adr/).
 - Der Besitzer lernt Ash und Phoenix mit diesem Projekt kennen. Schritte und Ash-Konzepte
   daher kurz erklären, wenn sie neu sind, z. B. Resources, Actions, Relationships,
   Calculations, Aggregates und Policies.
+- Die Oberfläche ist auf Deutsch, Texte stehen derzeit direkt in den Templates (noch kein Gettext).
 - Mit dem Besitzer wird auf **Deutsch** kommuniziert. Code, Bezeichner und
   Commit-Messages sind auf Englisch, die Dokumentation (README, ADRs) auf Deutsch.
 - Erst planen und besprechen, dann bauen. Größere Designentscheidungen vorher abstimmen.
@@ -61,6 +62,10 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 
 - `lib/plattensammlung/`: Geschäftslogik (Ash-Domains und -Resources, `Repo`)
 - `lib/plattensammlung_web/`: Phoenix (Router, LiveViews, Komponenten)
+  - `live/album_live/`: `Index` (Sammlung `/` und Wunschliste `/wishlist`, Suche über `?q=`),
+    `Show` (`/albums/:id`), `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
+  - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
+  - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
 - `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
@@ -98,5 +103,7 @@ Ecto-Contexts.
 ## Stolperfallen
 
 - AshAuthentication hat keine eingebaute Passkey-Strategie, siehe [ADR 0005](docs/adr/0005-passkey-login.md).
+- Formulare nutzen `AshPhoenix.Form` (`for_create`/`for_update`, `validate`, `submit`), keine Ecto-Changesets.
+  Listen wie `genres` werden im Formular als kommagetrennter Text eingegeben und per `prepare_params` umgewandelt.
 - Bei `podman compose` übernimmt das externe `docker-compose` die Ausführung. Der Hinweis
   dazu in der Ausgabe ist harmlos.

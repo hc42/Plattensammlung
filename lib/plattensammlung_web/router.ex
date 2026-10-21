@@ -17,7 +17,13 @@ defmodule PlattensammlungWeb.Router do
   scope "/", PlattensammlungWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", AlbumLive.Index, :collection
+    live "/wishlist", AlbumLive.Index, :wishlist
+    live "/albums/new", AlbumLive.Form, :new
+    live "/albums/:id", AlbumLive.Show, :show
+    live "/albums/:id/edit", AlbumLive.Form, :edit
+    live "/albums/:id/copies/new", CopyLive.Form, :new
+    live "/copies/:id/edit", CopyLive.Form, :edit
   end
 
   # Other scopes may use custom stacks.
