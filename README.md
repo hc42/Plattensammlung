@@ -12,6 +12,8 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 - Schnell beantworten: „Habe ich diese Platte?“, mit Links zu Discogs
 - **Wunschliste**: Alben merken, die man noch sucht. Der Scan im Plattenladen zeigt sofort „habe ich“ oder „steht auf der Wunschliste“
 - Sammlung durchsuchen und filtern, z. B. nach Artist, Genre oder Jahr
+- **Eigene Sammlung pro Person**, für die anderen angemeldeten Sammler sichtbar (Seite „Sammler“);
+  fremde Alben lassen sich auf die eigene Wunschliste übernehmen
 - Zugriff über eine Weboberfläche **und** eine JSON-API
 - Anmeldung per Passkey
 - **Alle Alben** im Blick, auch solche ohne Exemplar und ohne Wunsch („nicht zugeordnet“)

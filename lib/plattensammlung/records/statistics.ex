@@ -11,26 +11,38 @@ defmodule Plattensammlung.Records.Statistics do
 
   require Ash.Query
 
-  alias Plattensammlung.Records
   alias Plattensammlung.Records.{Album, Artist, Condition, Copy}
 
   @top 8
 
   @impl true
-  def run(_input, _opts, context) do
+  def run(input, _opts, context) do
     # Same actor and authorization as the calling action
     opts = Ash.Context.to_opts(context)
+    # Someone else's collection if asked for, otherwise the actor's own (ADR 0013)
+    owner = input.arguments[:owner_id] || (context.actor && context.actor.id)
 
-    with {:ok, albums} <- Ash.count(owned_albums(), opts),
-         {:ok, copies} <- Ash.count(Copy, opts),
-         {:ok, wishlist} <- Ash.count(Ash.Query.filter(Album, wanted == true), opts),
-         {:ok, artists} <- Ash.count(Ash.Query.filter(Artist, exists(albums.copies, true)), opts),
-         {:ok, collection} <- Records.list_collection(opts),
-         {:ok, all_copies} <- Ash.read(Copy, opts) do
+    owned = Ash.Query.filter(Album, owner_id == ^owner and exists(copies, true))
+    copies = Ash.Query.filter(Copy, album.owner_id == ^owner)
+
+    with {:ok, albums} <- Ash.count(owned, opts),
+         {:ok, copy_count} <- Ash.count(copies, opts),
+         {:ok, wishlist} <-
+           Ash.count(Ash.Query.filter(Album, owner_id == ^owner and wanted == true), opts),
+         {:ok, artists} <-
+           Ash.count(
+             Ash.Query.filter(
+               Artist,
+               exists(albums, owner_id == ^owner and exists(copies, true))
+             ),
+             opts
+           ),
+         {:ok, collection} <- Ash.read(Ash.Query.load(owned, :artist), opts),
+         {:ok, all_copies} <- Ash.read(copies, opts) do
       {:ok,
        %{
          albums: albums,
-         copies: copies,
+         copies: copy_count,
          wishlist: wishlist,
          artists: artists,
          genres: genres(collection),
@@ -40,8 +52,6 @@ defmodule Plattensammlung.Records.Statistics do
        }}
     end
   end
-
-  defp owned_albums, do: Ash.Query.filter(Album, exists(copies, true))
 
   # Each breakdown is a list of %{label, count, filter}, ready for bars and for
   # JSON. `filter` holds the Album.search arguments that list exactly these albums

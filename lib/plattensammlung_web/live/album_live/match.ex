@@ -142,6 +142,14 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     album = Records.get_album!(id, load: [:artist, :copies], actor: socket.assigns.current_user)
+
+    case PlattensammlungWeb.Ownership.require_owner(socket, album) do
+      :ok -> mount_owner(socket, album)
+      {:redirect, socket} -> {:ok, socket}
+    end
+  end
+
+  defp mount_owner(socket, album) do
     linked? = not is_nil(album.discogs_master_id || album.musicbrainz_release_group_id)
 
     {:ok,

@@ -7,7 +7,8 @@ defmodule PlattensammlungWeb.RecordsApiTest do
 
   # Requests authenticate with an API key; arrange/assert calls skip authorization
   setup %{conn: conn} do
-    {api_key, _} = api_key_fixture(user_fixture())
+    user = user_fixture()
+    {api_key, _} = api_key_fixture(user)
 
     conn =
       conn
@@ -15,7 +16,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
       |> put_req_header("content-type", @json_api)
       |> put_req_header("authorization", "Bearer " <> api_key)
 
-    %{conn: conn}
+    %{conn: conn, user: user}
   end
 
   describe "authentication" do
@@ -47,9 +48,9 @@ defmodule PlattensammlungWeb.RecordsApiTest do
   end
 
   describe "GET /api/json/albums" do
-    setup do
-      Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969}, authorize?: false)
-      Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
+    setup %{user: user} do
+      Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969}, actor: user)
+      Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
       :ok
     end
 
@@ -132,8 +133,8 @@ defmodule PlattensammlungWeb.RecordsApiTest do
   end
 
   describe "copies" do
-    test "adding a copy marks the album as owned", %{conn: conn} do
-      album = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
+    test "adding a copy marks the album as owned", %{conn: conn, user: user} do
+      album = Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
 
       payload = %{
         data: %{
@@ -148,10 +149,10 @@ defmodule PlattensammlungWeb.RecordsApiTest do
                Records.get_album!(album.id, load: [:owned], authorize?: false)
     end
 
-    test "lists the copies of an album", %{conn: conn} do
+    test "lists the copies of an album", %{conn: conn, user: user} do
       album =
         Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{label: "Apple"}},
-          authorize?: false
+          actor: user
         )
 
       body = conn |> get(~p"/api/json/albums/#{album.id}/copies") |> json_response(200)
@@ -160,8 +161,8 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     end
   end
 
-  test "PATCH updates album and copy", %{conn: conn} do
-    album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+  test "PATCH updates album and copy", %{conn: conn, user: user} do
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
     [copy] = Ash.load!(album, :copies, authorize?: false).copies
 
     album_patch = %{
@@ -176,8 +177,8 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     assert body["data"]["attributes"]["notes"] == "Regal B"
   end
 
-  test "DELETE removes an album", %{conn: conn} do
-    album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+  test "DELETE removes an album", %{conn: conn, user: user} do
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
 
     conn |> delete(~p"/api/json/albums/#{album.id}") |> response(200)
 
@@ -192,10 +193,8 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     assert [%{"source" => "discogs", "title" => "Abbey Road", "year" => 1969}] = body
   end
 
-  test "GET /api/json/albums/statistics returns key figures", %{conn: conn} do
-    Records.add_to_collection!("The Beatles", "Abbey Road", %{genres: ["Rock"]},
-      authorize?: false
-    )
+  test "GET /api/json/albums/statistics returns key figures", %{conn: conn, user: user} do
+    Records.add_to_collection!("The Beatles", "Abbey Road", %{genres: ["Rock"]}, actor: user)
 
     body = conn |> get(~p"/api/json/albums/statistics") |> json_response(200)
 

@@ -12,6 +12,9 @@ defmodule Plattensammlung.Accounts do
     resource Plattensammlung.Accounts.User do
       define :request_magic_link, args: [:email]
       define :get_user, action: :read, get_by: [:id]
+      define :list_collectors, action: :collectors
+      define :get_collector, action: :collectors, get_by: [:id]
+      define :update_profile, args: [:display_name]
     end
 
     resource Plattensammlung.Accounts.ApiKey do
@@ -29,6 +32,10 @@ defmodule Plattensammlung.Accounts do
       define :destroy_passkey, action: :destroy
     end
   end
+
+  @doc "How a user is shown to others."
+  def display_name(%{display_name: name}) when is_binary(name) and name != "", do: name
+  def display_name(_user), do: "Ohne Namen"
 
   @doc "Whether this e-mail address may sign in (case-insensitive)."
   def allowed_email?(nil), do: false

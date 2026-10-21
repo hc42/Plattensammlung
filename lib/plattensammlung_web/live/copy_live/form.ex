@@ -92,7 +92,12 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    {:ok, apply_action(socket, socket.assigns.live_action, params)}
+    socket = apply_action(socket, socket.assigns.live_action, params)
+
+    case PlattensammlungWeb.Ownership.require_owner(socket, socket.assigns.album) do
+      :ok -> {:ok, socket}
+      {:redirect, socket} -> {:ok, socket}
+    end
   end
 
   defp apply_action(socket, :new, %{"id" => album_id}) do

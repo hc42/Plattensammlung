@@ -82,12 +82,19 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   `PasskeyController`, JS in `assets/js/hooks/passkey.js`.
 - Nur Adressen aus `ALLOWED_EMAILS` (`config :plattensammlung, :allowed_emails`) können sich
   anmelden (`Accounts.allowed_email?/1`).
+- **Besitz (ADR 0013):** Jedes Album gehört einem User (`owner`). Lesen dürfen alle
+  Angemeldeten, ändern nur der Besitzer. Listen und Statistik zeigen ohne `owner_id`
+  die Alben des Actors (Preparation `ScopeToOwner`). Bearbeiten-Seiten prüfen mit
+  `PlattensammlungWeb.Ownership.require_owner/2`. Anderen Usern nur `Accounts.list_collectors`
+  (ID + Anzeigename) zeigen, nie die E-Mail.
 - **Alle Records-Actions brauchen einen Actor.** In LiveViews `actor: socket.assigns.current_user`
   übergeben, AshPhoenix-Formulare mit `actor:` erzeugen. In Changes die Optionen mit
   `Ash.Context.to_opts(context)` weiterreichen. Nur Seeds und Test-Vorbereitung nutzen
   `authorize?: false`.
 - LiveViews liegen in `ash_authentication_live_session :authenticated` im Router. Neue
   Seiten gehören dort hinein und übergeben `current_user={@current_user}` an `Layouts.app`.
+- Testdaten in Web-Tests mit `actor: user` anlegen (sonst fehlt der Besitzer);
+  Lesen zum Prüfen darf `authorize?: false` nutzen.
 - Tests: `register_and_sign_in_user` / `sign_in_user/2` (ConnCase), `user_fixture/1`,
   `api_key_fixture/1` (`test/support/accounts_fixtures.ex`), `SoftAuthenticator` für
   Passkeys. `test@example.com` ist in der Test-Freigabeliste.

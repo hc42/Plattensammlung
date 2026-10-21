@@ -200,15 +200,26 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
       |> Enum.map(&to_string(&1.name))
       |> Enum.sort()
 
-    {:ok,
-     socket
-     |> assign(:artist_names, artist_names)
-     |> assign(:genre_suggestions, genre_suggestions(socket.assigns.current_user))
-     |> assign(:tag_keys, %{})
-     |> assign(:duplicates, [])
-     |> assign(:fields, @fields)
-     |> assign(:focus, nil)
-     |> apply_action(socket.assigns.live_action, params)}
+    socket =
+      socket
+      |> assign(:artist_names, artist_names)
+      |> assign(:genre_suggestions, genre_suggestions(socket.assigns.current_user))
+      |> assign(:tag_keys, %{})
+      |> assign(:duplicates, [])
+      |> assign(:fields, @fields)
+      |> assign(:focus, nil)
+      |> apply_action(socket.assigns.live_action, params)
+
+    case socket.assigns[:album] do
+      nil ->
+        {:ok, socket}
+
+      album ->
+        case PlattensammlungWeb.Ownership.require_owner(socket, album) do
+          :ok -> {:ok, socket}
+          {:redirect, socket} -> {:ok, socket}
+        end
+    end
   end
 
   defp apply_action(socket, :new, params) do

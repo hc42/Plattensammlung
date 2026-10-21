@@ -21,6 +21,27 @@ defmodule PlattensammlungWeb.AccountLive do
           </.link>
         </div>
 
+        <section class="space-y-3">
+          <div>
+            <h2 class="text-lg font-semibold">Anzeigename</h2>
+            <p class="text-sm opacity-70">
+              So sehen dich andere Sammler. Deine E-Mail-Adresse bleibt privat.
+            </p>
+          </div>
+          <.form for={@profile_form} id="profile-form" phx-submit="save_profile" class="flex gap-2">
+            <input
+              type="text"
+              name="display_name"
+              value={@profile_form[:display_name].value}
+              maxlength="40"
+              placeholder="z. B. Hans"
+              class="input flex-1"
+              aria-label="Anzeigename"
+            />
+            <button class="btn" id="save-profile">Speichern</button>
+          </.form>
+        </section>
+
         <section class="space-y-4">
           <div>
             <h2 class="text-lg font-semibold">Passkeys</h2>
@@ -174,6 +195,10 @@ defmodule PlattensammlungWeb.AccountLive do
      |> assign(:renaming, nil)
      |> assign(:rename_form, to_form(%{}))
      |> assign(:new_api_key, nil)
+     |> assign(
+       :profile_form,
+       to_form(%{"display_name" => socket.assigns.current_user.display_name})
+     )
      |> assign(:api_key_form, to_form(%{}))
      |> load_passkeys()
      |> load_api_keys()}
@@ -190,6 +215,22 @@ defmodule PlattensammlungWeb.AccountLive do
 
   def handle_event("passkey_failed", %{"error" => error}, socket) do
     {:noreply, assign(socket, :passkey_error, error)}
+  end
+
+  def handle_event("save_profile", %{"display_name" => name}, socket) do
+    name = name |> String.trim() |> String.slice(0, 40)
+
+    case Accounts.update_profile(actor(socket), blank_to_nil(name), actor: actor(socket)) do
+      {:ok, user} ->
+        {:noreply,
+         socket
+         |> assign(:current_user, user)
+         |> assign(:profile_form, to_form(%{"display_name" => user.display_name}))
+         |> put_flash(:info, "Anzeigename gespeichert.")}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, "Der Name konnte nicht gespeichert werden.")}
+    end
   end
 
   def handle_event("start_rename", %{"id" => id}, socket) do

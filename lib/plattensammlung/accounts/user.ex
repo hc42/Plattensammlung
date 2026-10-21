@@ -51,6 +51,15 @@ defmodule Plattensammlung.Accounts.User do
   actions do
     defaults [:read]
 
+    read :collectors do
+      description "Other users as others may see them: id and display name only, never the e-mail."
+      prepare build(select: [:id, :display_name], sort: [display_name: :asc])
+    end
+
+    update :update_profile do
+      accept [:display_name]
+    end
+
     read :get_by_subject do
       description "Get a user by the subject claim in a JWT"
       argument :subject, :string, allow_nil?: false
@@ -119,7 +128,17 @@ defmodule Plattensammlung.Accounts.User do
       authorize_if always()
     end
 
-    policy action_type(:read) do
+    # The full record (with e-mail) only for oneself
+    policy action(:read) do
+      authorize_if expr(id == ^actor(:id))
+    end
+
+    # Name list for the "Sammler" page, visible to every signed-in user
+    policy action(:collectors) do
+      authorize_if actor_present()
+    end
+
+    policy action(:update_profile) do
       authorize_if expr(id == ^actor(:id))
     end
   end
@@ -131,6 +150,12 @@ defmodule Plattensammlung.Accounts.User do
       allow_nil? false
       public? true
     end
+
+    attribute :display_name, :string do
+      description "Name other users see (the e-mail stays private)"
+      constraints max_length: 40
+      public? true
+    end
   end
 
   relationships do
@@ -139,6 +164,10 @@ defmodule Plattensammlung.Accounts.User do
     end
 
     has_many :passkeys, Plattensammlung.Accounts.Passkey
+
+    has_many :albums, Plattensammlung.Records.Album do
+      destination_attribute :owner_id
+    end
   end
 
   identities do

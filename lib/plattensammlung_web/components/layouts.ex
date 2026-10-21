@@ -57,6 +57,14 @@ defmodule PlattensammlungWeb.Layouts do
             <span class="hidden sm:inline">Erfassen</span>
           </.link>
           <.link
+            navigate={~p"/collectors"}
+            class="btn btn-ghost btn-sm btn-square"
+            id="nav-collectors"
+            aria-label="Sammler"
+          >
+            <.icon name="hero-users" class="size-5" />
+          </.link>
+          <.link
             navigate={~p"/stats"}
             class="btn btn-ghost btn-sm btn-square"
             id="nav-stats"

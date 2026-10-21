@@ -51,9 +51,9 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     assert to_string(title) == "Abbey Road Revisited"
   end
 
-  test "marks albums that are already in the collection", %{conn: conn} do
+  test "marks albums that are already in the collection", %{conn: conn, user: user} do
     Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{barcode: "0602547288530"}},
-      authorize?: false
+      actor: user
     )
 
     {:ok, view, _html} = live(conn, ~p"/import?q=0602547288530")
@@ -64,8 +64,8 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     refute has_element?(view, "#import-wishlist-0")
   end
 
-  test "adding a known album from the results adds another copy", %{conn: conn} do
-    album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+  test "adding a known album from the results adds another copy", %{conn: conn, user: user} do
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
 
     {:ok, view, _html} = live(conn, ~p"/import?q=0602547288530")
     render_async(view)

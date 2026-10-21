@@ -9,7 +9,9 @@ defmodule Plattensammlung.RecordsTest do
 
   describe "authorization" do
     test "every action needs a signed-in user (actor)" do
-      assert {:error, %Ash.Error.Forbidden{}} = Records.add_to_collection("Kraftwerk", "Autobahn")
+      # Refused either way: no owner to relate (invalid) or forbidden by policy
+      assert {:error, error} = Records.add_to_collection("Kraftwerk", "Autobahn")
+      assert error.class in [:forbidden, :invalid]
       assert {:error, %Ash.Error.Forbidden{}} = Records.search_albums(nil, nil)
       assert {:error, %Ash.Error.Forbidden{}} = Records.lookup_albums("beatles")
     end

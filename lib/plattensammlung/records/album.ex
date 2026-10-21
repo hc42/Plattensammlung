@@ -42,6 +42,8 @@ defmodule Plattensammlung.Records.Album do
     references do
       # An artist with albums cannot be deleted
       reference :artist, on_delete: :restrict
+      # Deleting a user deletes their albums
+      reference :owner, on_delete: :delete
     end
   end
 
@@ -88,6 +90,7 @@ defmodule Plattensammlung.Records.Album do
       end
 
       change set_attribute(:wanted, false)
+      change relate_actor(:owner)
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
       change Plattensammlung.Records.Changes.NormalizeStreamingIds
@@ -102,6 +105,7 @@ defmodule Plattensammlung.Records.Album do
       argument :artist_name, :ci_string, allow_nil?: false
 
       change set_attribute(:wanted, true)
+      change relate_actor(:owner)
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
       change Plattensammlung.Records.Changes.NormalizeStreamingIds
@@ -149,6 +153,8 @@ defmodule Plattensammlung.Records.Album do
       by genre, decade, artist or condition (see AlbumFilters).
       """
 
+      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
+      prepare Plattensammlung.Records.Preparations.ScopeToOwner
       argument :query, :ci_string
       argument :genre, :string
       argument :decade, :string
@@ -179,6 +185,8 @@ defmodule Plattensammlung.Records.Album do
     read :by_barcode do
       description "Albums that have a copy with this barcode."
       argument :barcode, :string, allow_nil?: false
+      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
+      prepare Plattensammlung.Records.Preparations.ScopeToOwner
       filter expr(exists(copies, barcode == ^arg(:barcode)))
     end
 
@@ -265,6 +273,7 @@ defmodule Plattensammlung.Records.Album do
 
     action :statistics, :map do
       description "Key figures and breakdowns (genres, decades, conditions, artists)."
+      argument :owner_id, :uuid, description: "Whose collection (default: the actor's)"
       run Plattensammlung.Records.Statistics
     end
 
@@ -272,27 +281,38 @@ defmodule Plattensammlung.Records.Album do
       description "Albums with exactly this artist and title (case-insensitive)."
       argument :artist_name, :ci_string, allow_nil?: false
       argument :title, :ci_string, allow_nil?: false
+      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
+      prepare Plattensammlung.Records.Preparations.ScopeToOwner
 
       filter expr(title == ^arg(:title) and artist.name == ^arg(:artist_name))
     end
 
     read :collection do
+      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
+      prepare Plattensammlung.Records.Preparations.ScopeToOwner
       filter expr(exists(copies, true))
       prepare build(sort: [title: :asc], load: [:artist])
     end
 
     read :wishlist do
+      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
+      prepare Plattensammlung.Records.Preparations.ScopeToOwner
       filter expr(wanted == true)
       prepare build(sort: [title: :asc], load: [:artist])
     end
   end
 
+  # Every signed-in user may see every collection; only the owner may change
+  # an album (ADR 0013). List actions show the actor's own albums by default.
   policies do
-    # One shared collection: every signed-in user (or API key) may do everything
-    policy always() do
+    policy action_type([:read, :create, :action]) do
       # :strict raises Forbidden instead of silently returning no rows
       access_type :strict
       authorize_if actor_present()
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if expr(owner_id == ^actor(:id))
     end
   end
 
@@ -342,6 +362,12 @@ defmodule Plattensammlung.Records.Album do
   end
 
   relationships do
+    belongs_to :owner, Plattensammlung.Accounts.User do
+      description "Whose collection or wishlist the album is in"
+      allow_nil? false
+      public? true
+    end
+
     belongs_to :artist, Plattensammlung.Records.Artist do
       allow_nil? false
       public? true

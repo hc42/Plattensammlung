@@ -73,12 +73,20 @@ defmodule Plattensammlung.Records.Copy do
     end
   end
 
+  # Copies follow their album: readable for every signed-in user, changeable
+  # only by the album's owner (ADR 0013)
   policies do
-    # One shared collection: every signed-in user (or API key) may do everything
-    policy always() do
-      # :strict raises Forbidden instead of silently returning no rows
+    policy action_type(:read) do
       access_type :strict
       authorize_if actor_present()
+    end
+
+    policy action_type(:create) do
+      authorize_if Plattensammlung.Records.Checks.AlbumOwnedByActor
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if expr(album.owner_id == ^actor(:id))
     end
   end
 

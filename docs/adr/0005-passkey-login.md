@@ -63,3 +63,8 @@ wenige, bekannte Personen sollen Zugang haben.
   `authorize?: false`).
 - Für den Betrieb fehlen noch ein echter Mailversand (z. B. SMTP) und ein echtes
   Zertifikat.
+
+## Nachtrag (2026-10-21)
+
+Die „eine gemeinsame Sammlung für alle angemeldeten Benutzer“ ist durch eigene Sammlungen
+pro Benutzer ersetzt, die alle anderen lesen dürfen ([ADR 0013](0013-eigene-sammlungen.md)).

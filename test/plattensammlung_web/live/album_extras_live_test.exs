@@ -11,11 +11,11 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
   setup :register_and_sign_in_user
 
   describe "all albums" do
-    setup do
-      owned = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
-      wanted = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
-      loose = Records.add_to_wishlist!("Kraftwerk", "Autobahn", authorize?: false)
-      Records.unmark_wanted!(loose, authorize?: false)
+    setup %{user: user} do
+      owned = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
+      wanted = Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
+      loose = Records.add_to_wishlist!("Kraftwerk", "Autobahn", actor: user)
+      Records.unmark_wanted!(loose, actor: user)
 
       %{owned: owned, wanted: wanted, loose: loose}
     end
@@ -46,9 +46,9 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
   end
 
   describe "match page" do
-    setup do
+    setup %{user: user} do
       LookupStub.install()
-      album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+      album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
       %{album: album}
     end
 
@@ -98,10 +98,10 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
   end
 
   describe "streaming links" do
-    test "the album page links to Spotify and Tidal", %{conn: conn} do
+    test "the album page links to Spotify and Tidal", %{conn: conn, user: user} do
       album =
         Records.add_to_collection!("The Beatles", "Abbey Road", %{discogs_master_id: 24047},
-          authorize?: false
+          actor: user
         )
 
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
@@ -115,12 +115,12 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
       refute has_element?(view, "#find-streaming-links")
     end
 
-    test "missing links can be searched from the album page", %{conn: conn} do
+    test "missing links can be searched from the album page", %{conn: conn, user: user} do
       LookupStub.install(wikidata: :error, musicbrainz: :error)
 
       album =
         Records.add_to_collection!("The Beatles", "Abbey Road", %{discogs_master_id: 24047},
-          authorize?: false
+          actor: user
         )
 
       LookupStub.install()
@@ -134,8 +134,8 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
   end
 
   describe "cover upload" do
-    setup do
-      %{album: Records.add_to_collection!("Can", "Tago Mago", authorize?: false)}
+    setup %{user: user} do
+      %{album: Records.add_to_collection!("Can", "Tago Mago", actor: user)}
     end
 
     test "an uploaded image becomes the cover", %{conn: conn, album: album} do

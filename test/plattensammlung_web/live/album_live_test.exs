@@ -9,11 +9,11 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
   alias Plattensammlung.Records
 
   describe "Index" do
-    setup do
+    setup %{user: user} do
       owned =
-        Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969}, authorize?: false)
+        Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969}, actor: user)
 
-      wanted = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
+      wanted = Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
       %{owned: owned, wanted: wanted}
     end
 
@@ -31,8 +31,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       refute has_element?(view, "#albums-#{owned.id}")
     end
 
-    test "search filters by artist and updates the URL", %{conn: conn, owned: owned} do
-      Records.add_to_collection!("Pink Floyd", "Animals", authorize?: false)
+    test "search filters by artist and updates the URL", %{conn: conn, owned: owned, user: user} do
+      Records.add_to_collection!("Pink Floyd", "Animals", actor: user)
       {:ok, view, _html} = live(conn, ~p"/")
 
       view |> form("#search-form", %{q: "beatles"}) |> render_change()
@@ -78,8 +78,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       assert Records.search_albums!(nil, nil, authorize?: false) == []
     end
 
-    test "warns about duplicates", %{conn: conn} do
-      Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+    test "warns about duplicates", %{conn: conn, user: user} do
+      Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
       {:ok, view, _html} = live(conn, ~p"/albums/new")
 
       view
@@ -89,9 +89,9 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       assert has_element?(view, "#duplicate-warning")
     end
 
-    test "edits optional fields and genre tags", %{conn: conn} do
-      Records.add_to_collection!("Pink Floyd", "Animals", %{genres: ["Rock"]}, authorize?: false)
-      album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+    test "edits optional fields and genre tags", %{conn: conn, user: user} do
+      Records.add_to_collection!("Pink Floyd", "Animals", %{genres: ["Rock"]}, actor: user)
+      album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}/edit")
 
       assert has_element?(view, "#cover-preview")
@@ -116,10 +116,10 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
                Records.get_album!(album.id, authorize?: false)
     end
 
-    test "removing an optional field clears its value", %{conn: conn} do
+    test "removing an optional field clears its value", %{conn: conn, user: user} do
       album =
         Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969, genres: ["Rock"]},
-          authorize?: false
+          actor: user
         )
 
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}/edit")
@@ -137,8 +137,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
   end
 
   describe "Show" do
-    test "toggles the wishlist for an album that is not owned", %{conn: conn} do
-      album = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
+    test "toggles the wishlist for an album that is not owned", %{conn: conn, user: user} do
+      album = Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
 
       view |> element("#toggle-wanted") |> render_click()
@@ -146,8 +146,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       refute Records.get_album!(album.id, authorize?: false).wanted
     end
 
-    test "adding a copy via the copy form marks the album as owned", %{conn: conn} do
-      album = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
+    test "adding a copy via the copy form marks the album as owned", %{conn: conn, user: user} do
+      album = Records.add_to_wishlist!("Can", "Tago Mago", actor: user)
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}/copies/new")
 
       # Optional fields appear only after their "+" button
@@ -168,8 +168,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       assert [%{format: ["2LP", "Gatefold"], media_condition: :near_mint}] = album.copies
     end
 
-    test "deletes a copy and the album", %{conn: conn} do
-      album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+    test "deletes a copy and the album", %{conn: conn, user: user} do
+      album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
       [copy] = Ash.load!(album, :copies, authorize?: false).copies
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
 

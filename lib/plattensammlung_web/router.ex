@@ -76,6 +76,9 @@ defmodule PlattensammlungWeb.Router do
       live "/albums/:id/copies/new", CopyLive.Form, :new
       live "/copies/:id/edit", CopyLive.Form, :edit
       live "/stats", StatsLive
+      live "/collectors", CollectorsLive
+      live "/collectors/:user_id", AlbumLive.Index, :user_collection
+      live "/collectors/:user_id/wishlist", AlbumLive.Index, :user_wishlist
       live "/account", AccountLive
     end
 

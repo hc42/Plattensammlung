@@ -8,10 +8,8 @@ defmodule PlattensammlungWeb.StatsLiveTest do
   describe "signed in" do
     setup :register_and_sign_in_user
 
-    setup do
-      Records.add_to_collection!("The Beatles", "Abbey Road", %{genres: ["Rock"]},
-        authorize?: false
-      )
+    setup %{user: user} do
+      Records.add_to_collection!("The Beatles", "Abbey Road", %{genres: ["Rock"]}, actor: user)
 
       :ok
     end
@@ -24,10 +22,8 @@ defmodule PlattensammlungWeb.StatsLiveTest do
       assert has_element?(view, "#export-csv")
     end
 
-    test "a bar leads to its albums, the filter can be removed", %{conn: conn} do
-      Records.add_to_collection!("Kraftwerk", "Autobahn", %{genres: ["Electronic"]},
-        authorize?: false
-      )
+    test "a bar leads to its albums, the filter can be removed", %{conn: conn, user: user} do
+      Records.add_to_collection!("Kraftwerk", "Autobahn", %{genres: ["Electronic"]}, actor: user)
 
       {:ok, view, _html} = live(conn, ~p"/stats")
 
