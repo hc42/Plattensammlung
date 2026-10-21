@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Projekt ist angelegt (Phoenix 1.8, Ash 3, Postgres 18). Als Nächstes kommt die Domain `Records`.
+> **Status:** Domain `Records` (Artist, Album, Copy) mit Wunschliste steht und ist getestet. Als Nächstes kommt die LiveView-Oberfläche.
 
 ## Ziele
 
@@ -40,8 +40,8 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 
 ## Fahrplan
 
-1. Projekt anlegen (Phoenix und Ash über Igniter), Postgres über `compose.yml`
-2. Domain `Records` mit Artist, Album und Copy, plus Seed-Daten
+1. ✅ Projekt anlegen (Phoenix und Ash über Igniter), Postgres über `compose.yml`
+2. ✅ Domain `Records` mit Artist, Album und Copy, plus Seed-Daten
 3. LiveView-Oberfläche: Liste, Suche und Filter, Detailseite, Schnellerfassung, Wunschliste
 4. Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
 5. Barcode-Scan mit der Kamera im Browser

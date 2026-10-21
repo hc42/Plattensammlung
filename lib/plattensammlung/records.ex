@@ -1,0 +1,41 @@
+defmodule Plattensammlung.Records do
+  @moduledoc """
+  Domain for the record collection: artists, albums and owned copies.
+
+  A domain groups related resources and exposes a *code interface*: plain functions
+  such as `add_to_collection/3` that run a resource action. LiveViews, the JSON API
+  and seeds call these functions instead of touching the database directly.
+  """
+  use Ash.Domain, otp_app: :plattensammlung
+
+  resources do
+    resource Plattensammlung.Records.Artist do
+      define :list_artists, action: :read
+      define :get_artist, action: :read, get_by: [:id]
+      define :get_artist_by_name, action: :read, get_by: [:name]
+      define :create_artist, action: :create, args: [:name]
+      define :update_artist, action: :update
+      define :destroy_artist, action: :destroy
+    end
+
+    resource Plattensammlung.Records.Album do
+      define :add_to_collection, args: [:artist_name, :title]
+      define :add_to_wishlist, args: [:artist_name, :title]
+      define :get_album, action: :read, get_by: [:id]
+      define :search_albums, action: :search, args: [{:optional, :query}]
+      define :list_collection, action: :collection
+      define :list_wishlist, action: :wishlist
+      define :update_album, action: :update
+      define :mark_wanted
+      define :unmark_wanted
+      define :destroy_album, action: :destroy
+    end
+
+    resource Plattensammlung.Records.Copy do
+      define :add_copy, action: :create, args: [:album_id]
+      define :get_copy, action: :read, get_by: [:id]
+      define :update_copy, action: :update
+      define :destroy_copy, action: :destroy
+    end
+  end
+end

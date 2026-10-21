@@ -55,6 +55,7 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 - `mix test`: Tests
 - `mix precommit`: **vor jedem Commit ausführen** und alle Probleme beheben
 - `mix ash.codegen <name>`: Migrationen aus Ash-Resources erzeugen, danach `mix ash.migrate`
+- `mix ash.reset`: Entwicklungsdatenbank neu aufbauen, danach `mix run priv/repo/seeds.exs`
 
 ## Projektstruktur
 
@@ -63,6 +64,29 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
 - `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
+
+## Domain `Plattensammlung.Records`
+
+Dateien: `lib/plattensammlung/records.ex` (Domain mit Code Interface),
+`lib/plattensammlung/records/` (Resources `Artist`, `Album`, `Copy`, Enum `Condition`,
+`changes/`).
+
+Wichtigste Funktionen des Code Interface (jeweils auch mit `!`):
+
+- `add_to_collection(artist_name, title, attrs)`: Album und eine Copy anlegen.
+  Pressungsdetails stehen unter `attrs.copy`.
+- `add_to_wishlist(artist_name, title, attrs)`: Album ohne Copy mit `wanted: true` anlegen.
+- `add_copy(album_id, attrs)`: weiteres Exemplar anlegen, entfernt das Album von der Wunschliste.
+- `search_albums(query \\ nil)`, `list_collection()`, `list_wishlist()`
+- `get_album(id, load: [:artist, :copies, :owned, :copy_count, :discogs_url])`
+
+Regeln:
+
+- Artists werden über den Namen gefunden oder angelegt (Change `FindOrCreateArtist`),
+  ohne Beachtung der Groß- und Kleinschreibung (`:ci_string` = citext).
+- „Besitze ich“ ist das Aggregate `owned` (existiert eine Copy?). Es wird nie gespeichert.
+- Eine Copy anzulegen setzt `wanted` am Album zurück (Change `RemoveFromWishlist`).
+- Ein Album zu löschen löscht seine Copies. Ein Artist mit Alben kann nicht gelöscht werden.
 
 ## Phoenix-Richtlinien
 

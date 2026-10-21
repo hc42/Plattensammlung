@@ -56,6 +56,7 @@ config :spark,
 
 config :plattensammlung,
   ecto_repos: [Plattensammlung.Repo],
+  ash_domains: [Plattensammlung.Records],
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint
