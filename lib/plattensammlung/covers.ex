@@ -126,21 +126,57 @@ defmodule Plattensammlung.Covers do
 
   def delete(_url), do: :ok
 
+  @doc "Hosts covers may be downloaded from; subdomains count too."
+  def hosts, do: Application.fetch_env!(:plattensammlung, :cover_hosts)
+
+  @doc "Whether `url` is an https URL on one of the cover hosts."
+  def allowed_url?(url) when is_binary(url) do
+    case URI.new(url) do
+      {:ok, %URI{scheme: "https", host: "" <> host, userinfo: nil}} ->
+        host = String.downcase(host)
+        Enum.any?(hosts(), &(host == &1 or String.ends_with?(host, "." <> &1)))
+
+      _ ->
+        false
+    end
+  end
+
+  def allowed_url?(_url), do: false
+
   # Short timeouts: a slow image host must not block adding an album for long.
-  # If it fails, the album keeps the remote URL.
-  defp download(url) do
+  # If it fails, the album keeps the remote URL. Redirects are followed by hand,
+  # so every hop must be an allowed host (no requests into the local network).
+  defp download(url, redirects_left \\ 3) do
     req =
       HTTP.new(
         decode_body: false,
         retry: false,
+        redirect: false,
         receive_timeout: 8_000,
         connect_options: [timeout: 4_000]
       )
 
-    case Req.get(req, url: url) do
-      {:ok, %{status: 200} = response} -> {:ok, response}
-      {:ok, %{status: status}} -> {:error, {:http_status, status}}
-      {:error, exception} -> {:error, exception}
+    with true <- allowed_url?(url) || {:error, :host_not_allowed} do
+      case Req.get(req, url: url) do
+        {:ok, %{status: 200} = response} ->
+          {:ok, response}
+
+        {:ok, %{status: status} = response}
+        when status in [301, 302, 303, 307, 308] and redirects_left > 0 ->
+          case Req.Response.get_header(response, "location") do
+            [location | _] ->
+              download(url |> URI.merge(location) |> to_string(), redirects_left - 1)
+
+            [] ->
+              {:error, {:http_status, status}}
+          end
+
+        {:ok, %{status: status}} ->
+          {:error, {:http_status, status}}
+
+        {:error, exception} ->
+          {:error, exception}
+      end
     end
   end
 

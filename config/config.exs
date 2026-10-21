@@ -72,6 +72,8 @@ config :plattensammlung,
   ecto_repos: [Plattensammlung.Repo],
   ash_domains: [Plattensammlung.Accounts, Plattensammlung.Records],
   covers_dir: Path.expand("../uploads/covers", __DIR__),
+  # Covers are only downloaded from these hosts (and their subdomains), see ADR 0014
+  cover_hosts: ["i.discogs.com", "coverartarchive.org", "archive.org"],
   generators: [timestamp_type: :utc_datetime],
   ash_authentication: [return_error_on_invalid_magic_link_token?: true]
 

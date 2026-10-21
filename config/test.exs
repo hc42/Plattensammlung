@@ -47,6 +47,7 @@ config :plattensammlung,
   req_options: [plug: {Req.Test, Plattensammlung.Lookup}, retry: false],
   discogs_token: "test-token",
   covers_dir: Path.expand("../tmp/test/covers", __DIR__),
+  cover_hosts: ["i.discogs.com", "coverartarchive.org", "archive.org", "x.test"],
   allowed_emails: ["test@example.com"],
   cleanup_covers_on_start: false,
   token_signing_secret: "s8e+mMsE8aMgXGy/5YS4X4/kvA6Yt2ou"
