@@ -2,17 +2,18 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Konzeptphase. Es gibt noch keinen Code. Das Datenmodell wird gerade
-> besprochen (siehe [ADR 0006](docs/adr/0006-datenmodell.md)).
+> **Status:** Konzept steht, das Projekt wird angelegt.
 
 ## Ziele
 
-- Schallplatten schnell erfassen: Artist, Label, Pressung, Zustand, Kaufinfos, Lagerort
-- Sammlung durchsuchen und filtern, z. B. nach Artist, Genre, Jahr oder Regal
-- Mehrere Exemplare derselben Pressung unterscheiden
+- **Erfassen mit minimalem Aufwand**: Pflicht sind nur Artist und Albumtitel, alles andere ist optional
+- Barcode scannen (oder nach Artist und Titel suchen), Daten und Cover von Discogs und MusicBrainz übernehmen, ohne eine Pressungsvariante auswählen zu müssen
+- Schnell beantworten: „Habe ich diese Platte?“, mit Links zu Discogs
+- **Wunschliste**: Alben merken, die man noch sucht. Der Scan im Plattenladen zeigt sofort „habe ich“ oder „steht auf der Wunschliste“
+- Sammlung durchsuchen und filtern, z. B. nach Artist, Genre oder Jahr
 - Zugriff über eine Weboberfläche **und** eine JSON-API
 - Anmeldung per Passkey
-- Später: Cover-Bilder, Statistiken (Wert der Sammlung, Platten pro Genre), Import aus Discogs
+- Später: Statistiken (Wert der Sammlung, Platten pro Genre), Export
 
 ## Technik
 
@@ -23,29 +24,30 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 | Datenbank | PostgreSQL in Podman (Compose) | [ADR 0003](docs/adr/0003-postgresql-mit-podman.md) |
 | Oberfläche | Phoenix LiveView und AshJsonApi | [ADR 0004](docs/adr/0004-liveview-und-json-api.md) |
 | Login | AshAuthentication, Passkeys über `wax_`, Magic Link als Rückfallebene | [ADR 0005](docs/adr/0005-passkey-login.md) |
+| Import | Barcode-Scan im Browser, Discogs API, MusicBrainz und Cover Art Archive | [ADR 0007](docs/adr/0007-barcode-scan-und-import.md) |
 
-## Datenmodell (Entwurf)
+## Datenmodell
 
 ```
-Artist ──< Release >── Label
-              │
-              ├──< Copy    (eigene Exemplare: Zustand, Preis, Lagerort)
-              └──< Track   (optional: Seite/Position, Titel, Dauer)
+Artist ──< Album ──< Copy
 ```
 
-- **Release**: eine bestimmte Veröffentlichung oder Pressung (Titel, Katalognummer, Jahr, Format).
-- **Copy**: ein konkretes Exemplar, das man besitzt (Zustand, Kaufdatum, Preis, Lagerort).
+- **Album**: das Werk, unabhängig von der Pressung (Pflicht: Titel und Artist; optional: Jahr, Cover, Genres, Wunschliste ja/nein).
+  Entspricht der *Release Group* bei MusicBrainz bzw. dem *Master* bei Discogs.
+- **Copy**: ein eigenes Exemplar. Album mit Copy = „habe ich“. Alle Pressungs- und Sammlerangaben sind optional (Label, Barcode, Zustand, Preis, Lagerort).
 
-Details und offene Fragen stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
+Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 
 ## Fahrplan
 
 1. Projekt anlegen (Phoenix und Ash über Igniter), Postgres über `compose.yml`
-2. Domain `Records` mit Artist, Label, Release, Copy und Track, plus Seed-Daten
-3. LiveView-Oberfläche: Liste, Suche und Filter, Detailseiten, Formulare
-4. JSON-API (AshJsonApi) mit OpenAPI-Doku
-5. Login per Passkey, Magic Link als Rückfallebene
-6. Extras: Cover-Upload, Statistiken, Discogs-Import
+2. Domain `Records` mit Artist, Album und Copy, plus Seed-Daten
+3. LiveView-Oberfläche: Liste, Suche und Filter, Detailseite, Schnellerfassung, Wunschliste
+4. Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
+5. Barcode-Scan mit der Kamera im Browser
+6. JSON-API (AshJsonApi) mit OpenAPI-Doku
+7. Login per Passkey, Magic Link als Rückfallebene
+8. Extras: Statistiken, Export (JSON-LD / CSV)
 
 ## Entwicklung
 
