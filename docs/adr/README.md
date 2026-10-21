@@ -12,3 +12,4 @@ Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md
 | [0005](0005-passkey-login.md) | Login per Passkey | Vorgeschlagen |
 | [0006](0006-datenmodell.md) | Datenmodell der Sammlung | Angenommen |
 | [0007](0007-barcode-scan-und-import.md) | Barcode-Scan und Import aus Discogs und MusicBrainz | Angenommen |
+| [0008](0008-https-im-lan.md) | HTTPS im lokalen Netz für den Kamera-Scan | Angenommen |

@@ -85,12 +85,14 @@ config :phoenix_live_view,
 # at the `config/runtime.exs`.
 config :plattensammlung, Plattensammlung.Mailer, adapter: Swoosh.Adapters.Local
 
-# Configure esbuild (the version is required)
+# Configure esbuild (the version is required).
+# ESM with code splitting lets rarely needed libraries (e.g. ZXing for the
+# barcode scanner) load on demand via import().
 config :esbuild,
   version: "0.25.4",
   plattensammlung: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+      ~w(js/app.js --bundle --format=esm --splitting --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]

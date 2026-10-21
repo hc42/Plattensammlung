@@ -1,6 +1,6 @@
 # 0007. Barcode-Scan und Import aus Discogs und MusicBrainz
 
-- **Status:** Angenommen (Import umgesetzt am 2026-10-21, Kamera-Scan folgt)
+- **Status:** Angenommen (umgesetzt am 2026-10-21)
 - **Datum:** 2026-10-21
 
 ## Kontext
@@ -66,6 +66,13 @@ gleichermaßen nutzen können. Übernommen wird ein Treffer über die vorhandene
 - Cover-Download vor der Datenbank-Transaktion, mit kurzen Timeouts (4 s Verbindung,
   8 s Antwort). Bei Fehlern bleibt die Remote-URL stehen.
 - Der Lookup läuft in der LiveView asynchron (`start_async`).
+- Kamera-Scan: JS-Hook `BarcodeScanner` (`assets/js/hooks/barcode_scanner.js`). Er nutzt
+  `BarcodeDetector`, wenn der Browser EAN/UPC unterstützt, sonst `@zxing/browser`. ZXing
+  wird per `import()` erst bei Bedarf geladen (esbuild mit `--splitting`, `app.js` als
+  ES-Modul). Ein Code zählt erst, wenn er zweimal hintereinander gelesen wurde und die
+  Prüfziffer stimmt.
+- „Foto aufnehmen“ als Alternative zur Live-Kamera. Das funktioniert ohne HTTPS.
+- HTTPS fürs Handy im WLAN: siehe [ADR 0008](0008-https-im-lan.md).
 
 ## Betrachtete Alternativen
 

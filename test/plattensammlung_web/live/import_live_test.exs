@@ -68,6 +68,24 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     assert %{copy_count: 2} = Records.get_album!(album.id, load: [:copy_count])
   end
 
+  test "a scanned barcode starts the lookup", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/import")
+
+    view |> element("#barcode-scanner") |> render_hook("scanned", %{code: "0602547288530"})
+
+    assert_patch(view, ~p"/import?q=0602547288530")
+    render_async(view)
+    assert has_element?(view, "#result-0")
+  end
+
+  test "an invalid scan is rejected", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/import")
+
+    view |> element("#barcode-scanner") |> render_hook("scanned", %{code: "abc"})
+
+    refute has_element?(view, "#lookup-loading")
+  end
+
   test "shows an error when no source answers", %{conn: conn} do
     LookupStub.install(discogs: :error, musicbrainz: :error)
 

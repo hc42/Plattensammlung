@@ -106,8 +106,17 @@ Regeln:
 - Übernahme: `Lookup.album_attrs/1` und `Lookup.copy_attrs/1` → `add_to_collection`/`add_to_wishlist`.
 - Cover: Der Change `StoreCover` lädt Remote-URLs vor der Transaktion herunter
   (`Plattensammlung.Covers`, ausgeliefert unter `/covers`). Schlägt das fehl, bleibt die Remote-URL.
+- Kamera-Scan: JS-Hook `BarcodeScanner` in `assets/js/hooks/barcode_scanner.js` (registriert in
+  `app.js`). Er sendet das LiveView-Event `"scanned"` an `ImportLive`.
 - **Tests gehen nie ins Netz**: `config/test.exs` leitet Req auf den Stub
   `Plattensammlung.LookupStub` (`test/support/lookup_stub.ex`) um.
+
+## Assets
+
+- npm-Pakete liegen in `assets/package.json` (`mix setup` führt `npm install` aus), derzeit
+  nur `@zxing/browser`.
+- esbuild baut ES-Module mit Code-Splitting. Große, selten gebrauchte Bibliotheken per
+  `await import("…")` laden, damit sie in einem eigenen Chunk landen.
 
 ## Phoenix-Richtlinien
 
@@ -124,5 +133,8 @@ Ecto-Contexts.
 - MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
 - Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.
   Dann bleibt die Remote-URL stehen und die Oberfläche zeigt die Platzhalter-Platte.
+- `LAN=1 mix phx.server` öffnet HTTPS auf Port 4001 für das ganze WLAN (ADR 0008). Ohne
+  Login nur in vertrauenswürdigen Netzen verwenden. Das Zertifikat liegt in `priv/cert/`
+  (nicht im Git).
 - Bei `podman compose` übernimmt das externe `docker-compose` die Ausführung. Der Hinweis
   dazu in der Ausgabe ist harmlos.

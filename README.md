@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Sammlung, Wunschliste und Import (Barcode oder Künstler/Titel über Discogs und MusicBrainz) funktionieren im Browser. Als Nächstes kommt der Barcode-Scan mit der Kamera.
+> **Status:** Sammlung, Wunschliste, Import über Discogs und MusicBrainz sowie der Barcode-Scan mit Kamera oder Foto funktionieren. Als Nächstes kommt die JSON-API.
 
 ## Ziele
 
@@ -44,14 +44,14 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 2. ✅ Domain `Records` mit Artist, Album und Copy, plus Seed-Daten
 3. ✅ LiveView-Oberfläche: Liste, Suche und Filter, Detailseite, Schnellerfassung, Wunschliste
 4. ✅ Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
-5. Barcode-Scan mit der Kamera im Browser
+5. ✅ Barcode-Scan mit der Kamera im Browser (HTTPS im WLAN: [ADR 0008](docs/adr/0008-https-im-lan.md))
 6. JSON-API (AshJsonApi) mit OpenAPI-Doku
 7. Login per Passkey, Magic Link als Rückfallebene
 8. Extras: Statistiken, Export (JSON-LD / CSV)
 
 ## Entwicklung
 
-Voraussetzungen: Elixir 1.20 / OTP 29 und Podman (mit laufender `podman machine`).
+Voraussetzungen: Elixir 1.20 / OTP 29, Node.js (für die Scanner-Bibliothek) und Podman (mit laufender `podman machine`).
 
 ```bash
 podman compose up -d   # Postgres 18 im Container starten (Port 5432, nur localhost)
@@ -70,6 +70,25 @@ Optionale Umgebungsvariablen für den Import (vor `mix phx.server` setzen):
 ```bash
 export DISCOGS_TOKEN=dein-token
 ```
+
+### Vom Handy aus scannen
+
+Die Live-Kamera braucht HTTPS. Einmalig ein Zertifikat erzeugen:
+
+```bash
+mix phx.gen.cert localhost "$(scutil --get LocalHostName).local"
+```
+
+Dann den Server mit `LAN=1` starten:
+
+```bash
+LAN=1 mix phx.server
+```
+
+Auf dem Handy (gleiches WLAN) `https://<LocalHostName>.local:4001/import` öffnen und die
+Zertifikatswarnung einmal bestätigen. Den Namen zeigt `scutil --get LocalHostName`.
+Ohne HTTPS funktioniert „Foto aufnehmen“. Die App hat noch keinen Login, deshalb nur in
+einem vertrauenswürdigen Netz verwenden.
 
 Weitere Befehle:
 

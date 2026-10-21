@@ -94,7 +94,11 @@ defmodule Plattensammlung.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ash.setup --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.setup": [
+        "tailwind.install --if-missing",
+        "esbuild.install --if-missing",
+        "cmd --cd assets npm install"
+      ],
       "assets.build": ["compile", "tailwind plattensammlung", "esbuild plattensammlung"],
       "assets.deploy": [
         "tailwind plattensammlung --minify",

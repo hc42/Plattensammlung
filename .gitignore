@@ -41,3 +41,6 @@ npm-debug.log
 
 # Downloaded album covers
 /uploads/
+
+# Self-signed dev certificate (mix phx.gen.cert)
+/priv/cert/

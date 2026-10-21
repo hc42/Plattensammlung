@@ -16,8 +16,43 @@ defmodule PlattensammlungWeb.ImportLive do
         <div>
           <h1 class="text-2xl font-bold">Platte erfassen</h1>
           <p class="text-sm opacity-70">
-            Barcode eintippen oder scannen, oder nach Künstler und Titel suchen.
+            Barcode scannen oder eintippen, oder nach Künstler und Titel suchen.
           </p>
+        </div>
+
+        <%!-- The JS hook manages this element (camera, status), so LiveView must not patch it --%>
+        <div
+          id="barcode-scanner"
+          phx-hook="BarcodeScanner"
+          phx-update="ignore"
+          data-active="false"
+          class="group space-y-2"
+        >
+          <div class="flex flex-wrap gap-2 group-data-[active=true]:hidden">
+            <button type="button" data-start class="btn btn-sm btn-neutral" id="scan-camera">
+              <.icon name="hero-camera" class="size-4" /> Mit Kamera scannen
+            </button>
+            <label class="btn btn-sm btn-ghost" id="scan-photo">
+              <.icon name="hero-photo" class="size-4" /> Foto aufnehmen
+              <input type="file" accept="image/*" capture="environment" class="hidden" />
+            </label>
+          </div>
+          <div class="relative hidden overflow-hidden rounded-lg bg-black group-data-[active=true]:block">
+            <video playsinline muted class="aspect-[4/3] w-full object-cover"></video>
+            <div class="pointer-events-none absolute inset-x-[12%] inset-y-[30%] rounded-md border-2 border-white/80 shadow-[0_0_0_100vmax_rgba(0,0,0,0.35)]">
+            </div>
+            <div class="pointer-events-none absolute inset-x-[14%] top-1/2 h-0.5 animate-pulse bg-red-500">
+            </div>
+            <button
+              type="button"
+              data-stop
+              class="btn btn-sm btn-circle absolute right-2 top-2"
+              aria-label="Kamera schließen"
+            >
+              <.icon name="hero-x-mark" class="size-4" />
+            </button>
+          </div>
+          <p data-status class="min-h-5 text-sm opacity-70" aria-live="polite"></p>
         </div>
 
         <.form for={@search_form} id="lookup-form" phx-submit="lookup" class="flex gap-2">
@@ -140,6 +175,14 @@ defmodule PlattensammlungWeb.ImportLive do
   @impl true
   def handle_event("lookup", %{"query" => query}, socket) do
     {:noreply, push_patch(socket, to: ~p"/import?#{[q: query]}")}
+  end
+
+  # Sent by the BarcodeScanner hook (assets/js/hooks/barcode_scanner.js)
+  def handle_event("scanned", %{"code" => code}, socket) do
+    case Lookup.barcode(code) do
+      nil -> {:noreply, put_flash(socket, :error, "Das sieht nicht nach einem Barcode aus.")}
+      barcode -> {:noreply, push_patch(socket, to: ~p"/import?#{[q: barcode]}")}
+    end
   end
 
   def handle_event("import", %{"index" => index, "target" => target}, socket) do
