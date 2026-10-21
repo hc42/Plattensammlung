@@ -21,6 +21,7 @@ defmodule Plattensammlung.Records.LookupResult do
     attribute :thumb_url, :string, public?: true
     attribute :discogs_master_id, :integer, public?: true
     attribute :musicbrainz_release_group_id, :string, public?: true
+    attribute :spotify_album_id, :string, public?: true
 
     # Pressing (only for barcode lookups)
     attribute :barcode, :string, public?: true

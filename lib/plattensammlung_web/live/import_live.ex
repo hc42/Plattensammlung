@@ -16,7 +16,8 @@ defmodule PlattensammlungWeb.ImportLive do
         <div>
           <h1 class="text-2xl font-bold">Platte erfassen</h1>
           <p class="text-sm opacity-70">
-            Barcode scannen oder eintippen, oder nach Künstler und Titel suchen.
+            Barcode scannen oder eintippen, nach Künstler und Titel suchen oder einen
+            Spotify-Album-Link einfügen.
           </p>
         </div>
 
@@ -132,10 +133,17 @@ defmodule PlattensammlungWeb.ImportLive do
   end
 
   # Sent by the BarcodeScanner hook (assets/js/hooks/barcode_scanner.js)
+  # Codes are barcodes or, from QR codes, Spotify album links
   def handle_event("scanned", %{"code" => code}, socket) do
-    case Lookup.barcode(code) do
-      nil -> {:noreply, put_flash(socket, :error, "Das sieht nicht nach einem Barcode aus.")}
-      barcode -> {:noreply, push_patch(socket, to: ~p"/import?#{[q: barcode]}")}
+    cond do
+      barcode = Lookup.barcode(code) ->
+        {:noreply, push_patch(socket, to: ~p"/import?#{[q: barcode]}")}
+
+      Lookup.spotify_link(code) ->
+        {:noreply, push_patch(socket, to: ~p"/import?#{[q: String.trim(code)]}")}
+
+      true ->
+        {:noreply, put_flash(socket, :error, "Das sieht nicht nach einem Barcode aus.")}
     end
   end
 

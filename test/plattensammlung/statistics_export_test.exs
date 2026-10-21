@@ -140,7 +140,12 @@ defmodule Plattensammlung.StatisticsExportTest do
       assert album["@type"] == "MusicAlbum"
       assert album["byArtist"] == %{"@type" => "MusicGroup", "name" => "The Beatles"}
       assert album["datePublished"] == "1969"
-      assert album["sameAs"] == ["https://www.discogs.com/master/24047"]
+      # Spotify and Tidal were filled in automatically from Wikidata
+      assert album["sameAs"] == [
+               "https://www.discogs.com/master/24047",
+               "https://open.spotify.com/album/0ETFjACtuP2ADo6LFhL6HN",
+               "https://tidal.com/album/55130630"
+             ]
 
       assert [release | _] = album["albumRelease"]
       assert release["@type"] == "MusicRelease"

@@ -16,6 +16,8 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 - Anmeldung per Passkey
 - **Alle Alben** im Blick, auch solche ohne Exemplar und ohne Wunsch („nicht zugeordnet“)
 - **Abgleichen** bestehender Alben mit Discogs/MusicBrainz, auch per nachträglichem Barcode-Scan; Pressungsdaten wandern dabei ins Exemplar
+- **Spotify und Tidal**: Links werden automatisch gefunden (Wikidata, MusicBrainz) oder eingefügt;
+  Alben lassen sich auch über einen Spotify-Link oder dessen QR-Code erfassen
 - **Cover** hochladen (auch per Handykamera), ersetzen oder entfernen; verwaiste Bilddateien werden aufgeräumt
 - Statistik (Umfang, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
 

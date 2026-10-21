@@ -13,7 +13,14 @@ defmodule Plattensammlung.Records.AlbumMatch do
   """
   alias Plattensammlung.Covers
 
-  @fields [:year, :genres, :cover_url, :discogs_master_id, :musicbrainz_release_group_id]
+  @fields [
+    :year,
+    :genres,
+    :cover_url,
+    :discogs_master_id,
+    :musicbrainz_release_group_id,
+    :spotify_album_id
+  ]
 
   @copy_fields [
     :barcode,
@@ -39,7 +46,8 @@ defmodule Plattensammlung.Records.AlbumMatch do
     genres: "Genres",
     cover_url: "Cover",
     discogs_master_id: "Discogs-Verknüpfung",
-    musicbrainz_release_group_id: "MusicBrainz-Verknüpfung"
+    musicbrainz_release_group_id: "MusicBrainz-Verknüpfung",
+    spotify_album_id: "Spotify-Verknüpfung"
   }
 
   @doc "Map of field => new value."

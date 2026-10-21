@@ -115,16 +115,47 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
             </.button>
           </div>
 
-          <a
-            :if={@album.discogs_url}
-            href={@album.discogs_url}
-            target="_blank"
-            rel="noopener"
-            class="link inline-flex items-center gap-1 text-sm"
-            id="discogs-link"
-          >
-            Auf Discogs ansehen <.icon name="hero-arrow-top-right-on-square-micro" class="size-4" />
-          </a>
+          <div class="flex flex-wrap items-center gap-2 text-sm" id="external-links">
+            <a
+              :if={@album.spotify_url}
+              href={@album.spotify_url}
+              target="_blank"
+              rel="noopener"
+              class="btn btn-sm btn-outline"
+              id="spotify-link"
+            >
+              <.icon name="hero-play-circle" class="size-4" /> Spotify
+            </a>
+            <a
+              :if={@album.tidal_url}
+              href={@album.tidal_url}
+              target="_blank"
+              rel="noopener"
+              class="btn btn-sm btn-outline"
+              id="tidal-link"
+            >
+              <.icon name="hero-play-circle" class="size-4" /> Tidal
+            </a>
+            <button
+              :if={can_find_streaming?(@album)}
+              phx-click="find_streaming_links"
+              phx-disable-with="Suche …"
+              class="btn btn-sm btn-ghost"
+              id="find-streaming-links"
+            >
+              <.icon name="hero-magnifying-glass" class="size-4" /> Streaming-Links suchen
+            </button>
+            <a
+              :if={@album.discogs_url}
+              href={@album.discogs_url}
+              target="_blank"
+              rel="noopener"
+              class="link inline-flex items-center gap-1"
+              id="discogs-link"
+            >
+              Auf Discogs ansehen <.icon name="hero-arrow-top-right-on-square-micro" class="size-4" />
+            </a>
+          </div>
         </div>
       </div>
 
@@ -202,6 +233,25 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   @impl true
   def handle_event("validate_cover", _params, socket), do: {:noreply, socket}
   def handle_event("noop", _params, socket), do: {:noreply, socket}
+
+  def handle_event("find_streaming_links", _params, socket) do
+    before = socket.assigns.album
+    album = Records.find_streaming_links!(before, actor: socket.assigns.current_user)
+
+    found =
+      [
+        (is_nil(before.spotify_album_id) and album.spotify_album_id) && "Spotify",
+        (is_nil(before.tidal_album_id) and album.tidal_album_id) && "Tidal"
+      ]
+      |> Enum.filter(& &1)
+
+    message =
+      if found == [],
+        do: "Keine Streaming-Links gefunden. Du kannst sie unter „Bearbeiten“ selbst eintragen.",
+        else: "Gefunden: #{Enum.join(found, ", ")}."
+
+    {:noreply, socket |> put_flash(:info, message) |> load_album(album.id)}
+  end
 
   def handle_event("remove_cover", _params, socket) do
     album = Records.remove_cover!(socket.assigns.album, actor: socket.assigns.current_user)
@@ -282,12 +332,26 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     album =
       Records.get_album!(id,
         actor: socket.assigns.current_user,
-        load: [:artist, :owned, :copy_count, :discogs_url, copies: [:discogs_url]]
+        load: [
+          :artist,
+          :owned,
+          :copy_count,
+          :discogs_url,
+          :spotify_url,
+          :tidal_url,
+          copies: [:discogs_url]
+        ]
       )
 
     socket
     |> assign(:album, album)
     |> assign(:page_title, "#{album.artist.name} – #{album.title}")
+  end
+
+  # Wikidata needs a Discogs or MusicBrainz link to find the album
+  defp can_find_streaming?(album) do
+    (is_nil(album.spotify_album_id) or is_nil(album.tidal_album_id)) and
+      not is_nil(album.discogs_master_id || album.musicbrainz_release_group_id)
   end
 
   defp back_path(%{owned: true}), do: ~p"/"

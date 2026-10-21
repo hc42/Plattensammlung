@@ -97,6 +97,42 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
     end
   end
 
+  describe "streaming links" do
+    test "the album page links to Spotify and Tidal", %{conn: conn} do
+      album =
+        Records.add_to_collection!("The Beatles", "Abbey Road", %{discogs_master_id: 24047},
+          authorize?: false
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
+
+      assert has_element?(
+               view,
+               "#spotify-link[href='https://open.spotify.com/album/0ETFjACtuP2ADo6LFhL6HN']"
+             )
+
+      assert has_element?(view, "#tidal-link[href='https://tidal.com/album/55130630']")
+      refute has_element?(view, "#find-streaming-links")
+    end
+
+    test "missing links can be searched from the album page", %{conn: conn} do
+      LookupStub.install(wikidata: :error, musicbrainz: :error)
+
+      album =
+        Records.add_to_collection!("The Beatles", "Abbey Road", %{discogs_master_id: 24047},
+          authorize?: false
+        )
+
+      LookupStub.install()
+      {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
+
+      view |> element("#find-streaming-links") |> render_click()
+
+      assert has_element?(view, "#spotify-link")
+      assert has_element?(view, "#tidal-link")
+    end
+  end
+
   describe "cover upload" do
     setup do
       %{album: Records.add_to_collection!("Can", "Tago Mago", authorize?: false)}

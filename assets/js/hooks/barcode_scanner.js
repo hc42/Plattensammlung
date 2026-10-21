@@ -1,11 +1,12 @@
 // Barcode scanner for the import page (see docs/adr/0007-barcode-scan-und-import.md).
 //
-// Reads EAN/UPC codes from the live camera or from a photo. Uses the browser's
+// Reads EAN/UPC codes, and QR codes with a Spotify album link, from the live
+// camera or from a photo. Uses the browser's
 // built-in BarcodeDetector where it supports these formats (Chrome, Android) and
 // otherwise loads ZXing on demand (Safari, Firefox). A detected code is pushed to
 // the LiveView as the "scanned" event.
 
-const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e"]
+const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "qr_code"]
 const SCAN_INTERVAL_MS = 150
 const MAX_PHOTO_SIZE = 1600
 
@@ -21,8 +22,8 @@ async function createDetector() {
     }
   }
 
-  const {BrowserMultiFormatOneDReader} = await import("@zxing/browser")
-  const reader = new BrowserMultiFormatOneDReader()
+  const {BrowserMultiFormatReader} = await import("@zxing/browser")
+  const reader = new BrowserMultiFormatReader()
 
   return async canvas => {
     try {
@@ -32,6 +33,10 @@ async function createDetector() {
     }
   }
 }
+
+// A Spotify album link from a QR code, e.g. https://open.spotify.com/album/…
+export const spotifyAlbumLink = code =>
+  /^(https:\/\/open\.spotify\.com\/(intl-[a-z-]+\/)?album\/|spotify:album:)[0-9A-Za-z]{22}/.test(code)
 
 // EAN-13, UPC-A (12) and EAN-8 carry a check digit; misreads usually fail it.
 // UPC-E (8 digits, rare on records) is checked like EAN-8 and may be rejected.
@@ -122,7 +127,7 @@ export const BarcodeScanner = {
 
   // A code counts once it was read twice in a row, which filters out misreads
   confirm(code) {
-    if (!validBarcode(code)) return false
+    if (!validBarcode(code) && !spotifyAlbumLink(code)) return false
 
     if (code !== this.lastCode) {
       this.lastCode = code
@@ -149,7 +154,7 @@ export const BarcodeScanner = {
 
       const code = await detect(this.canvas)
 
-      if (code && validBarcode(code)) {
+      if (code && (validBarcode(code) || spotifyAlbumLink(code))) {
         this.found(code)
       } else {
         this.setStatus("Kein Barcode erkannt. Bitte näher heran und scharf fotografieren.")

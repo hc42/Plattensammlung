@@ -21,6 +21,8 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   @fields [
     year: "Erscheinungsjahr",
     genres: "Genres",
+    spotify_album_id: "Spotify",
+    tidal_album_id: "Tidal",
     discogs_master_id: "Discogs-Master-ID"
   ]
 
@@ -125,6 +127,34 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
               keys={@tag_keys}
               suggestions={@genre_suggestions}
               placeholder="z. B. Rock"
+            />
+          </.optional_field>
+
+          <.optional_field
+            form={@form}
+            field={:spotify_album_id}
+            label="Spotify"
+            visible={@visible}
+            focus={@focus}
+          >
+            <.input
+              field={@form[:spotify_album_id]}
+              label="Spotify (Link oder ID)"
+              placeholder="https://open.spotify.com/album/…"
+            />
+          </.optional_field>
+
+          <.optional_field
+            form={@form}
+            field={:tidal_album_id}
+            label="Tidal"
+            visible={@visible}
+            focus={@focus}
+          >
+            <.input
+              field={@form[:tidal_album_id]}
+              label="Tidal (Link oder ID)"
+              placeholder="https://tidal.com/album/…"
             />
           </.optional_field>
 

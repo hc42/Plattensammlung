@@ -11,14 +11,15 @@ defmodule Plattensammlung.Records.Export do
   Data is read through the Records domain with the given options (actor).
   """
   alias Plattensammlung.Records
-  alias Plattensammlung.Records.Condition
+  alias Plattensammlung.Records.{Condition, Streaming}
 
   NimbleCSV.define(__MODULE__.CSV, separator: ",", escape: "\"")
 
   @csv_columns ~w(status artist title year genres format label catalog_number barcode country
                   pressing_year media_condition sleeve_condition purchased_on
                   notes discogs_master_id discogs_release_id
-                  musicbrainz_release_group_id musicbrainz_release_id)
+                  musicbrainz_release_group_id musicbrainz_release_id
+                  spotify_album_id tidal_album_id)
 
   @doc "CSV text with a header row."
   def csv(opts) do
@@ -85,7 +86,9 @@ defmodule Plattensammlung.Records.Export do
       album.discogs_master_id,
       copy_value.(:discogs_release_id),
       album.musicbrainz_release_group_id,
-      copy_value.(:musicbrainz_release_id)
+      copy_value.(:musicbrainz_release_id),
+      album.spotify_album_id,
+      album.tidal_album_id
     ]
     |> Enum.map(&cell/1)
   end
@@ -117,7 +120,9 @@ defmodule Plattensammlung.Records.Export do
         compact([
           album.discogs_master_id && "https://www.discogs.com/master/#{album.discogs_master_id}",
           album.musicbrainz_release_group_id &&
-            "https://musicbrainz.org/release-group/#{album.musicbrainz_release_group_id}"
+            "https://musicbrainz.org/release-group/#{album.musicbrainz_release_group_id}",
+          Streaming.spotify_url(album.spotify_album_id),
+          Streaming.tidal_url(album.tidal_album_id)
         ]),
       "albumRelease" => Enum.map(album.copies, &music_release(&1, album))
     }

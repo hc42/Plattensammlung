@@ -173,6 +173,16 @@ Regeln:
   löschen, bei Fehlern die neue wieder entfernen. `Covers.cleanup_orphans/0` löscht
   unreferenzierte Dateien (älter als 1 h) beim App-Start (`:cleanup_covers_on_start`, in Tests aus).
 
+## Streaming-Links (ADR 0012)
+
+- `Album.spotify_album_id` / `tidal_album_id` speichern IDs; Links über `Records.Streaming`
+  bzw. die Calculations `spotify_url` / `tidal_url`.
+- Suche: `Lookup.StreamingLinks.find/1` (Discogs→MusicBrainz, Wikidata, MusicBrainz-Releases),
+  ausgelöst vom Change `FillStreamingLinks` (Import, Abgleich, geänderte Verknüpfung,
+  `Album.find_streaming_links`). Spotify-Links im Import: `Lookup.Spotify`.
+- Tests: `LookupStub` beantwortet Wikidata und MusicBrainz; er ist in DataCase/ConnCase
+  standardmäßig aktiv, damit kein Test ins Netz geht.
+
 ## Statistik und Export (ADR 0010)
 
 - `Album.statistics` ist eine generische Action, implementiert in `Records.Statistics`

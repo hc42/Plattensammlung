@@ -69,6 +69,7 @@ defmodule Plattensammlung.Records do
       define :apply_match, args: [:result, {:optional, :mode}]
       define :upload_cover, args: [:image]
       define :remove_cover
+      define :find_streaming_links
       define :statistics, action: :statistics
       define :list_collection, action: :collection
       define :list_wishlist, action: :wishlist

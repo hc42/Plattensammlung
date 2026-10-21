@@ -6,7 +6,7 @@ defmodule Plattensammlung.Lookup do
   match wins (Discogs, then MusicBrainz). Any other query is a text search in
   all sources at once; results are merged album by album, Discogs first.
   """
-  alias Plattensammlung.Lookup.{Discogs, MusicBrainz}
+  alias Plattensammlung.Lookup.{Discogs, MusicBrainz, Spotify}
   alias Plattensammlung.Records.LookupResult
 
   require Logger
@@ -20,10 +20,41 @@ defmodule Plattensammlung.Lookup do
   def search(query) do
     query = String.trim(query)
 
-    case barcode(query) do
-      nil -> text_search(query)
-      barcode -> barcode_search(barcode)
+    cond do
+      spotify_id = spotify_link(query) -> spotify_search(spotify_id)
+      barcode = barcode(query) -> barcode_search(barcode)
+      true -> text_search(query)
     end
+  end
+
+  @doc "The album id if the query is a Spotify album link or URI, otherwise nil."
+  def spotify_link(query) do
+    with true <- String.contains?(query, "spotify"),
+         {:ok, id} <- Plattensammlung.Records.Streaming.spotify_id(query) do
+      id
+    else
+      _ -> nil
+    end
+  end
+
+  # Albums known to Wikidata come with full data; otherwise search the title
+  # that Spotify reports, and remember the Spotify id on every candidate
+  defp spotify_search(spotify_id) do
+    case Spotify.by_album_id(spotify_id) do
+      {:ok, [_ | _] = results} ->
+        to_structs({:ok, results})
+
+      _none ->
+        with {:ok, title} <- Spotify.title(spotify_id),
+             {:ok, results} <- text_search(strip_edition(title)) do
+          {:ok, Enum.map(results, &%{&1 | spotify_album_id: spotify_id})}
+        end
+    end
+  end
+
+  # "Abbey Road (Remastered 2009)" -> "Abbey Road"
+  defp strip_edition(title) do
+    title |> String.replace(~r/\s*[\(\[][^\)\]]*[\)\]]\s*$/, "") |> String.trim()
   end
 
   @doc """
@@ -78,8 +109,10 @@ defmodule Plattensammlung.Lookup do
       :genres,
       :cover_url,
       :discogs_master_id,
-      :musicbrainz_release_group_id
+      :musicbrainz_release_group_id,
+      :spotify_album_id
     ])
+    |> Map.reject(fn {_key, value} -> is_nil(value) end)
   end
 
   @doc "Pressing details for a copy; empty when the result came from a text search."

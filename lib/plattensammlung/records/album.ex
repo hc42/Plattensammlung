@@ -27,7 +27,11 @@ defmodule Plattensammlung.Records.Album do
       :musicbrainz_release_group_id,
       :owned,
       :copy_count,
-      :discogs_url
+      :discogs_url,
+      :spotify_album_id,
+      :tidal_album_id,
+      :spotify_url,
+      :tidal_url
     ]
   end
 
@@ -48,7 +52,9 @@ defmodule Plattensammlung.Records.Album do
       :cover_url,
       :genres,
       :discogs_master_id,
-      :musicbrainz_release_group_id
+      :musicbrainz_release_group_id,
+      :spotify_album_id,
+      :tidal_album_id
     ]
 
     defaults [:read]
@@ -84,6 +90,8 @@ defmodule Plattensammlung.Records.Album do
       change set_attribute(:wanted, false)
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
+      change Plattensammlung.Records.Changes.NormalizeStreamingIds
+      change Plattensammlung.Records.Changes.FillStreamingLinks
       change manage_relationship(:copy, :copies, type: :create)
     end
 
@@ -96,6 +104,8 @@ defmodule Plattensammlung.Records.Album do
       change set_attribute(:wanted, true)
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
+      change Plattensammlung.Records.Changes.NormalizeStreamingIds
+      change Plattensammlung.Records.Changes.FillStreamingLinks
     end
 
     update :update do
@@ -105,6 +115,9 @@ defmodule Plattensammlung.Records.Album do
 
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
+      change Plattensammlung.Records.Changes.NormalizeStreamingIds
+      # Plain edits stay offline; a new Discogs/MusicBrainz link triggers the lookup
+      change {Plattensammlung.Records.Changes.FillStreamingLinks, when: :links_changed}
     end
 
     update :mark_wanted do
@@ -241,6 +254,13 @@ defmodule Plattensammlung.Records.Album do
       # Order matters: StoreCover downloads the cover that ApplyMatch set
       change Plattensammlung.Records.Changes.ApplyMatch
       change Plattensammlung.Records.Changes.StoreCover
+      change Plattensammlung.Records.Changes.FillStreamingLinks
+    end
+
+    update :find_streaming_links do
+      description "Fills missing Spotify/Tidal ids from Wikidata (needs a Discogs or MusicBrainz link)."
+      require_atomic? false
+      change Plattensammlung.Records.Changes.FillStreamingLinks
     end
 
     action :statistics, :map do
@@ -308,6 +328,16 @@ defmodule Plattensammlung.Records.Album do
     attribute :discogs_master_id, :integer, public?: true
     attribute :musicbrainz_release_group_id, :uuid, public?: true
 
+    attribute :spotify_album_id, :string do
+      description "Spotify album id (a pasted link is reduced to the id)"
+      public? true
+    end
+
+    attribute :tidal_album_id, :string do
+      description "Tidal album id (a pasted link is reduced to the id)"
+      public? true
+    end
+
     timestamps()
   end
 
@@ -323,6 +353,28 @@ defmodule Plattensammlung.Records.Album do
   end
 
   calculations do
+    calculate :spotify_url,
+              :string,
+              expr(
+                if is_nil(spotify_album_id) do
+                  nil
+                else
+                  "https://open.spotify.com/album/" <> spotify_album_id
+                end
+              ),
+              public?: true
+
+    calculate :tidal_url,
+              :string,
+              expr(
+                if is_nil(tidal_album_id) do
+                  nil
+                else
+                  "https://tidal.com/album/" <> tidal_album_id
+                end
+              ),
+              public?: true
+
     calculate :discogs_url,
               :string,
               expr(

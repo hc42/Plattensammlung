@@ -46,6 +46,77 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
     end
   end
 
+  @doc """
+  The release group (album) that a streaming or shop URL belongs to, e.g. a
+  Spotify album link that MusicBrainz editors attached to one of its releases.
+  """
+  def release_group_for_url(url) do
+    with {:ok, body} <- get("/url", resource: url, inc: "release-rels release-group-rels") do
+      relations = (body || %{}) |> Map.get("relations", [])
+
+      case Enum.find_value(relations, &get_in(&1, ["release_group", "id"])) do
+        nil ->
+          release_group_of_release(Enum.find_value(relations, &get_in(&1, ["release", "id"])))
+
+        group ->
+          {:ok, group}
+      end
+    end
+  end
+
+  defp release_group_of_release(nil), do: {:ok, nil}
+
+  defp release_group_of_release(release_id) do
+    with {:ok, body} <- get("/release/#{release_id}", inc: "release-groups") do
+      {:ok, get_in(body || %{}, ["release-group", "id"])}
+    end
+  end
+
+  @doc "The release group (album) linked to a Discogs master, or nil."
+  def release_group_for_discogs_master(master_id) do
+    params = [resource: "https://www.discogs.com/master/#{master_id}", inc: "release-group-rels"]
+
+    with {:ok, body} <- get("/url", params) do
+      {:ok,
+       (body || %{})
+       |> Map.get("relations", [])
+       |> Enum.find_value(&get_in(&1, ["release_group", "id"]))}
+    end
+  end
+
+  @doc """
+  Spotify and Tidal album ids linked to any release (pressing, digital edition)
+  of the release group; the newest release with a link wins.
+  """
+  def streaming_links(release_group_id) do
+    params = ["release-group": release_group_id, inc: "url-rels", limit: 100]
+
+    with {:ok, body} <- get("/release", params) do
+      urls =
+        (body || %{})
+        |> Map.get("releases", [])
+        |> Enum.sort_by(&(&1["date"] || ""), :desc)
+        |> Enum.flat_map(fn release ->
+          for %{"url" => %{"resource" => url}} <- release["relations"] || [], do: url
+        end)
+
+      {:ok,
+       %{
+         spotify: first_id(urls, &Plattensammlung.Records.Streaming.spotify_id/1),
+         tidal: first_id(urls, &Plattensammlung.Records.Streaming.tidal_id/1)
+       }}
+    end
+  end
+
+  defp first_id(urls, parse) do
+    Enum.find_value(urls, fn url ->
+      case parse.(url) do
+        {:ok, id} -> id
+        :error -> nil
+      end
+    end)
+  end
+
   # Community-voted genres, most votes first: "art rock" -> "Art Rock"
   defp genres(group) do
     group

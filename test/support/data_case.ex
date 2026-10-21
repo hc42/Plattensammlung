@@ -30,6 +30,8 @@ defmodule Plattensammlung.DataCase do
 
   setup tags do
     Plattensammlung.DataCase.setup_sandbox(tags)
+    # No test talks to the internet; tests may install other stubs
+    Plattensammlung.LookupStub.install()
     :ok
   end
 

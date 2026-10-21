@@ -43,14 +43,106 @@ defmodule Plattensammlung.LookupStub do
     end
   end
 
+  @night_train_group "9ce4b9ee-9ad4-3deb-95a4-4cb4e68c145e"
+
+  def night_train_discogs_master, do: 99328
+
   defp route(conn, "musicbrainz.org", opts) do
+    params = conn.query_params
+
     case {Keyword.get(opts, :musicbrainz, :ok), conn.request_path} do
-      {:error, _path} -> send_resp(conn, 503, "")
-      {:empty, "/ws/2/release-group"} -> Req.Test.json(conn, %{"release-groups" => []})
-      {:empty, "/ws/2/release"} -> Req.Test.json(conn, %{"releases" => []})
-      {:ok, "/ws/2/release-group"} -> Req.Test.json(conn, %{"release-groups" => mb_groups()})
-      {:ok, "/ws/2/release-group/" <> _id} -> Req.Test.json(conn, mb_group_with_genres())
-      {:ok, "/ws/2/release"} -> Req.Test.json(conn, %{"releases" => [mb_release()]})
+      {:error, _path} ->
+        send_resp(conn, 503, "")
+
+      # Discogs master -> release group (only Night Train is linked)
+      {:ok, "/ws/2/url"} ->
+        cond do
+          params["resource"] =~ "/master/99328" ->
+            Req.Test.json(conn, %{
+              "relations" => [%{"release_group" => %{"id" => @night_train_group}}]
+            })
+
+          # Spotify link attached to a Night Train release
+          params["resource"] =~ "4gPYH4cFOgaukEpzcAr7vw" ->
+            Req.Test.json(conn, %{"relations" => [%{"release" => %{"id" => "night-train-2013"}}]})
+
+          true ->
+            send_resp(conn, 404, "")
+        end
+
+      {:ok, "/ws/2/release/night-train-2013"} ->
+        Req.Test.json(conn, %{"release-group" => %{"id" => @night_train_group}})
+
+      {:ok, "/ws/2/release-group/" <> @night_train_group} ->
+        Req.Test.json(conn, %{
+          "id" => @night_train_group,
+          "title" => "Night Train",
+          "first-release-date" => "1963",
+          "artist-credit" => [%{"name" => "The Oscar Peterson Trio"}],
+          "genres" => [%{"name" => "jazz", "count" => 5}]
+        })
+
+      # Releases of a release group with their streaming links
+      {:ok, "/ws/2/release"} when is_map_key(params, "release-group") ->
+        releases =
+          if params["release-group"] == @night_train_group,
+            do: night_train_releases(),
+            else: []
+
+        Req.Test.json(conn, %{"releases" => releases})
+
+      {:empty, "/ws/2/release-group"} ->
+        Req.Test.json(conn, %{"release-groups" => []})
+
+      {:empty, "/ws/2/release"} ->
+        Req.Test.json(conn, %{"releases" => []})
+
+      {:ok, "/ws/2/release-group"} ->
+        Req.Test.json(conn, %{"release-groups" => mb_groups()})
+
+      {:ok, "/ws/2/release-group/" <> _id} ->
+        Req.Test.json(conn, mb_group_with_genres())
+
+      {:ok, "/ws/2/release"} ->
+        Req.Test.json(conn, %{"releases" => [mb_release()]})
+    end
+  end
+
+  # Spotify/Tidal ids for Abbey Road (MusicBrainz id or Discogs master 24047)
+  defp route(conn, "query.wikidata.org", opts) do
+    query = conn.query_params["query"] || ""
+
+    cond do
+      Keyword.get(opts, :wikidata) == :error ->
+        send_resp(conn, 500, "")
+
+      query =~ ~s(wdt:P2205 "0ETFjACtuP2ADo6LFhL6HN") ->
+        Req.Test.json(conn, %{
+          "results" => %{
+            "bindings" => [
+              %{
+                "musicbrainz" => %{"value" => "9162580e-5df4-32de-80cc-f45a8d8a9b1d"},
+                "discogs" => %{"value" => "24047"}
+              }
+            ]
+          }
+        })
+
+      query =~ "9162580e-5df4-32de-80cc-f45a8d8a9b1d" or query =~ ~s("24047") ->
+        Req.Test.json(conn, %{
+          "results" => %{
+            "bindings" => [
+              %{
+                "spotify" => %{"value" => "0ETFjACtuP2ADo6LFhL6HN"},
+                "tidal" => %{"value" => "55130630"}
+              },
+              %{"tidal" => %{"value" => "118390427"}}
+            ]
+          }
+        })
+
+      true ->
+        Req.Test.json(conn, %{"results" => %{"bindings" => []}})
     end
   end
 
@@ -126,6 +218,25 @@ defmodule Plattensammlung.LookupStub do
       %{"name" => "rock", "count" => 12},
       %{"name" => "psychedelic", "count" => 1}
     ])
+  end
+
+  defp night_train_releases do
+    [
+      %{"date" => "1963", "relations" => []},
+      %{
+        "date" => "2010-03-02",
+        "relations" => [
+          %{"url" => %{"resource" => "https://open.spotify.com/album/3gPOWmWT0q7Ygp95Xiuw1v"}}
+        ]
+      },
+      %{
+        "date" => "2013-03-15",
+        "relations" => [
+          %{"url" => %{"resource" => "https://open.spotify.com/album/4gPYH4cFOgaukEpzcAr7vw"}},
+          %{"url" => %{"resource" => "https://tidal.com/album/129183356"}}
+        ]
+      }
+    ]
   end
 
   defp mb_release do
