@@ -87,6 +87,9 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   die Alben des Actors (Preparation `ScopeToOwner`). Bearbeiten-Seiten prüfen mit
   `PlattensammlungWeb.Ownership.require_owner/2`. Anderen Usern nur `Accounts.list_collectors`
   (ID + Anzeigename) zeigen, nie die E-Mail.
+- `Copy.purchased_on` und `Copy.notes` sind per Field Policy nur für den Besitzer lesbar.
+  Andere bekommen `%Ash.ForbiddenField{}` (truthy!), in der API fehlen die Felder.
+  Neue private Felder dort in `field_policies` eintragen.
 - **Alle Records-Actions brauchen einen Actor.** In LiveViews `actor: socket.assigns.current_user`
   übergeben, AshPhoenix-Formulare mit `actor:` erzeugen. In Changes die Optionen mit
   `Ash.Context.to_opts(context)` weiterreichen. Nur Seeds und Test-Vorbereitung nutzen

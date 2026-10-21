@@ -222,7 +222,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 <dd>{value}</dd>
               <% end %>
             </dl>
-            <%!-- Notes stay private to the owner --%>
+            <%!-- Notes stay private to the owner (field policy on Copy) --%>
             <p :if={copy.notes && !@owner} class="mt-2 whitespace-pre-line opacity-80">
               {copy.notes}
             </p>
@@ -450,7 +450,8 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     end
   end
 
-  # Purchase date stays private to the owner
+  # Purchase date stays private to the owner; for others the field policy on
+  # Copy returns %Ash.ForbiddenField{} anyway
   defp purchase_date(%{purchased_on: %Date{} = date}, nil),
     do: Calendar.strftime(date, "%d.%m.%Y")
 

@@ -177,6 +177,36 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     assert body["data"]["attributes"]["notes"] == "Regal B"
   end
 
+  test "purchase date and notes of someone else's copy are left out", %{conn: conn, user: user} do
+    alice = user_fixture("alice@example.com")
+
+    album =
+      Records.add_to_collection!(
+        "The Beatles",
+        "Abbey Road",
+        %{copy: %{label: "Apple", notes: "Geheim", purchased_on: ~D[2019-05-03]}},
+        actor: alice
+      )
+
+    [copy] = Ash.load!(album, :copies, authorize?: false).copies
+
+    for path <- [~p"/api/json/copies/#{copy.id}", ~p"/api/json/albums/#{album.id}?include=copies"] do
+      body = conn |> get(path) |> response(200)
+
+      assert body =~ "Apple"
+      refute body =~ "Geheim"
+      refute body =~ "2019-05-03"
+    end
+
+    # The owner still sees everything
+    own =
+      Records.add_to_collection!("Can", "Tago Mago", %{copy: %{notes: "Meins"}}, actor: user)
+
+    [own_copy] = Ash.load!(own, :copies, authorize?: false).copies
+    body = conn |> get(~p"/api/json/copies/#{own_copy.id}") |> json_response(200)
+    assert body["data"]["attributes"]["notes"] == "Meins"
+  end
+
   test "DELETE removes an album", %{conn: conn, user: user} do
     album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
 

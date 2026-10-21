@@ -50,3 +50,11 @@ dass es dafür eine Freigabe braucht.
 - Notizen und Kaufdatum sind nur in der Oberfläche verborgen. Über die API kann ein anderer
   angemeldeter Benutzer sie lesen. Sollen sie wirklich privat sein, braucht es Field Policies.
 - Die Seeds legen die Beispielalben für die erste Adresse aus `ALLOWED_EMAILS` an.
+
+## Nachtrag (2026-10-21): Field Policies
+
+Kaufdatum und Notizen eines Exemplars sind jetzt auch über die API privat. `Copy` hat
+Field Policies: `purchased_on` und `notes` liest nur, wem das Album gehört
+(`album.owner_id == actor`), alle anderen Felder bleiben für Angemeldete lesbar.
+Andere Benutzer bekommen in Ash `%Ash.ForbiddenField{}`, die JSON:API lässt die Felder
+weg. Die Oberfläche blendet sie wie bisher aus.

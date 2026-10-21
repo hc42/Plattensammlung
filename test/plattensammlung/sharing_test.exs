@@ -42,6 +42,27 @@ defmodule Plattensammlung.SharingTest do
              Records.update_copy(copy, %{notes: "meins"}, actor: bob)
   end
 
+  test "purchase date and notes of a copy are readable by the owner only",
+       %{alice: alice, bob: bob, album: album} do
+    [copy] = Ash.load!(album, :copies, authorize?: false).copies
+
+    Records.update_copy!(copy, %{notes: "Geheim", purchased_on: ~D[2019-05-03], label: "Apple"},
+      actor: alice
+    )
+
+    theirs = Records.get_copy!(copy.id, actor: bob)
+    assert theirs.label == "Apple"
+    assert %Ash.ForbiddenField{} = theirs.notes
+    assert %Ash.ForbiddenField{} = theirs.purchased_on
+
+    assert [%{notes: %Ash.ForbiddenField{}}] =
+             Records.get_album!(album.id, load: [:copies], actor: bob).copies
+
+    mine = Records.get_copy!(copy.id, actor: alice)
+    assert mine.notes == "Geheim"
+    assert mine.purchased_on == ~D[2019-05-03]
+  end
+
   test "statistics describe one collection", %{alice: alice, bob: bob} do
     assert %{albums: 0, wishlist: 0} = Records.statistics!(actor: bob)
     assert %{albums: 1, wishlist: 1} = Records.statistics!(%{owner_id: alice.id}, actor: bob)

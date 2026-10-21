@@ -47,6 +47,18 @@ defmodule Plattensammlung.Records.Copy do
     end
   end
 
+  # Purchase date and notes are private: others get `%Ash.ForbiddenField{}`,
+  # the JSON:API leaves them out (ADR 0013)
+  field_policies do
+    field_policy [:purchased_on, :notes] do
+      authorize_if expr(album.owner_id == ^actor(:id))
+    end
+
+    field_policy :* do
+      authorize_if always()
+    end
+  end
+
   actions do
     @fields [
       :label,
