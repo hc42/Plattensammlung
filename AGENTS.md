@@ -65,6 +65,7 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   - `live/album_live/`: `Index` (Sammlung `/` und Wunschliste `/wishlist`, Suche über `?q=`),
     `Show` (`/albums/:id`), `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
   - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
+  - `live/import_live.ex`: Import-Seite `/import` (Barcode oder Text, Ergebnis per Klick übernehmen)
   - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
@@ -93,6 +94,21 @@ Regeln:
 - Eine Copy anzulegen setzt `wanted` am Album zurück (Change `RemoveFromWishlist`).
 - Ein Album zu löschen löscht seine Copies. Ein Artist mit Alben kann nicht gelöscht werden.
 
+## Import (`Plattensammlung.Lookup`)
+
+- `Plattensammlung.Lookup.search/1` ist die Fassade: 8–14 Ziffern sind ein Barcode
+  (erste Quelle mit Treffer gewinnt, Discogs vor MusicBrainz), alles andere ist eine
+  Textsuche in allen Quellen, zusammengeführt pro Album.
+- Clients: `Lookup.Discogs` (Token nötig) und `Lookup.MusicBrainz` (+ Cover Art Archive).
+  Alle HTTP-Aufrufe laufen über `Lookup.HTTP.new/1` (Req).
+- In Ash ist der Import die **generische Action** `Album.lookup` (`Records.lookup_albums/1`).
+  Sie liefert `Records.LookupResult`, eine Embedded Resource, die nicht gespeichert wird.
+- Übernahme: `Lookup.album_attrs/1` und `Lookup.copy_attrs/1` → `add_to_collection`/`add_to_wishlist`.
+- Cover: Der Change `StoreCover` lädt Remote-URLs vor der Transaktion herunter
+  (`Plattensammlung.Covers`, ausgeliefert unter `/covers`). Schlägt das fehl, bleibt die Remote-URL.
+- **Tests gehen nie ins Netz**: `config/test.exs` leitet Req auf den Stub
+  `Plattensammlung.LookupStub` (`test/support/lookup_stub.ex`) um.
+
 ## Phoenix-Richtlinien
 
 Bei Arbeit an Web-Code (LiveView, HEEx, Komponenten, Router) **unbedingt
@@ -105,5 +121,8 @@ Ecto-Contexts.
 - AshAuthentication hat keine eingebaute Passkey-Strategie, siehe [ADR 0005](docs/adr/0005-passkey-login.md).
 - Formulare nutzen `AshPhoenix.Form` (`for_create`/`for_update`, `validate`, `submit`), keine Ecto-Changesets.
   Listen wie `genres` werden im Formular als kommagetrennter Text eingegeben und per `prepare_params` umgewandelt.
+- MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
+- Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.
+  Dann bleibt die Remote-URL stehen und die Oberfläche zeigt die Platzhalter-Platte.
 - Bei `podman compose` übernimmt das externe `docker-compose` die Ausführung. Der Hinweis
   dazu in der Ausgabe ist harmlos.

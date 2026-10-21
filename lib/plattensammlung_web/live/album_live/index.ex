@@ -41,7 +41,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
         <div class="col-span-full hidden py-16 text-center only:block" id="albums-empty">
           <.icon name="hero-musical-note" class="mx-auto size-10 opacity-30" />
           <p class="mt-2 opacity-70">{empty_text(@live_action, @query)}</p>
-          <.link :if={!@query} navigate={~p"/albums/new"} class="btn btn-primary btn-sm mt-4">
+          <.link :if={!@query} navigate={~p"/import"} class="btn btn-primary btn-sm mt-4">
             Platte erfassen
           </.link>
         </div>

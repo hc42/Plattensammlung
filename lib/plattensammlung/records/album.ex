@@ -29,7 +29,17 @@ defmodule Plattensammlung.Records.Album do
       :musicbrainz_release_group_id
     ]
 
-    defaults [:read, :destroy]
+    defaults [:read]
+
+    destroy :destroy do
+      primary? true
+      require_atomic? false
+
+      change after_action(fn _changeset, album, _context ->
+               Plattensammlung.Covers.delete(album.cover_url)
+               {:ok, album}
+             end)
+    end
 
     create :add_to_collection do
       description "Adds an album together with one owned copy."
@@ -44,6 +54,7 @@ defmodule Plattensammlung.Records.Album do
 
       change set_attribute(:wanted, false)
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
+      change Plattensammlung.Records.Changes.StoreCover
       change manage_relationship(:copy, :copies, type: :create)
     end
 
@@ -55,6 +66,7 @@ defmodule Plattensammlung.Records.Album do
 
       change set_attribute(:wanted, true)
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
+      change Plattensammlung.Records.Changes.StoreCover
     end
 
     update :update do
@@ -63,6 +75,7 @@ defmodule Plattensammlung.Records.Album do
       require_atomic? false
 
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
+      change Plattensammlung.Records.Changes.StoreCover
     end
 
     update :mark_wanted do
@@ -97,6 +110,25 @@ defmodule Plattensammlung.Records.Album do
              )
 
       prepare build(sort: [title: :asc], load: [:artist])
+    end
+
+    read :by_barcode do
+      description "Albums that have a copy with this barcode."
+      argument :barcode, :string, allow_nil?: false
+      filter expr(exists(copies, barcode == ^arg(:barcode)))
+    end
+
+    action :lookup, {:array, Plattensammlung.Records.LookupResult} do
+      description """
+      Searches Discogs and MusicBrainz by barcode or by artist and title.
+      A generic action: it runs custom code instead of reading or writing rows.
+      """
+
+      argument :query, :string, allow_nil?: false
+
+      run fn input, _context ->
+        Plattensammlung.Lookup.search(input.arguments.query)
+      end
     end
 
     read :duplicates do

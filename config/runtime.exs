@@ -23,6 +23,19 @@ end
 config :plattensammlung, PlattensammlungWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Album lookup (see docs/adr/0007-barcode-scan-und-import.md).
+# DISCOGS_TOKEN: personal access token from discogs.com/settings/developers (optional).
+# MUSICBRAINZ_CONTACT: e-mail or URL sent in the User-Agent, as MusicBrainz asks (optional).
+if config_env() != :test do
+  config :plattensammlung,
+    discogs_token: System.get_env("DISCOGS_TOKEN"),
+    musicbrainz_contact: System.get_env("MUSICBRAINZ_CONTACT")
+end
+
+if covers_dir = System.get_env("COVERS_DIR") do
+  config :plattensammlung, covers_dir: covers_dir
+end
+
 if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :plattensammlung, PlattensammlungWeb.Endpoint,

@@ -49,7 +49,7 @@ defmodule PlattensammlungWeb.Layouts do
         <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm" id="nav-wishlist">
           Wunschliste
         </.link>
-        <.link navigate={~p"/albums/new"} class="btn btn-primary btn-sm" id="nav-new">
+        <.link navigate={~p"/import"} class="btn btn-primary btn-sm" id="nav-new">
           <.icon name="hero-plus" class="size-4" />
           <span class="hidden sm:inline">Erfassen</span>
         </.link>

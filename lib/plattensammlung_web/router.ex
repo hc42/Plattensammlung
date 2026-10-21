@@ -19,6 +19,7 @@ defmodule PlattensammlungWeb.Router do
 
     live "/", AlbumLive.Index, :collection
     live "/wishlist", AlbumLive.Index, :wishlist
+    live "/import", ImportLive
     live "/albums/new", AlbumLive.Form, :new
     live "/albums/:id", AlbumLive.Show, :show
     live "/albums/:id/edit", AlbumLive.Form, :edit

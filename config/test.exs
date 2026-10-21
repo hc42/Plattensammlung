@@ -40,3 +40,9 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# External lookups and cover downloads hit a Req.Test stub instead of the network
+config :plattensammlung,
+  req_options: [plug: {Req.Test, Plattensammlung.Lookup}, retry: false],
+  discogs_token: "test-token",
+  covers_dir: Path.expand("../tmp/test/covers", __DIR__)

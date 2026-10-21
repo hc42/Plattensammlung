@@ -24,6 +24,8 @@ defmodule Plattensammlung.Records do
       define :get_album, action: :read, get_by: [:id]
       define :search_albums, action: :search, args: [{:optional, :query}, {:optional, :status}]
       define :find_duplicates, action: :duplicates, args: [:artist_name, :title]
+      define :find_by_barcode, action: :by_barcode, args: [:barcode]
+      define :lookup_albums, action: :lookup, args: [:query]
       define :list_collection, action: :collection
       define :list_wishlist, action: :wishlist
       define :update_album, action: :update

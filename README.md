@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Sammlung und Wunschliste sind im Browser bedienbar: Suche, Detailseite, Schnellerfassung und Exemplare. Als Nächstes kommt der Import von Discogs und MusicBrainz.
+> **Status:** Sammlung, Wunschliste und Import (Barcode oder Künstler/Titel über Discogs und MusicBrainz) funktionieren im Browser. Als Nächstes kommt der Barcode-Scan mit der Kamera.
 
 ## Ziele
 
@@ -43,7 +43,7 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 1. ✅ Projekt anlegen (Phoenix und Ash über Igniter), Postgres über `compose.yml`
 2. ✅ Domain `Records` mit Artist, Album und Copy, plus Seed-Daten
 3. ✅ LiveView-Oberfläche: Liste, Suche und Filter, Detailseite, Schnellerfassung, Wunschliste
-4. Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
+4. ✅ Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
 5. Barcode-Scan mit der Kamera im Browser
 6. JSON-API (AshJsonApi) mit OpenAPI-Doku
 7. Login per Passkey, Magic Link als Rückfallebene
@@ -57,6 +57,18 @@ Voraussetzungen: Elixir 1.20 / OTP 29 und Podman (mit laufender `podman machine`
 podman compose up -d   # Postgres 18 im Container starten (Port 5432, nur localhost)
 mix setup              # Abhängigkeiten, Datenbank anlegen und migrieren, Assets, Seeds
 mix phx.server         # App starten: http://localhost:4000
+```
+
+Optionale Umgebungsvariablen für den Import (vor `mix phx.server` setzen):
+
+| Variable | Zweck |
+|---|---|
+| `DISCOGS_TOKEN` | Persönliches Token von https://www.discogs.com/settings/developers. Ohne Token wird nur MusicBrainz durchsucht. |
+| `MUSICBRAINZ_CONTACT` | E-Mail oder URL, die MusicBrainz im User-Agent sehen möchte |
+| `COVERS_DIR` | Ablage der heruntergeladenen Cover (Standard: `uploads/covers`, nicht im Git) |
+
+```bash
+export DISCOGS_TOKEN=dein-token
 ```
 
 Weitere Befehle:

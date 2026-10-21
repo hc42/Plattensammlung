@@ -57,6 +57,7 @@ config :spark,
 config :plattensammlung,
   ecto_repos: [Plattensammlung.Repo],
   ash_domains: [Plattensammlung.Records],
+  covers_dir: Path.expand("../uploads/covers", __DIR__),
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint

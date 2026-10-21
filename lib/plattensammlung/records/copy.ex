@@ -12,6 +12,11 @@ defmodule Plattensammlung.Records.Copy do
     table "copies"
     repo Plattensammlung.Repo
 
+    custom_indexes do
+      # Fast "do I own this pressing?" check when scanning
+      index [:barcode]
+    end
+
     references do
       # Deleting an album deletes its copies
       reference :album, on_delete: :delete
@@ -27,6 +32,7 @@ defmodule Plattensammlung.Records.Copy do
       :pressing_year,
       :format,
       :discogs_release_id,
+      :musicbrainz_release_id,
       :media_condition,
       :sleeve_condition,
       :purchased_on,
@@ -65,6 +71,7 @@ defmodule Plattensammlung.Records.Copy do
     end
 
     attribute :discogs_release_id, :integer, public?: true
+    attribute :musicbrainz_release_id, :uuid, public?: true
     attribute :media_condition, Plattensammlung.Records.Condition, public?: true
     attribute :sleeve_condition, Plattensammlung.Records.Condition, public?: true
     attribute :purchased_on, :date, public?: true

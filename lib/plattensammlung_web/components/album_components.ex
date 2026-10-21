@@ -16,27 +16,31 @@ defmodule PlattensammlungWeb.AlbumComponents do
 
   def cover(assigns) do
     ~H"""
-    <div class={[
-      "relative aspect-square overflow-hidden rounded-lg bg-base-300 shadow-sm",
-      @class
-    ]}>
-      <img
-        :if={@album.cover_url}
-        src={@album.cover_url}
-        alt={"Cover: #{@album.title}"}
-        loading="lazy"
-        class="size-full object-cover"
-      />
-      <div :if={!@album.cover_url} class="grid size-full place-items-center">
+    <div
+      class={["relative aspect-square overflow-hidden rounded-lg bg-base-300 shadow-sm", @class]}
+      role="img"
+      aria-label={"Cover: #{@album.title}"}
+    >
+      <div class="grid size-full place-items-center">
         <div class="grid aspect-square w-3/4 place-items-center rounded-full bg-neutral shadow-inner">
           <div class="grid aspect-square w-1/3 place-items-center rounded-full bg-primary/70">
             <div class="size-1.5 rounded-full bg-base-100"></div>
           </div>
         </div>
       </div>
+      <%!-- A background image instead of <img>: if the URL is broken, the record stays visible --%>
+      <div
+        :if={@album.cover_url}
+        class="absolute inset-0 bg-cover bg-center"
+        style={"background-image: url('#{css_url(@album.cover_url)}')"}
+      >
+      </div>
     </div>
     """
   end
+
+  # Percent-encode characters that could break out of url('…')
+  defp css_url(url), do: URI.encode(url, &(&1 not in ~c"'\"()\\ "))
 
   @doc """
   Shows whether an album is owned (with number of copies) or on the wishlist.

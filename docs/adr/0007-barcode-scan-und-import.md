@@ -1,6 +1,6 @@
 # 0007. Barcode-Scan und Import aus Discogs und MusicBrainz
 
-- **Status:** Vorgeschlagen
+- **Status:** Angenommen (Import umgesetzt am 2026-10-21, Kamera-Scan folgt)
 - **Datum:** 2026-10-21
 
 ## Kontext
@@ -13,7 +13,7 @@ Wichtige Beobachtung: Ein **Barcode bezeichnet bereits eine konkrete Pressung**.
 diese lässt sich automatisch das zugehörige Album ermitteln (Discogs „Master“,
 MusicBrainz „Release Group“). Die Variantenauswahl entfällt also.
 
-## Entscheidung (Vorschlag)
+## Entscheidung
 
 **Erfassungswege**, alle führen zu einem vorausgefüllten Formular, das nur noch
 bestätigt wird:
@@ -45,8 +45,27 @@ Zuerst wird Discogs gefragt, MusicBrainz dient als Rückfallebene und ergänzt f
 Cover. Cover werden **lokal gespeichert**, damit die Sammlung ohne die externen Dienste
 vollständig bleibt.
 
-HTTP-Aufrufe erfolgen mit `Req`. Der Import ist eine Ash Action, z. B.
-`Album.import_by_barcode`, damit LiveView und JSON-API ihn gleichermaßen nutzen können.
+HTTP-Aufrufe erfolgen mit `Req`. Die Suche ist die generische Ash Action `Album.lookup`.
+Sie liefert die Embedded Resource `LookupResult`, damit LiveView und JSON-API sie
+gleichermaßen nutzen können. Übernommen wird ein Treffer über die vorhandenen Actions
+`add_to_collection` bzw. `add_to_wishlist`.
+
+### Umsetzungsdetails
+
+- Ein Eingabefeld für alles: 8–14 Ziffern (Leerzeichen und Bindestriche erlaubt) gelten
+  als Barcode, alles andere als Textsuche.
+- Textsuche: Discogs sucht *Master*, MusicBrainz *Release Groups* (Modus `dismax`, findet
+  Artist und Titel zusammen). Gleiche Alben (Artist und Titel normalisiert) erscheinen
+  nur einmal, Discogs zuerst, weil es besser nach Bekanntheit sortiert.
+- Barcode bei Discogs: Release suchen, danach den Master laden. Der Master liefert das
+  Originaljahr und die Genres, der Release die Pressungsdetails für die Copy.
+- Liefert eine Quelle einen Fehler, wird die nächste gefragt. Ein Fehler wird nur
+  gemeldet, wenn keine Quelle antwortet.
+- Ein Barcode wird zusätzlich lokal geprüft: „Genau diese Pressung hast du schon“
+  (Read Action `Album.by_barcode`, Index auf `copies.barcode`).
+- Cover-Download vor der Datenbank-Transaktion, mit kurzen Timeouts (4 s Verbindung,
+  8 s Antwort). Bei Fehlern bleibt die Remote-URL stehen.
+- Der Lookup läuft in der LiveView asynchron (`start_async`).
 
 ## Betrachtete Alternativen
 

@@ -27,6 +27,11 @@ defmodule PlattensammlungWeb.Endpoint do
     only: PlattensammlungWeb.static_paths(),
     raise_on_missing_only: code_reloading?
 
+  # Album covers downloaded from Discogs/MusicBrainz (see Plattensammlung.Covers)
+  plug Plug.Static,
+    at: "/covers",
+    from: {Plattensammlung.Covers, :dir, []}
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

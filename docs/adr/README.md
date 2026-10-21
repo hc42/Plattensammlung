@@ -11,4 +11,4 @@ Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md
 | [0004](0004-liveview-und-json-api.md) | LiveView-Oberfläche und JSON-API | Angenommen |
 | [0005](0005-passkey-login.md) | Login per Passkey | Vorgeschlagen |
 | [0006](0006-datenmodell.md) | Datenmodell der Sammlung | Angenommen |
-| [0007](0007-barcode-scan-und-import.md) | Barcode-Scan und Import aus Discogs und MusicBrainz | Vorgeschlagen |
+| [0007](0007-barcode-scan-und-import.md) | Barcode-Scan und Import aus Discogs und MusicBrainz | Angenommen |
