@@ -52,7 +52,9 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 
 ## Entwicklung
 
-Voraussetzungen: Elixir 1.20 / OTP 29, Node.js (für die Scanner-Bibliothek) und Podman (mit laufender `podman machine`).
+Voraussetzungen: Elixir 1.20 / OTP 29, Node.js 24 (für die Scanner-Bibliothek) und Podman (mit laufender `podman machine`).
+Mit nvm wählt `nvm use` im Projektordner die Version aus `.nvmrc`. Wird nvm verzögert
+geladen, muss das vor `mix setup` im jeweiligen Terminal passieren, sonst fehlt `npm`.
 
 ```bash
 podman compose up -d   # Postgres 18 im Container starten (Port 5432, nur localhost)

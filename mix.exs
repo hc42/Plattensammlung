@@ -104,7 +104,7 @@ defmodule Plattensammlung.MixProject do
       "assets.setup": [
         "tailwind.install --if-missing",
         "esbuild.install --if-missing",
-        "cmd --cd assets npm install"
+        &npm_install/1
       ],
       "assets.build": ["compile", "tailwind plattensammlung", "esbuild plattensammlung"],
       "assets.deploy": [
@@ -114,5 +114,22 @@ defmodule Plattensammlung.MixProject do
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]
+  end
+
+  # Installs the JavaScript packages in assets/ (ZXing for the barcode scanner)
+  defp npm_install(_args) do
+    if System.find_executable("npm") == nil do
+      Mix.raise("""
+      npm wurde nicht gefunden. Die Assets brauchen Node.js (assets/package.json).
+
+      Mit nvm im Projektordner:  nvm use     (Version aus .nvmrc)
+      Oder Node.js installieren, z. B. mit Homebrew:  brew install node
+      """)
+    end
+
+    case Mix.shell().cmd("npm install", cd: "assets") do
+      0 -> :ok
+      status -> Mix.raise("npm install ist fehlgeschlagen (Exit-Code #{status})")
+    end
   end
 end

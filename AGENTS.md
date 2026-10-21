@@ -152,8 +152,10 @@ Regeln:
 
 ## Assets
 
-- npm-Pakete liegen in `assets/package.json` (`mix setup` führt `npm install` aus), derzeit
-  nur `@zxing/browser`.
+- npm-Pakete liegen in `assets/package.json` (`mix setup` führt über `npm_install/1` in
+  `mix.exs` `npm install` aus und bricht mit Hinweis ab, wenn npm fehlt), derzeit nur
+  `@zxing/browser`. Node-Version in `.nvmrc`. Beim Besitzer wird nvm verzögert geladen:
+  In frischen Terminals ist `npm` erst nach `nvm use` verfügbar.
 - esbuild baut ES-Module mit Code-Splitting. Große, selten gebrauchte Bibliotheken per
   `await import("…")` laden, damit sie in einem eigenen Chunk landen.
 
