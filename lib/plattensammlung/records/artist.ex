@@ -6,7 +6,13 @@ defmodule Plattensammlung.Records.Artist do
   use Ash.Resource,
     otp_app: :plattensammlung,
     domain: Plattensammlung.Records,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    extensions: [AshJsonApi.Resource]
+
+  json_api do
+    type "artist"
+    includes [:albums]
+  end
 
   postgres do
     table "artists"

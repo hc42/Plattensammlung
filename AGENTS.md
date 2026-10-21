@@ -66,6 +66,7 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
     `Show` (`/albums/:id`), `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
   - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
   - `live/import_live.ex`: Import-Seite `/import` (Barcode oder Text, Ergebnis per Klick übernehmen)
+  - `ash_json_api_router.ex`: JSON:API unter `/api/json`, Swagger-UI unter `/api/json/swaggerui`
   - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
@@ -110,6 +111,22 @@ Regeln:
   `app.js`). Er sendet das LiveView-Event `"scanned"` an `ImportLive`.
 - **Tests gehen nie ins Netz**: `config/test.exs` leitet Req auf den Stub
   `Plattensammlung.LookupStub` (`test/support/lookup_stub.ex`) um.
+
+## JSON-API (AshJsonApi)
+
+- Routen stehen in `Plattensammlung.Records` unter `json_api do routes … end`. Jede Route ruft
+  eine vorhandene Action auf, keine API-eigene Logik. Neue Actions, die die API braucht,
+  dort eintragen.
+- Serialisierung pro Resource in `json_api do`: `type`, `includes`, `default_fields`.
+  Aggregate und Berechnungen erscheinen nur, wenn sie in `default_fields` stehen.
+  Private Attribute (z. B. Timestamps) dürfen dort **nicht** stehen, sonst lehnt
+  `fields[…]` sie ab.
+- Router: `lib/plattensammlung_web/ash_json_api_router.ex` (OpenAPI-Titel, Server-URL,
+  vorerst ohne Bearer-Auth).
+- PATCH-Routen laufen zuerst atomar. Wenn die Antwort Aggregate lädt, muss die Action
+  nicht atomar sein (siehe `mark_wanted`).
+- Tests: `test/plattensammlung_web/api/`, mit den Headern `accept` und `content-type`
+  auf `application/vnd.api+json`.
 
 ## Assets
 

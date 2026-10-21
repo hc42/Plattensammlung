@@ -6,7 +6,32 @@ defmodule Plattensammlung.Records.Copy do
   use Ash.Resource,
     otp_app: :plattensammlung,
     domain: Plattensammlung.Records,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    extensions: [AshJsonApi.Resource]
+
+  json_api do
+    type "copy"
+    includes [:album]
+
+    default_fields [
+      :album_id,
+      :label,
+      :catalog_number,
+      :barcode,
+      :country,
+      :pressing_year,
+      :format,
+      :discogs_release_id,
+      :musicbrainz_release_id,
+      :media_condition,
+      :sleeve_condition,
+      :purchased_on,
+      :purchase_price,
+      :location,
+      :notes,
+      :discogs_url
+    ]
+  end
 
   postgres do
     table "copies"

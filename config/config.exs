@@ -7,6 +7,14 @@
 # General application configuration
 import Config
 
+config :mime,
+  extensions: %{"json" => "application/vnd.api+json"},
+  types: %{"application/vnd.api+json" => ["json"]}
+
+config :ash_json_api,
+  show_public_calculations_when_loaded?: false,
+  authorize_update_destroy_with_error?: true
+
 # These enable behaviors that will become the default in the next major
 # version of Ash. Setting them now opts your application into the new
 # behavior and ensures a seamless upgrade. See the backwards compatibility
@@ -34,6 +42,7 @@ config :spark,
     remove_parens?: true,
     "Ash.Resource": [
       section_order: [
+        :json_api,
         :postgres,
         :resource,
         :code_interface,
@@ -51,7 +60,9 @@ config :spark,
         :identities
       ]
     ],
-    "Ash.Domain": [section_order: [:resources, :policies, :authorization, :domain, :execution]]
+    "Ash.Domain": [
+      section_order: [:json_api, :resources, :policies, :authorization, :domain, :execution]
+    ]
   ]
 
 config :plattensammlung,

@@ -6,7 +6,43 @@ defmodule Plattensammlung.Records do
   such as `add_to_collection/3` that run a resource action. LiveViews, the JSON API
   and seeds call these functions instead of touching the database directly.
   """
-  use Ash.Domain, otp_app: :plattensammlung
+  use Ash.Domain, otp_app: :plattensammlung, extensions: [AshJsonApi.Domain]
+
+  # JSON:API endpoints under /api/json (see ADR 0004). Each route runs an Ash
+  # action, so the API follows the same rules as the web UI.
+  json_api do
+    routes do
+      base_route "/artists", Plattensammlung.Records.Artist do
+        index :read
+        get :read
+        post :create
+        patch :update
+        delete :destroy
+        related :albums, :read
+      end
+
+      base_route "/albums", Plattensammlung.Records.Album do
+        # Before `get`, so "lookup" is not taken for an album id
+        route :get, "/lookup", :lookup
+        index :search
+        get :read
+        post :add_to_collection, route: "/collection"
+        post :add_to_wishlist, route: "/wishlist"
+        patch :update
+        patch :mark_wanted, route: "/:id/wanted"
+        patch :unmark_wanted, route: "/:id/unwanted"
+        delete :destroy
+        related :copies, :read
+      end
+
+      base_route "/copies", Plattensammlung.Records.Copy do
+        get :read
+        post :create
+        patch :update
+        delete :destroy
+      end
+    end
+  end
 
   resources do
     resource Plattensammlung.Records.Artist do

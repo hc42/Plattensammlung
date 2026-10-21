@@ -7,7 +7,28 @@ defmodule Plattensammlung.Records.Album do
   use Ash.Resource,
     otp_app: :plattensammlung,
     domain: Plattensammlung.Records,
-    data_layer: AshPostgres.DataLayer
+    data_layer: AshPostgres.DataLayer,
+    extensions: [AshJsonApi.Resource]
+
+  json_api do
+    type "album"
+    # ?include=artist,copies
+    includes [:artist, :copies]
+
+    # Aggregates and calculations are only serialized when listed here
+    default_fields [
+      :title,
+      :year,
+      :cover_url,
+      :genres,
+      :wanted,
+      :discogs_master_id,
+      :musicbrainz_release_group_id,
+      :owned,
+      :copy_count,
+      :discogs_url
+    ]
+  end
 
   postgres do
     table "albums"
@@ -79,11 +100,25 @@ defmodule Plattensammlung.Records.Album do
     end
 
     update :mark_wanted do
-      change set_attribute(:wanted, true)
+      # Deliberately not atomic: AshJsonApi tries an atomic UPDATE first, and that
+      # fails when the response loads the owned/copy_count aggregates. A function
+      # change cannot run atomically, so Ash reads the record and updates it.
+      require_atomic? false
+
+      change fn changeset, _context ->
+        Ash.Changeset.change_attribute(changeset, :wanted, true)
+      end
     end
 
     update :unmark_wanted do
-      change set_attribute(:wanted, false)
+      # Deliberately not atomic: AshJsonApi tries an atomic UPDATE first, and that
+      # fails when the response loads the owned/copy_count aggregates. A function
+      # change cannot run atomically, so Ash reads the record and updates it.
+      require_atomic? false
+
+      change fn changeset, _context ->
+        Ash.Changeset.change_attribute(changeset, :wanted, false)
+      end
     end
 
     read :search do

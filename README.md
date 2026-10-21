@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Sammlung, Wunschliste, Import über Discogs und MusicBrainz sowie der Barcode-Scan mit Kamera oder Foto funktionieren. Als Nächstes kommt die JSON-API.
+> **Status:** Sammlung, Wunschliste, Import über Discogs und MusicBrainz, Barcode-Scan mit Kamera oder Foto und die JSON-API funktionieren. Als Nächstes kommt der Login per Passkey.
 
 ## Ziele
 
@@ -45,7 +45,7 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 3. ✅ LiveView-Oberfläche: Liste, Suche und Filter, Detailseite, Schnellerfassung, Wunschliste
 4. ✅ Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
 5. ✅ Barcode-Scan mit der Kamera im Browser (HTTPS im WLAN: [ADR 0008](docs/adr/0008-https-im-lan.md))
-6. JSON-API (AshJsonApi) mit OpenAPI-Doku
+6. ✅ JSON-API (AshJsonApi) mit OpenAPI-Doku ([ADR 0009](docs/adr/0009-gestaltung-der-json-api.md))
 7. Login per Passkey, Magic Link als Rückfallebene
 8. Extras: Statistiken, Export (JSON-LD / CSV)
 
@@ -97,6 +97,21 @@ mix test               # Tests (legt die Testdatenbank automatisch an)
 mix precommit          # Kompilieren mit Warnungen als Fehler, Formatierung, Tests
 podman compose down    # Postgres stoppen (Daten bleiben im Volume erhalten)
 ```
+
+## JSON-API
+
+JSON:API unter `/api/json`, interaktive Doku in der Swagger-UI unter
+http://localhost:4000/api/json/swaggerui (Spezifikation: `/api/json/open_api`).
+
+```bash
+curl -H "Accept: application/vnd.api+json" "http://localhost:4000/api/json/albums?query=beatles&include=artist"
+```
+
+```bash
+curl -X POST http://localhost:4000/api/json/albums/collection -H "Content-Type: application/vnd.api+json" -d '{"data":{"type":"album","attributes":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":"LP"}}}}'
+```
+
+Noch ohne Authentifizierung (siehe ADR 0005 und 0009).
 
 ## Dokumentation
 
