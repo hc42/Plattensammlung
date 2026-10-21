@@ -79,11 +79,10 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
             <% else %>
               <button
                 phx-click="add_to_my_wishlist"
-                phx-disable-with="…"
-                class="btn btn-sm btn-primary"
+                class="btn btn-sm btn-primary phx-click-loading:pointer-events-none"
                 id="add-to-my-wishlist"
               >
-                <.icon name="hero-heart" class="size-4" /> Auf meine Wunschliste
+                <.loading_icon name="hero-heart" /> Auf meine Wunschliste
               </button>
             <% end %>
           </div>
@@ -163,11 +162,10 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
             <button
               :if={!@owner and can_find_streaming?(@album)}
               phx-click="find_streaming_links"
-              phx-disable-with="Suche …"
-              class="btn btn-sm btn-ghost"
+              class="btn btn-sm btn-ghost phx-click-loading:pointer-events-none"
               id="find-streaming-links"
             >
-              <.icon name="hero-magnifying-glass" class="size-4" /> Streaming-Links suchen
+              <.loading_icon name="hero-magnifying-glass" /> Streaming-Links suchen
             </button>
             <a
               :if={@album.discogs_url}

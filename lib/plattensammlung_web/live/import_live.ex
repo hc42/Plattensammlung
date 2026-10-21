@@ -78,11 +78,10 @@ defmodule PlattensammlungWeb.ImportLive do
                 phx-click="import"
                 phx-value-index={item.index}
                 phx-value-target="collection"
-                phx-disable-with="…"
-                class="btn btn-primary btn-sm"
+                class="btn btn-primary btn-sm phx-click-loading:pointer-events-none"
                 id={"import-collection-#{item.index}"}
               >
-                <.icon name="hero-plus-micro" class="size-4" />
+                <.loading_icon name="hero-plus-micro" />
                 {if item.existing && item.existing.owned, do: "Exemplar", else: "Sammlung"}
               </button>
               <button
@@ -90,11 +89,10 @@ defmodule PlattensammlungWeb.ImportLive do
                 phx-click="import"
                 phx-value-index={item.index}
                 phx-value-target="wishlist"
-                phx-disable-with="…"
-                class="btn btn-ghost btn-sm"
+                class="btn btn-ghost btn-sm phx-click-loading:pointer-events-none"
                 id={"import-wishlist-#{item.index}"}
               >
-                <.icon name="hero-heart-micro" class="size-4" /> Wunsch
+                <.loading_icon name="hero-heart-micro" /> Wunsch
               </button>
             </:actions>
           </.lookup_result>

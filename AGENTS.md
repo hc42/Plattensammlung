@@ -235,6 +235,9 @@ Ecto-Contexts.
   Wert (Label, Land). Die Eingabe gehört zu einem eigenen Formular `#<feld>-entry` außerhalb des
   Hauptformulars, damit Enter einen Tag hinzufügt statt zu speichern. Listen kommen als
   `form[feld][]` an und werden per `prepare_params` bereinigt.
+- Buttons mit Icon: kein `phx-disable-with` (stellt nur den Text wieder her, das Icon
+  verschwindet). Stattdessen `<.loading_icon name="…" />` und am Button
+  `phx-click-loading:pointer-events-none`.
 - Die Cover-URL wird nicht von Hand bearbeitet; das Formular zeigt nur eine Vorschau.
 - MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
 - Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.

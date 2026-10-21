@@ -150,6 +150,22 @@ defmodule PlattensammlungWeb.AlbumComponents do
     end
   end
 
+  @doc """
+  Icon for a `phx-click` button that turns into a spinner while the click is
+  being handled. Use it instead of `phx-disable-with`, which restores only the
+  button's text and so loses the icon. The button gets
+  `phx-click-loading:pointer-events-none` against double clicks.
+  """
+  attr :name, :string, required: true
+  attr :class, :any, default: "size-4"
+
+  def loading_icon(assigns) do
+    ~H"""
+    <.icon name={@name} class={[@class, "phx-click-loading:hidden"]} />
+    <span class="loading loading-spinner loading-xs hidden phx-click-loading:inline-block"></span>
+    """
+  end
+
   @doc "Select options for the Goldmine grading scale."
   def condition_options do
     Enum.map(Condition.values(), &{Condition.description(&1), &1})
