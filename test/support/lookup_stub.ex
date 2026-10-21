@@ -11,6 +11,10 @@ defmodule Plattensammlung.LookupStub do
 
   def abbey_road_barcode, do: @abbey_road_barcode
 
+  @night_train_group "9ce4b9ee-9ad4-3deb-95a4-4cb4e68c145e"
+
+  def night_train_discogs_master, do: 99328
+
   @doc """
   Options: `discogs:` and `musicbrainz:` each `:ok` (default), `:empty` or `:error`.
   """
@@ -42,10 +46,6 @@ defmodule Plattensammlung.LookupStub do
         Req.Test.json(conn, discogs_master())
     end
   end
-
-  @night_train_group "9ce4b9ee-9ad4-3deb-95a4-4cb4e68c145e"
-
-  def night_train_discogs_master, do: 99328
 
   defp route(conn, "musicbrainz.org", opts) do
     params = conn.query_params
