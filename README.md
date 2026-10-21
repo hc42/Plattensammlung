@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Konzept steht, das Projekt wird angelegt.
+> **Status:** Projekt ist angelegt (Phoenix 1.8, Ash 3, Postgres 18). Als Nächstes kommt die Domain `Records`.
 
 ## Ziele
 
@@ -51,12 +51,20 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 
 ## Entwicklung
 
-_Folgt, sobald das Projekt angelegt ist._ Geplant ist:
+Voraussetzungen: Elixir 1.20 / OTP 29 und Podman (mit laufender `podman machine`).
 
 ```bash
-podman compose up -d   # Postgres starten
-mix setup              # Abhängigkeiten, Datenbank, Seeds
-mix phx.server         # http://localhost:4000
+podman compose up -d   # Postgres 18 im Container starten (Port 5432, nur localhost)
+mix setup              # Abhängigkeiten, Datenbank anlegen und migrieren, Assets, Seeds
+mix phx.server         # App starten: http://localhost:4000
+```
+
+Weitere Befehle:
+
+```bash
+mix test               # Tests (legt die Testdatenbank automatisch an)
+mix precommit          # Kompilieren mit Warnungen als Fehler, Formatierung, Tests
+podman compose down    # Postgres stoppen (Daten bleiben im Volume erhalten)
 ```
 
 ## Dokumentation

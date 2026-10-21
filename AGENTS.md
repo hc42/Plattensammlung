@@ -35,7 +35,7 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 
 ## Technik und Konventionen
 
-- Elixir 1.20 / OTP 29, Phoenix (aktuelle Version), Ash 3.x
+- Elixir 1.20 / OTP 29, Phoenix 1.8, Ash 3.x, PostgreSQL 18 (`min_pg_version` im Repo)
 - Projekt mit Igniter anlegen und erweitern (`mix igniter.install …`), wo möglich,
   statt Konfiguration von Hand zu schreiben.
 - Datenzugriff **nur über Ash**: Code Interfaces der Domain (`define`) statt direktem
@@ -49,7 +49,27 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 
 ## Befehle
 
-_Werden ergänzt, sobald das Projekt angelegt ist._
+- `podman compose up -d`: Postgres starten (vor allem anderen nötig)
+- `mix setup`: Abhängigkeiten, Datenbank, Assets, Seeds
+- `mix phx.server`: Entwicklungsserver auf http://localhost:4000
+- `mix test`: Tests
+- `mix precommit`: **vor jedem Commit ausführen** und alle Probleme beheben
+- `mix ash.codegen <name>`: Migrationen aus Ash-Resources erzeugen, danach `mix ash.migrate`
+
+## Projektstruktur
+
+- `lib/plattensammlung/`: Geschäftslogik (Ash-Domains und -Resources, `Repo`)
+- `lib/plattensammlung_web/`: Phoenix (Router, LiveViews, Komponenten)
+- `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
+- `docs/adr/`: Architekturentscheidungen
+- `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
+
+## Phoenix-Richtlinien
+
+Bei Arbeit an Web-Code (LiveView, HEEx, Komponenten, Router) **unbedingt
+[docs/agents/phoenix.md](docs/agents/phoenix.md) lesen und befolgen**. Die Datei stammt
+vom Phoenix-Generator. Abweichend davon gilt hier: Datenzugriff über Ash statt über
+Ecto-Contexts.
 
 ## Stolperfallen
 
