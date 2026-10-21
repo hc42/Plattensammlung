@@ -57,10 +57,17 @@ defmodule Plattensammlung.Records.Album do
       primary? true
       require_atomic? false
 
-      change after_action(fn _changeset, album, _context ->
-               Plattensammlung.Covers.delete(album.cover_url)
-               {:ok, album}
-             end)
+      # Only once the delete is committed, so a rollback keeps the cover
+      change fn changeset, _context ->
+        Ash.Changeset.after_transaction(changeset, fn
+          _changeset, {:ok, album} = result ->
+            Plattensammlung.Covers.delete(album.cover_url)
+            result
+
+          _changeset, error ->
+            error
+        end)
+      end
     end
 
     create :add_to_collection do
@@ -131,7 +138,8 @@ defmodule Plattensammlung.Records.Album do
       argument :query, :ci_string
 
       argument :status, :atom do
-        constraints one_of: [:collection, :wishlist]
+        # :other = neither owned nor wanted (e.g. after deleting the last copy)
+        constraints one_of: [:collection, :wishlist, :other]
       end
 
       filter expr(
@@ -142,7 +150,8 @@ defmodule Plattensammlung.Records.Album do
       filter expr(
                is_nil(^arg(:status)) or
                  (^arg(:status) == :collection and exists(copies, true)) or
-                 (^arg(:status) == :wishlist and wanted == true)
+                 (^arg(:status) == :wishlist and wanted == true) or
+                 (^arg(:status) == :other and not exists(copies, true) and wanted == false)
              )
 
       prepare build(sort: [title: :asc], load: [:artist])
@@ -165,6 +174,67 @@ defmodule Plattensammlung.Records.Album do
       run fn input, _context ->
         Plattensammlung.Lookup.search(input.arguments.query)
       end
+    end
+
+    action :find_matches, {:array, Plattensammlung.Records.LookupResult} do
+      description """
+      Candidates from Discogs/MusicBrainz to update an existing album with:
+      by its stored ids, otherwise by artist and title, or by the given query.
+      """
+
+      argument :album_id, :uuid, allow_nil?: false
+      argument :query, :string
+
+      run fn input, context ->
+        opts = Ash.Context.to_opts(context)
+
+        with {:ok, album} <-
+               Plattensammlung.Records.get_album(
+                 input.arguments.album_id,
+                 [load: [:artist]] ++ opts
+               ) do
+          Plattensammlung.Lookup.for_album(album, input.arguments[:query])
+        end
+      end
+    end
+
+    update :upload_cover do
+      description "Replaces the cover with an uploaded image (JPEG, PNG, WebP or GIF)."
+      argument :image, :file, allow_nil?: false
+      require_atomic? false
+      change Plattensammlung.Records.Changes.StoreUploadedCover
+    end
+
+    update :remove_cover do
+      require_atomic? false
+      change set_attribute(:cover_url, nil)
+      # Deletes the previous local file once the update is saved
+      change Plattensammlung.Records.Changes.StoreCover
+    end
+
+    update :apply_match do
+      description "Takes album data from a lookup result: fill empty fields or overwrite."
+      argument :result, Plattensammlung.Records.LookupResult, allow_nil?: false
+
+      argument :mode, :atom do
+        default :fill
+        constraints one_of: [:fill, :overwrite]
+      end
+
+      argument :copy_id, :uuid do
+        description "Copy of this album that gets the pressing details of a barcode result"
+      end
+
+      argument :new_copy, :boolean do
+        description "Add the pressing as a new copy instead"
+        default false
+      end
+
+      require_atomic? false
+
+      # Order matters: StoreCover downloads the cover that ApplyMatch set
+      change Plattensammlung.Records.Changes.ApplyMatch
+      change Plattensammlung.Records.Changes.StoreCover
     end
 
     action :statistics, :map do

@@ -38,7 +38,29 @@ defmodule PlattensammlungWeb.AccountLive do
               class="flex items-center gap-3 p-4"
             >
               <.icon name="hero-finger-print" class="size-5 opacity-60" />
-              <div class="flex-1 text-sm">
+              <.form
+                :if={@renaming == passkey.id}
+                for={@rename_form}
+                id={"rename-passkey-form-#{passkey.id}"}
+                phx-submit="rename_passkey"
+                class="flex flex-1 gap-2"
+              >
+                <input type="hidden" name="passkey_id" value={passkey.id} />
+                <input
+                  type="text"
+                  name="name"
+                  value={@rename_form[:name].value}
+                  maxlength="60"
+                  class="input input-sm flex-1"
+                  aria-label="Name des Passkeys"
+                  phx-mounted={JS.focus()}
+                />
+                <button class="btn btn-primary btn-sm">Speichern</button>
+                <button type="button" phx-click="cancel_rename" class="btn btn-ghost btn-sm">
+                  Abbrechen
+                </button>
+              </.form>
+              <div :if={@renaming != passkey.id} class="flex-1 text-sm">
                 <p class="font-medium">{passkey.name || "Passkey"}</p>
                 <p class="opacity-60">
                   angelegt {format_date(passkey.inserted_at)}<span :if={passkey.last_used_at}>,
@@ -46,6 +68,17 @@ defmodule PlattensammlungWeb.AccountLive do
                 </p>
               </div>
               <button
+                :if={@renaming != passkey.id}
+                phx-click="start_rename"
+                phx-value-id={passkey.id}
+                class="btn btn-ghost btn-sm"
+                id={"rename-passkey-#{passkey.id}"}
+                aria-label="Passkey umbenennen"
+              >
+                <.icon name="hero-pencil-square" class="size-4" />
+              </button>
+              <button
+                :if={@renaming != passkey.id}
                 phx-click="delete_passkey"
                 phx-value-id={passkey.id}
                 data-confirm="Diesen Passkey entfernen?"
@@ -138,6 +171,8 @@ defmodule PlattensammlungWeb.AccountLive do
      |> assign(:page_title, "Konto")
      |> assign(:host, socket.host_uri.host)
      |> assign(:passkey_error, nil)
+     |> assign(:renaming, nil)
+     |> assign(:rename_form, to_form(%{}))
      |> assign(:new_api_key, nil)
      |> assign(:api_key_form, to_form(%{}))
      |> load_passkeys()
@@ -155,6 +190,32 @@ defmodule PlattensammlungWeb.AccountLive do
 
   def handle_event("passkey_failed", %{"error" => error}, socket) do
     {:noreply, assign(socket, :passkey_error, error)}
+  end
+
+  def handle_event("start_rename", %{"id" => id}, socket) do
+    passkey = Enum.find(socket.assigns.passkeys, &(&1.id == id))
+
+    {:noreply,
+     socket
+     |> assign(:renaming, id)
+     |> assign(:rename_form, to_form(%{"name" => passkey.name}))}
+  end
+
+  def handle_event("cancel_rename", _params, socket) do
+    {:noreply, assign(socket, :renaming, nil)}
+  end
+
+  def handle_event("rename_passkey", %{"passkey_id" => id, "name" => name}, socket) do
+    passkey = Enum.find(socket.assigns.passkeys, &(&1.id == id))
+    name = name |> String.trim() |> String.slice(0, 60)
+
+    case Accounts.rename_passkey(passkey, blank_to_nil(name), actor: actor(socket)) do
+      {:ok, _passkey} ->
+        {:noreply, socket |> assign(:renaming, nil) |> load_passkeys()}
+
+      {:error, _error} ->
+        {:noreply, put_flash(socket, :error, "Der Passkey konnte nicht umbenannt werden.")}
+    end
   end
 
   def handle_event("delete_passkey", %{"id" => id}, socket) do
@@ -199,6 +260,9 @@ defmodule PlattensammlungWeb.AccountLive do
   end
 
   defp actor(socket), do: socket.assigns.current_user
+
+  defp blank_to_nil(""), do: nil
+  defp blank_to_nil(value), do: value
 
   defp format_date(datetime), do: Calendar.strftime(datetime, "%d.%m.%Y")
 end

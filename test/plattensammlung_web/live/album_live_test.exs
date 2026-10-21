@@ -136,7 +136,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       refute has_element?(view, "#copy-#{copy.id}")
 
       view |> element("#delete-album") |> render_click()
-      assert_redirect(view, ~p"/")
+      # Without copies the album was unassigned, so "back" leads to all albums
+      assert_redirect(view, ~p"/albums")
       assert {:error, _} = Records.get_album(album.id, authorize?: false)
     end
   end

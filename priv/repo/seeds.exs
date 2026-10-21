@@ -23,9 +23,7 @@ collection = [
        format: "LP",
        media_condition: :very_good_plus,
        sleeve_condition: :very_good,
-       purchased_on: ~D[2019-05-03],
-       purchase_price: Decimal.new("25.00"),
-       location: "Regal B, Fach 3"
+       purchased_on: ~D[2019-05-03]
      }
    }},
   {"Pink Floyd", "The Dark Side of the Moon", %{year: 1973, genres: ["Rock"]}},

@@ -52,3 +52,8 @@ einem offenen Format ([ADR 0006](0006-datenmodell.md) nennt schema.org als Vorbi
 - Cover-URLs im JSON-LD werden mit der Adresse der Anfrage absolut gemacht.
 - Excel öffnet die CSV mit Komma-Trennung nicht immer direkt richtig; der Import über
   „Daten → Aus Text/CSV“ funktioniert.
+
+## Nachtrag (2026-10-21)
+
+Kaufpreis und Lagerort gibt es nicht mehr ([ADR 0006](0006-datenmodell.md)). Die Kachel
+„Kaufwert“ ist durch „Künstler“ ersetzt; CSV und JSON-LD enthalten die Felder nicht mehr.

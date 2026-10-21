@@ -12,11 +12,46 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <.link navigate={back_path(@album)} class="text-sm opacity-70 hover:opacity-100">
         <.icon name="hero-arrow-left-micro" class="size-4" />
-        {if @album.owned, do: "Sammlung", else: "Wunschliste"}
+        {back_label(@album)}
       </.link>
 
       <div class="grid gap-8 md:grid-cols-[18rem_1fr]">
-        <.cover album={@album} class="w-full max-w-72" />
+        <div class="w-full max-w-72 space-y-2">
+          <.cover album={@album} class="w-full" />
+          <%!-- Live upload: the image is sent as soon as it is chosen (auto_upload) --%>
+          <form id="cover-form" phx-change="validate_cover" phx-submit="noop">
+            <.live_file_input upload={@uploads.cover} class="hidden" />
+            <div class="flex flex-wrap gap-1">
+              <label for={@uploads.cover.ref} class="btn btn-ghost btn-sm" id="change-cover">
+                <.icon name="hero-photo" class="size-4" />
+                {if @album.cover_url, do: "Cover ändern", else: "Cover hinzufügen"}
+              </label>
+              <button
+                :if={@album.cover_url}
+                type="button"
+                phx-click="remove_cover"
+                data-confirm="Cover entfernen?"
+                class="btn btn-ghost btn-sm text-error"
+                id="remove-cover"
+              >
+                <.icon name="hero-trash" class="size-4" /> Entfernen
+              </button>
+            </div>
+            <progress
+              :for={entry <- @uploads.cover.entries}
+              value={entry.progress}
+              max="100"
+              class="progress progress-primary w-full"
+            />
+            <p
+              :for={error <- cover_errors(@uploads.cover)}
+              class="text-sm text-error"
+              id="cover-error"
+            >
+              {error}
+            </p>
+          </form>
+        </div>
 
         <div class="space-y-4">
           <div>
@@ -63,6 +98,9 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 class="size-4"
               />
               {if @album.wanted, do: "Von Wunschliste entfernen", else: "Auf Wunschliste"}
+            </.button>
+            <.button navigate={~p"/albums/#{@album}/match"} id="match-album" class="btn btn-ghost">
+              <.icon name="hero-arrow-path" class="size-4" /> Abgleichen
             </.button>
             <.button navigate={~p"/albums/#{@album}/edit"} id="edit-album" class="btn btn-ghost">
               <.icon name="hero-pencil-square" class="size-4" /> Bearbeiten
@@ -149,10 +187,31 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
-    {:ok, load_album(socket, id)}
+    {:ok,
+     socket
+     |> allow_upload(:cover,
+       accept: ~w(.jpg .jpeg .png .webp .gif),
+       max_entries: 1,
+       max_file_size: 10_000_000,
+       auto_upload: true,
+       progress: &handle_cover_progress/3
+     )
+     |> load_album(id)}
   end
 
   @impl true
+  def handle_event("validate_cover", _params, socket), do: {:noreply, socket}
+  def handle_event("noop", _params, socket), do: {:noreply, socket}
+
+  def handle_event("remove_cover", _params, socket) do
+    album = Records.remove_cover!(socket.assigns.album, actor: socket.assigns.current_user)
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Cover entfernt.")
+     |> load_album(album.id)}
+  end
+
   def handle_event("toggle_wanted", _params, socket) do
     album = socket.assigns.album
 
@@ -185,6 +244,40 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
      |> load_album(socket.assigns.album.id)}
   end
 
+  defp handle_cover_progress(:cover, entry, socket) do
+    if entry.done? do
+      album = socket.assigns.album
+      actor = socket.assigns.current_user
+
+      result =
+        consume_uploaded_entry(socket, entry, fn %{path: path} ->
+          # The temporary upload file is removed after this function returns
+          {:ok, Records.upload_cover(album, Ash.Type.File.from_path(path), actor: actor)}
+        end)
+
+      case result do
+        {:ok, _album} ->
+          {:noreply, socket |> put_flash(:info, "Cover gespeichert.") |> load_album(album.id)}
+
+        {:error, _error} ->
+          {:noreply, put_flash(socket, :error, "Das Bild konnte nicht gelesen werden.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  defp cover_errors(upload) do
+    (upload_errors(upload) ++ Enum.flat_map(upload.entries, &upload_errors(upload, &1)))
+    |> Enum.map(fn
+      :too_large -> "Das Bild ist größer als 10 MB."
+      :not_accepted -> "Bitte ein Bild im Format JPEG, PNG, WebP oder GIF wählen."
+      :too_many_files -> "Bitte nur ein Bild wählen."
+      _other -> "Das Bild konnte nicht hochgeladen werden."
+    end)
+    |> Enum.uniq()
+  end
+
   defp load_album(socket, id) do
     album =
       Records.get_album!(id,
@@ -197,8 +290,13 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     |> assign(:page_title, "#{album.artist.name} – #{album.title}")
   end
 
-  defp back_path(%{owned: false, wanted: true}), do: ~p"/wishlist"
-  defp back_path(_album), do: ~p"/"
+  defp back_path(%{owned: true}), do: ~p"/"
+  defp back_path(%{wanted: true}), do: ~p"/wishlist"
+  defp back_path(_album), do: ~p"/albums"
+
+  defp back_label(%{owned: true}), do: "Sammlung"
+  defp back_label(%{wanted: true}), do: "Wunschliste"
+  defp back_label(_album), do: "Alle Alben"
 
   defp copy_heading(copy) do
     [copy.format, copy.label, copy.pressing_year && to_string(copy.pressing_year)]
@@ -216,17 +314,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
       {"Land", copy.country},
       {"Zustand Platte", condition_label(copy.media_condition)},
       {"Zustand Hülle", condition_label(copy.sleeve_condition)},
-      {"Gekauft am", copy.purchased_on && Calendar.strftime(copy.purchased_on, "%d.%m.%Y")},
-      {"Preis", copy.purchase_price && format_price(copy.purchase_price)},
-      {"Lagerort", copy.location}
+      {"Gekauft am", copy.purchased_on && Calendar.strftime(copy.purchased_on, "%d.%m.%Y")}
     ]
-  end
-
-  defp format_price(price) do
-    price
-    |> Decimal.round(2)
-    |> Decimal.to_string(:normal)
-    |> String.replace(".", ",")
-    |> Kernel.<>(" €")
   end
 end

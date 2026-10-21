@@ -32,6 +32,31 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
     end
   end
 
+  @doc "The album (release group) with this MusicBrainz id, including its top genres."
+  def by_release_group_id(id) do
+    case get("/release-group/#{id}", inc: "artist-credits genres") do
+      {:ok, %{} = group} ->
+        {:ok, [group |> from_release_group() |> Map.put(:genres, genres(group))]}
+
+      {:ok, nil} ->
+        {:ok, []}
+
+      error ->
+        error
+    end
+  end
+
+  # Community-voted genres, most votes first: "art rock" -> "Art Rock"
+  defp genres(group) do
+    group
+    |> Map.get("genres", [])
+    |> Enum.sort_by(&(-(&1["count"] || 0)))
+    |> Enum.take(3)
+    |> Enum.map(fn %{"name" => name} ->
+      name |> String.split(" ") |> Enum.map_join(" ", &String.capitalize/1)
+    end)
+  end
+
   defp get(path, params) do
     [base_url: @base_url]
     |> HTTP.new()

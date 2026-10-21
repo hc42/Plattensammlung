@@ -6,6 +6,8 @@ defmodule Plattensammlung.Covers do
   """
   alias Plattensammlung.Lookup.HTTP
 
+  require Logger
+
   @max_bytes 10_000_000
   @extensions %{
     "image/jpeg" => ".jpg",
@@ -24,11 +26,80 @@ defmodule Plattensammlung.Covers do
     with {:ok, response} <- download(url),
          {:ok, extension} <- extension(response),
          :ok <- check_size(response.body) do
-      name = Ash.UUIDv7.generate() <> extension
-      File.mkdir_p!(dir())
-      File.write!(Path.join(dir(), name), response.body)
-      {:ok, "/covers/" <> name}
+      write(response.body, extension)
     end
+  end
+
+  @doc """
+  Stores an uploaded image file and returns its local URL. The type is taken
+  from the file content, not from the name or what the browser claims.
+  """
+  @spec store_file(Path.t()) :: {:ok, String.t()} | {:error, term()}
+  def store_file(path) do
+    with {:ok, binary} <- File.read(path),
+         :ok <- check_size(binary),
+         {:ok, extension} <- detect_type(binary) do
+      write(binary, extension)
+    end
+  end
+
+  defp write(binary, extension) do
+    name = Ash.UUIDv7.generate() <> extension
+    File.mkdir_p!(dir())
+    File.write!(Path.join(dir(), name), binary)
+    {:ok, "/covers/" <> name}
+  end
+
+  # Magic bytes of the supported formats
+  defp detect_type(<<0xFF, 0xD8, 0xFF, _::binary>>), do: {:ok, ".jpg"}
+  defp detect_type(<<0x89, "PNG", 0x0D, 0x0A, 0x1A, 0x0A, _::binary>>), do: {:ok, ".png"}
+  defp detect_type(<<"GIF8", _::binary>>), do: {:ok, ".gif"}
+  defp detect_type(<<"RIFF", _size::binary-size(4), "WEBP", _::binary>>), do: {:ok, ".webp"}
+  defp detect_type(_binary), do: {:error, :unsupported_image}
+
+  @doc """
+  Deletes cover files no album refers to ("Karteileichen"), e.g. after a crash
+  between storing a file and saving the album. Files younger than `min_age`
+  seconds (default one hour) are kept, so uploads in progress are safe.
+  Runs at application start; by hand in a release:
+
+      bin/plattensammlung rpc "Plattensammlung.Covers.cleanup_orphans()"
+
+  Returns `{:ok, deleted_file_names}`.
+  """
+  def cleanup_orphans(min_age \\ 3600) do
+    referenced = referenced_files()
+    oldest_allowed = System.os_time(:second) - min_age
+
+    deleted =
+      case File.ls(dir()) do
+        {:ok, files} ->
+          for file <- files,
+              file not in referenced,
+              path = Path.join(dir(), file),
+              {:ok, %File.Stat{type: :regular, mtime: mtime}} <- [File.stat(path, time: :posix)],
+              mtime < oldest_allowed,
+              :ok == File.rm(path),
+              do: file
+
+        {:error, _reason} ->
+          []
+      end
+
+    if deleted != [], do: Logger.info("Deleted #{length(deleted)} unreferenced cover file(s)")
+    {:ok, deleted}
+  end
+
+  # Maintenance across all albums, independent of any user: no authorization
+  defp referenced_files do
+    Plattensammlung.Records.Album
+    |> Ash.Query.select([:cover_url])
+    |> Ash.read!(authorize?: false)
+    |> Enum.flat_map(fn
+      %{cover_url: "/covers/" <> name} -> [name]
+      _album -> []
+    end)
+    |> MapSet.new()
   end
 
   @doc "Removes a locally stored cover; remote URLs and nil are ignored."

@@ -19,8 +19,6 @@ defmodule Plattensammlung.StatisticsExportTest do
           catalog_number: "PCS 7088",
           barcode: "0602547288530",
           media_condition: :very_good_plus,
-          purchase_price: Decimal.new("25.50"),
-          location: "Regal B",
           notes: "Erbstück, \"Original\""
         }
       },
@@ -29,9 +27,7 @@ defmodule Plattensammlung.StatisticsExportTest do
 
     abbey = Records.find_duplicates!("The Beatles", "Abbey Road", actor: user) |> hd()
 
-    Records.add_copy!(abbey.id, %{media_condition: :good, purchase_price: Decimal.new("10")},
-      actor: user
-    )
+    Records.add_copy!(abbey.id, %{media_condition: :good}, actor: user)
 
     Records.add_to_collection!("The Beatles", "Revolver", %{year: 1966, genres: ["Rock"]},
       actor: user
@@ -54,8 +50,6 @@ defmodule Plattensammlung.StatisticsExportTest do
       assert stats.copies == 4
       assert stats.wishlist == 1
       assert stats.artists == 2
-      assert Decimal.equal?(stats.value, Decimal.new("35.50"))
-      assert stats.priced_copies == 2
     end
 
     test "breaks the collection down", %{user: user} do
@@ -98,7 +92,6 @@ defmodule Plattensammlung.StatisticsExportTest do
       assert row["artist"] == "The Beatles"
       assert row["genres"] == "Rock; Pop"
       assert row["media_condition"] == "VG+"
-      assert row["purchase_price"] == "25.50"
       # Quotes and commas survive the round trip
       assert row["notes"] == "Erbstück, \"Original\""
     end
@@ -131,8 +124,7 @@ defmodule Plattensammlung.StatisticsExportTest do
       assert release["musicReleaseFormat"] == "https://schema.org/VinylFormat"
 
       encoded = Phoenix.json_library().encode!(json_ld)
-      refute encoded =~ "25.50"
-      refute encoded =~ "Regal B"
+      refute encoded =~ "Erbstück"
       refute encoded =~ "Tago Mago"
     end
   end

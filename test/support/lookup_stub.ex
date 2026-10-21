@@ -49,6 +49,7 @@ defmodule Plattensammlung.LookupStub do
       {:empty, "/ws/2/release-group"} -> Req.Test.json(conn, %{"release-groups" => []})
       {:empty, "/ws/2/release"} -> Req.Test.json(conn, %{"releases" => []})
       {:ok, "/ws/2/release-group"} -> Req.Test.json(conn, %{"release-groups" => mb_groups()})
+      {:ok, "/ws/2/release-group/" <> _id} -> Req.Test.json(conn, mb_group_with_genres())
       {:ok, "/ws/2/release"} -> Req.Test.json(conn, %{"releases" => [mb_release()]})
     end
   end
@@ -114,6 +115,17 @@ defmodule Plattensammlung.LookupStub do
         "artist-credit" => [%{"name" => "Various", "joinphrase" => " & "}, %{"name" => "Friends"}]
       }
     ]
+  end
+
+  defp mb_group_with_genres do
+    mb_groups()
+    |> hd()
+    |> Map.put("genres", [
+      %{"name" => "pop", "count" => 3},
+      %{"name" => "art rock", "count" => 7},
+      %{"name" => "rock", "count" => 12},
+      %{"name" => "psychedelic", "count" => 1}
+    ])
   end
 
   defp mb_release do

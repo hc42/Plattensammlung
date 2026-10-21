@@ -1,7 +1,8 @@
 defmodule PlattensammlungWeb.AlbumLive.Index do
   @moduledoc """
-  Collection and wishlist as a searchable grid of covers.
-  The search term lives in the URL (`?q=`), so results can be bookmarked.
+  Collection, wishlist and all albums as a searchable grid of covers.
+  Search term (`?q=`) and the filter of the all-albums view (`?show=unassigned`)
+  live in the URL, so results can be bookmarked.
   """
   use PlattensammlungWeb, :live_view
 
@@ -14,7 +15,17 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold">{@page_title}</h1>
-          <p class="text-sm opacity-70">{count_text(@live_action, @count)}</p>
+          <p class="text-sm opacity-70">
+            {count_text(@live_action, @count)}
+            <.link
+              :if={@live_action != :all}
+              navigate={~p"/albums"}
+              class="link ml-2"
+              id="all-albums-link"
+            >
+              Alle Alben
+            </.link>
+          </p>
         </div>
 
         <.form for={@search_form} id="search-form" phx-change="search" phx-submit="search">
@@ -31,6 +42,17 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
             />
           </label>
         </.form>
+      </div>
+
+      <div :if={@live_action == :all} class="join" id="album-filter">
+        <.link
+          :for={{value, label} <- [{nil, "Alle"}, {"unassigned", "Ohne Exemplar und Wunsch"}]}
+          patch={all_path(@query, value)}
+          class={["join-item btn btn-sm", @show == value && "btn-active"]}
+          id={"filter-#{value || "all"}"}
+        >
+          {label}
+        </.link>
       </div>
 
       <div
@@ -78,18 +100,20 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   @impl true
   def handle_params(params, _url, socket) do
     query = blank_to_nil(params["q"])
-    status = socket.assigns.live_action
+    show = if params["show"] == "unassigned", do: "unassigned", else: nil
+    action = socket.assigns.live_action
 
     albums =
-      Records.search_albums!(query, status,
+      Records.search_albums!(query, status(action, show),
         load: [:owned, :copy_count],
         actor: socket.assigns.current_user
       )
 
     {:noreply,
      socket
-     |> assign(:page_title, page_title(status))
+     |> assign(:page_title, page_title(action))
      |> assign(:query, query)
+     |> assign(:show, show)
      |> assign(:count, length(albums))
      |> assign(:search_form, to_form(%{"q" => query}))
      |> stream(:albums, albums, reset: true)}
@@ -97,14 +121,28 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
   @impl true
   def handle_event("search", %{"q" => q}, socket) do
-    path = if socket.assigns.live_action == :wishlist, do: ~p"/wishlist", else: ~p"/"
-    params = if blank_to_nil(q), do: %{q: q}, else: %{}
+    path =
+      case socket.assigns.live_action do
+        :all -> all_path(blank_to_nil(q), socket.assigns.show)
+        :wishlist -> ~p"/wishlist" <> query_string(%{q: blank_to_nil(q)})
+        :collection -> ~p"/" <> query_string(%{q: blank_to_nil(q)})
+      end
 
-    {:noreply, push_patch(socket, to: path <> query_string(params), replace: true)}
+    {:noreply, push_patch(socket, to: path, replace: true)}
   end
 
-  defp query_string(params) when params == %{}, do: ""
-  defp query_string(params), do: "?" <> URI.encode_query(params)
+  defp status(:all, "unassigned"), do: :other
+  defp status(:all, nil), do: nil
+  defp status(action, _show), do: action
+
+  defp all_path(query, show), do: ~p"/albums" <> query_string(%{q: query, show: show})
+
+  defp query_string(params) do
+    case params |> Enum.reject(fn {_key, value} -> is_nil(value) end) do
+      [] -> ""
+      params -> "?" <> URI.encode_query(params)
+    end
+  end
 
   defp blank_to_nil(value) do
     case value && String.trim(value) do
@@ -115,13 +153,17 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
   defp page_title(:collection), do: "Sammlung"
   defp page_title(:wishlist), do: "Wunschliste"
+  defp page_title(:all), do: "Alle Alben"
 
   defp count_text(:collection, 1), do: "1 Album"
   defp count_text(:collection, n), do: "#{n} Alben"
   defp count_text(:wishlist, 1), do: "1 Wunsch"
   defp count_text(:wishlist, n), do: "#{n} Wünsche"
+  defp count_text(:all, 1), do: "1 Album"
+  defp count_text(:all, n), do: "#{n} Alben"
 
   defp empty_text(_action, query) when is_binary(query), do: "Nichts gefunden für „#{query}“."
   defp empty_text(:collection, nil), do: "Noch keine Platten in der Sammlung."
   defp empty_text(:wishlist, nil), do: "Die Wunschliste ist leer."
+  defp empty_text(:all, nil), do: "Keine Alben in dieser Ansicht."
 end

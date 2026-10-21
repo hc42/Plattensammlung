@@ -6,7 +6,7 @@ defmodule Plattensammlung.Records.Export do
     Meant as a backup and for spreadsheets; column names match the API fields.
   * `json_ld/2` – the owned albums as a schema.org `ItemList` of `MusicAlbum`s
     with their `MusicRelease`s (pressings). Private details (price, purchase
-    date, location, notes) are left out, so it can be shared.
+    date, notes) are left out, so it can be shared.
 
   Data is read through the Records domain with the given options (actor).
   """
@@ -16,8 +16,8 @@ defmodule Plattensammlung.Records.Export do
   NimbleCSV.define(__MODULE__.CSV, separator: ",", escape: "\"")
 
   @csv_columns ~w(status artist title year genres format label catalog_number barcode country
-                  pressing_year media_condition sleeve_condition purchased_on purchase_price
-                  location notes discogs_master_id discogs_release_id
+                  pressing_year media_condition sleeve_condition purchased_on
+                  notes discogs_master_id discogs_release_id
                   musicbrainz_release_group_id musicbrainz_release_id)
 
   @doc "CSV text with a header row."
@@ -81,8 +81,6 @@ defmodule Plattensammlung.Records.Export do
       condition(copy_value.(:media_condition)),
       condition(copy_value.(:sleeve_condition)),
       copy_value.(:purchased_on),
-      copy_value.(:purchase_price),
-      copy_value.(:location),
       copy_value.(:notes),
       album.discogs_master_id,
       copy_value.(:discogs_release_id),

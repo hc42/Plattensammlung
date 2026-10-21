@@ -45,14 +45,6 @@ defmodule PlattensammlungWeb.CopyLive.Form do
               options={condition_options()}
             />
             <.input field={@form[:purchased_on]} type="date" label="Gekauft am" />
-            <.input
-              field={@form[:purchase_price]}
-              type="number"
-              step="0.01"
-              min="0"
-              label="Kaufpreis (€)"
-            />
-            <.input field={@form[:location]} label="Lagerort" placeholder="Regal B, Fach 3" />
             <.input field={@form[:discogs_release_id]} type="number" label="Discogs-Release-ID" />
           </div>
           <.input field={@form[:notes]} type="textarea" label="Notizen" rows="3" />

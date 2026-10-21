@@ -138,7 +138,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
       payload = %{
         data: %{
           type: "copy",
-          attributes: %{album_id: album.id, format: "2LP", location: "Regal A"}
+          attributes: %{album_id: album.id, format: "2LP", notes: "Regal A"}
         }
       }
 
@@ -171,9 +171,9 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     body = conn |> patch(~p"/api/json/albums/#{album.id}", album_patch) |> json_response(200)
     assert %{"year" => 1969, "genres" => ["Rock"], "owned" => true} = body["data"]["attributes"]
 
-    copy_patch = %{data: %{type: "copy", id: copy.id, attributes: %{location: "Regal B"}}}
+    copy_patch = %{data: %{type: "copy", id: copy.id, attributes: %{notes: "Regal B"}}}
     body = conn |> patch(~p"/api/json/copies/#{copy.id}", copy_patch) |> json_response(200)
-    assert body["data"]["attributes"]["location"] == "Regal B"
+    assert body["data"]["attributes"]["notes"] == "Regal B"
   end
 
   test "DELETE removes an album", %{conn: conn} do

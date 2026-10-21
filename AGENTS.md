@@ -115,6 +115,8 @@ Regeln:
   ohne Beachtung der Groß- und Kleinschreibung (`:ci_string` = citext).
 - „Besitze ich“ ist das Aggregate `owned` (existiert eine Copy?). Es wird nie gespeichert.
 - Eine Copy anzulegen setzt `wanted` am Album zurück (Change `RemoveFromWishlist`).
+- Ein Album ohne Copy und ohne `wanted` ist „nicht zugeordnet“ (Such-Status `:other`).
+- Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr.
 - Ein Album zu löschen löscht seine Copies. Ein Artist mit Alben kann nicht gelöscht werden.
 
 ## Import (`Plattensammlung.Lookup`)
@@ -158,6 +160,18 @@ Regeln:
   In frischen Terminals ist `npm` erst nach `nvm use` verfügbar.
 - esbuild baut ES-Module mit Code-Splitting. Große, selten gebrauchte Bibliotheken per
   `await import("…")` laden, damit sie in einem eigenen Chunk landen.
+
+## Abgleich und Cover
+
+- `Album.find_matches` / `Album.apply_match` (ADR 0007, Nachtrag): Änderungen berechnet
+  `Records.AlbumMatch` (`changes/3`, `copy_changes/3`, `labels/1`), sowohl für die Vorschau
+  als auch fürs Speichern. Seite: `AlbumLive.Match` (`/albums/:id/match`).
+- Cover: `Album.upload_cover` (Argument `:image`, Typ `:file`, Bildtyp per Magic Bytes in
+  `Covers.store_file/1`) und `Album.remove_cover`. Upload in `AlbumLive.Show` per LiveView
+  `allow_upload` mit `auto_upload`.
+- Cover-Dateien: neue Datei vor der Transaktion speichern, alte erst nach erfolgreichem Commit
+  löschen, bei Fehlern die neue wieder entfernen. `Covers.cleanup_orphans/0` löscht
+  unreferenzierte Dateien (älter als 1 h) beim App-Start (`:cleanup_covers_on_start`, in Tests aus).
 
 ## Statistik und Export (ADR 0010)
 

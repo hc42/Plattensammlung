@@ -25,6 +25,7 @@ defmodule Plattensammlung.Accounts do
       define :list_passkeys, action: :read
       define :get_passkey_by_credential_id, action: :by_credential_id, args: [:credential_id]
       define :record_passkey_use, action: :record_use, args: [:sign_count]
+      define :rename_passkey, action: :rename, args: [:name]
       define :destroy_passkey, action: :destroy
     end
   end

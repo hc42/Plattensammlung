@@ -126,6 +126,11 @@ nginx-proxy-manager, **nicht** auf Port 4000 der App.
 - **Cover und Dumps:** **Data Protection → Periodic Snapshot Tasks** für
   `POOL/apps/plattensammlung` (rekursiv), optional mit Replikation auf ein anderes Gerät.
 - Zusätzlich als lesbare Sicherung: CSV-Export auf der Statistikseite.
+- Verwaiste Cover-Dateien räumt die App bei jedem Start auf. Von Hand:
+
+  ```bash
+  sudo docker exec $(sudo docker ps -q --filter label=com.docker.compose.project=ix-plattensammlung --filter label=com.docker.compose.service=app) /app/bin/plattensammlung rpc "Plattensammlung.Covers.cleanup_orphans()"
+  ```
 
 Wiederherstellen eines Dumps (App vorher stoppen, dann nur `db` starten oder die App kurz
 laufen lassen):

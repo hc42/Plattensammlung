@@ -36,6 +36,10 @@ defmodule Plattensammlung.Accounts.Passkey do
       prepare build(load: [:user])
     end
 
+    update :rename do
+      accept [:name]
+    end
+
     update :record_use do
       argument :sign_count, :integer, allow_nil?: false
       require_atomic? false
@@ -55,6 +59,10 @@ defmodule Plattensammlung.Accounts.Passkey do
     end
 
     policy action_type([:read, :destroy]) do
+      authorize_if relates_to_actor_via(:user)
+    end
+
+    policy action(:rename) do
       authorize_if relates_to_actor_via(:user)
     end
   end
@@ -78,6 +86,7 @@ defmodule Plattensammlung.Accounts.Passkey do
 
     attribute :name, :string do
       description "Shown on the account page, e.g. \"iPhone\""
+      constraints max_length: 60
       public? true
     end
 

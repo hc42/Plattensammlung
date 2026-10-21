@@ -48,4 +48,5 @@ config :plattensammlung,
   discogs_token: "test-token",
   covers_dir: Path.expand("../tmp/test/covers", __DIR__),
   allowed_emails: ["test@example.com"],
+  cleanup_covers_on_start: false,
   token_signing_secret: "s8e+mMsE8aMgXGy/5YS4X4/kvA6Yt2ou"

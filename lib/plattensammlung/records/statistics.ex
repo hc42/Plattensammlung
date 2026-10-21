@@ -3,7 +3,7 @@ defmodule Plattensammlung.Records.Statistics do
   Implementation of the generic action `Album.statistics`: key figures and
   breakdowns of the collection.
 
-  Totals are computed by the database with `Ash.count/2` and `Ash.sum/3`
+  Totals are computed by the database with `Ash.count/2`
   (aggregate queries). Breakdowns (genres, decades, …) are counted in Elixir,
   which is plenty fast for a private collection and keeps genre lists simple.
   """
@@ -25,8 +25,6 @@ defmodule Plattensammlung.Records.Statistics do
          {:ok, copies} <- Ash.count(Copy, opts),
          {:ok, wishlist} <- Ash.count(Ash.Query.filter(Album, wanted == true), opts),
          {:ok, artists} <- Ash.count(Ash.Query.filter(Artist, exists(albums.copies, true)), opts),
-         {:ok, value} <- Ash.sum(Copy, :purchase_price, opts),
-         {:ok, priced} <- Ash.count(Ash.Query.filter(Copy, not is_nil(purchase_price)), opts),
          {:ok, collection} <- Records.list_collection(opts),
          {:ok, all_copies} <- Ash.read(Copy, opts) do
       {:ok,
@@ -35,8 +33,6 @@ defmodule Plattensammlung.Records.Statistics do
          copies: copies,
          wishlist: wishlist,
          artists: artists,
-         value: value || Decimal.new(0),
-         priced_copies: priced,
          genres: genres(collection),
          decades: decades(collection),
          conditions: conditions(all_copies),

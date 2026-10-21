@@ -85,3 +85,11 @@ späterer Export ohne Umbau.
 - Schnelles Erfassen: Für einen Eintrag reichen Artist und Titel.
 - Pressungsdetails sind möglich, werden aber nie verlangt.
 - Fehlende Daten werden über den Import nachgeladen, nicht von Hand eingetippt.
+
+## Nachtrag (2026-10-21)
+
+- **Lagerort und Kaufpreis entfernt:** werden nicht gebraucht. Die Spalten sind per Migration
+  gelöscht, mit ihnen der „Kaufwert“ in der Statistik ([ADR 0010](0010-statistik-und-export.md)).
+- **Albenstatus „nicht zugeordnet“:** Ein Album ohne Exemplar und ohne `wanted` (z. B. nach
+  dem Löschen des letzten Exemplars) bleibt erhalten und erscheint in der Ansicht „Alle Alben“
+  (`/albums`, Filter `?show=unassigned`; Suche mit Status `:other`).

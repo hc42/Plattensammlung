@@ -27,8 +27,6 @@ defmodule Plattensammlung.Records.Copy do
       :media_condition,
       :sleeve_condition,
       :purchased_on,
-      :purchase_price,
-      :location,
       :notes,
       :discogs_url
     ]
@@ -62,8 +60,6 @@ defmodule Plattensammlung.Records.Copy do
       :media_condition,
       :sleeve_condition,
       :purchased_on,
-      :purchase_price,
-      :location,
       :notes
     ]
 
@@ -111,13 +107,6 @@ defmodule Plattensammlung.Records.Copy do
     attribute :sleeve_condition, Plattensammlung.Records.Condition, public?: true
     attribute :purchased_on, :date, public?: true
 
-    attribute :purchase_price, :decimal do
-      description "In EUR"
-      constraints min: 0
-      public? true
-    end
-
-    attribute :location, :string, public?: true
     attribute :notes, :string, public?: true
 
     timestamps()

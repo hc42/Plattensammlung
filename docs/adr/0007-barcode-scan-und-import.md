@@ -90,3 +90,16 @@ gleichermaßen nutzen können. Übernommen wird ein Treffer über die vorhandene
   Repository gespeichert.
 - Die Nutzungsbedingungen von Discogs (Quellenangabe, Rate Limits) sind einzuhalten.
   Für eine private Sammlung ist das unproblematisch.
+
+## Nachtrag (2026-10-21): Abgleich bestehender Alben
+
+- Generische Action `Album.find_matches`: holt verknüpfte Alben direkt über die gespeicherte
+  Discogs-Master- bzw. MusicBrainz-Release-Group-ID (MusicBrainz liefert dabei die
+  Top-3-Genres), sonst Suche nach Künstler und Titel oder einem eigenen Suchbegriff/Barcode.
+- Update-Action `Album.apply_match` mit `mode: :fill` (nur leere Felder) oder `:overwrite`.
+  Künstler und Titel werden nie geändert. `Records.AlbumMatch` berechnet die Änderungen und
+  liefert so auch die Vorschau in der Oberfläche.
+- Barcode-Treffer tragen Pressungsdaten: Sie gehen in ein gewähltes Exemplar (`copy_id`),
+  in ein neues (`new_copy: true`) oder nirgendwohin. Auch hier gilt „Ergänzen“ bzw.
+  „Überschreiben“.
+- Der Scanner ist eine gemeinsame Komponente (`barcode_scanner`) für Import und Abgleich.

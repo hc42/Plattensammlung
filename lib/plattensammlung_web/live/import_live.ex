@@ -20,40 +20,7 @@ defmodule PlattensammlungWeb.ImportLive do
           </p>
         </div>
 
-        <%!-- The JS hook manages this element (camera, status), so LiveView must not patch it --%>
-        <div
-          id="barcode-scanner"
-          phx-hook="BarcodeScanner"
-          phx-update="ignore"
-          data-active="false"
-          class="group space-y-2"
-        >
-          <div class="flex flex-wrap gap-2 group-data-[active=true]:hidden">
-            <button type="button" data-start class="btn btn-sm btn-neutral" id="scan-camera">
-              <.icon name="hero-camera" class="size-4" /> Mit Kamera scannen
-            </button>
-            <label class="btn btn-sm btn-ghost" id="scan-photo">
-              <.icon name="hero-photo" class="size-4" /> Foto aufnehmen
-              <input type="file" accept="image/*" capture="environment" class="hidden" />
-            </label>
-          </div>
-          <div class="relative hidden overflow-hidden rounded-lg bg-black group-data-[active=true]:block">
-            <video playsinline muted class="aspect-[4/3] w-full object-cover"></video>
-            <div class="pointer-events-none absolute inset-x-[12%] inset-y-[30%] rounded-md border-2 border-white/80 shadow-[0_0_0_100vmax_rgba(0,0,0,0.35)]">
-            </div>
-            <div class="pointer-events-none absolute inset-x-[14%] top-1/2 h-0.5 animate-pulse bg-red-500">
-            </div>
-            <button
-              type="button"
-              data-stop
-              class="btn btn-sm btn-circle absolute right-2 top-2"
-              aria-label="Kamera schließen"
-            >
-              <.icon name="hero-x-mark" class="size-4" />
-            </button>
-          </div>
-          <p data-status class="min-h-5 text-sm opacity-70" aria-live="polite"></p>
-        </div>
+        <.barcode_scanner id="barcode-scanner" />
 
         <.form for={@search_form} id="lookup-form" phx-submit="lookup" class="flex gap-2">
           <label class="input flex-1">
@@ -99,26 +66,13 @@ defmodule PlattensammlungWeb.ImportLive do
         </div>
 
         <ul id="results" phx-update="stream" class="divide-y divide-base-300">
-          <li :for={{dom_id, item} <- @streams.results} id={dom_id} class="flex gap-4 py-4">
-            <.cover
-              album={%{cover_url: item.result.thumb_url, title: item.result.title}}
-              class="size-20 shrink-0"
-            />
-            <div class="min-w-0 flex-1 space-y-1">
-              <p class="truncate font-medium">{item.result.title}</p>
-              <p class="truncate text-sm opacity-70">{item.result.artist_name}</p>
-              <p class="flex flex-wrap items-center gap-1.5 text-xs opacity-60">
-                <span :if={item.result.year}>{item.result.year}</span>
-                <span class="badge badge-ghost badge-xs">{source_label(item.result.source)}</span>
-                <span :if={pressing_text(item.result)}>{pressing_text(item.result)}</span>
-              </p>
-              <p :if={item.existing} class="text-xs">
-                <.link navigate={~p"/albums/#{item.existing}"} class="link link-accent">
-                  {if item.existing.owned, do: "Hast du schon", else: "Steht auf deiner Wunschliste"}
-                </.link>
-              </p>
-            </div>
-            <div class="flex shrink-0 flex-col gap-1.5">
+          <.lookup_result :for={{dom_id, item} <- @streams.results} id={dom_id} result={item.result}>
+            <p :if={item.existing} class="text-xs">
+              <.link navigate={~p"/albums/#{item.existing}"} class="link link-accent">
+                {existing_label(item.existing)}
+              </.link>
+            </p>
+            <:actions>
               <button
                 phx-click="import"
                 phx-value-index={item.index}
@@ -141,8 +95,8 @@ defmodule PlattensammlungWeb.ImportLive do
               >
                 <.icon name="hero-heart-micro" class="size-4" /> Wunsch
               </button>
-            </div>
-          </li>
+            </:actions>
+          </.lookup_result>
         </ul>
 
         <p class="text-sm opacity-70">
@@ -284,15 +238,7 @@ defmodule PlattensammlungWeb.ImportLive do
     end
   end
 
-  defp source_label(:discogs), do: "Discogs"
-  defp source_label(:musicbrainz), do: "MusicBrainz"
-
-  defp pressing_text(result) do
-    [result.format, result.label, result.catalog_number, result.country]
-    |> Enum.reject(&(&1 in [nil, ""]))
-    |> case do
-      [] -> nil
-      parts -> Enum.join(parts, " · ")
-    end
-  end
+  defp existing_label(%{owned: true}), do: "Hast du schon"
+  defp existing_label(%{wanted: true}), do: "Steht auf deiner Wunschliste"
+  defp existing_label(_album), do: "Schon erfasst (ohne Exemplar)"
 end

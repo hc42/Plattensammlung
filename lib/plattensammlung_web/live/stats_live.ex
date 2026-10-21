@@ -20,16 +20,10 @@ defmodule PlattensammlungWeb.StatsLive do
           id="kpi-albums"
           label="Alben"
           value={to_string(@stats.albums)}
-          note={"von #{@stats.artists} Künstlern"}
         />
         <.stat_tile id="kpi-copies" label="Exemplare" value={to_string(@stats.copies)} />
         <.stat_tile id="kpi-wishlist" label="Wunschliste" value={to_string(@stats.wishlist)} />
-        <.stat_tile
-          id="kpi-value"
-          label="Kaufwert"
-          value={format_euro(@stats.value)}
-          note={value_note(@stats)}
-        />
+        <.stat_tile id="kpi-artists" label="Künstler" value={to_string(@stats.artists)} />
       </div>
 
       <div class="grid gap-x-12 gap-y-10 md:grid-cols-2">
@@ -49,7 +43,7 @@ defmodule PlattensammlungWeb.StatsLive do
           <h2 class="font-semibold">Export</h2>
           <p class="text-sm opacity-70">
             CSV mit allen Feldern (Sammlung und Wunschliste) als Backup oder für die Tabellenkalkulation.
-            JSON-LD (schema.org) beschreibt die Sammlung ohne private Angaben wie Preise und Lagerort.
+            JSON-LD (schema.org) beschreibt die Sammlung ohne private Angaben wie Kaufdatum und Notizen.
           </p>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -76,24 +70,5 @@ defmodule PlattensammlungWeb.StatsLive do
      socket
      |> assign(:page_title, "Statistik")
      |> assign(:stats, Records.statistics!(actor: socket.assigns.current_user))}
-  end
-
-  defp value_note(%{priced_copies: 0}), do: "noch keine Kaufpreise erfasst"
-  defp value_note(%{priced_copies: 1}), do: "aus 1 Exemplar mit Preis"
-  defp value_note(%{priced_copies: n}), do: "aus #{n} Exemplaren mit Preis"
-
-  defp format_euro(decimal) do
-    [euros, cents] =
-      decimal |> Decimal.round(2) |> Decimal.to_string(:normal) |> String.split(".")
-
-    thousands =
-      euros
-      |> String.reverse()
-      |> String.graphemes()
-      |> Enum.chunk_every(3)
-      |> Enum.map_join(".", &Enum.join/1)
-      |> String.reverse()
-
-    "#{thousands},#{cents} €"
   end
 end

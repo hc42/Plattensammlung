@@ -13,7 +13,10 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 - Sammlung durchsuchen und filtern, z. B. nach Artist, Genre oder Jahr
 - Zugriff über eine Weboberfläche **und** eine JSON-API
 - Anmeldung per Passkey
-- Statistik (Umfang, Kaufwert, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
+- **Alle Alben** im Blick, auch solche ohne Exemplar und ohne Wunsch („nicht zugeordnet“)
+- **Abgleichen** bestehender Alben mit Discogs/MusicBrainz, auch per nachträglichem Barcode-Scan; Pressungsdaten wandern dabei ins Exemplar
+- **Cover** hochladen (auch per Handykamera), ersetzen oder entfernen; verwaiste Bilddateien werden aufgeräumt
+- Statistik (Umfang, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
 
 ## Technik
 
@@ -34,7 +37,7 @@ Artist ──< Album ──< Copy
 
 - **Album**: das Werk, unabhängig von der Pressung (Pflicht: Titel und Artist; optional: Jahr, Cover, Genres, Wunschliste ja/nein).
   Entspricht der *Release Group* bei MusicBrainz bzw. dem *Master* bei Discogs.
-- **Copy**: ein eigenes Exemplar. Album mit Copy = „habe ich“. Alle Pressungs- und Sammlerangaben sind optional (Label, Barcode, Zustand, Preis, Lagerort).
+- **Copy**: ein eigenes Exemplar. Album mit Copy = „habe ich“. Alle Pressungs- und Sammlerangaben sind optional (Label, Barcode, Zustand, Kaufdatum, Notizen).
 
 Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 

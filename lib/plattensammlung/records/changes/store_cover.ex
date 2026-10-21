@@ -24,7 +24,10 @@ defmodule Plattensammlung.Records.Changes.StoreCover do
           if album.cover_url != previous, do: Covers.delete(previous)
           result
 
-        _changeset, error ->
+        changeset, error ->
+          # Saving failed: remove the file stored before the transaction
+          new = Ash.Changeset.get_attribute(changeset, :cover_url)
+          if new != previous, do: Covers.delete(new)
           error
       end)
     else

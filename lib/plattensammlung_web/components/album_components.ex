@@ -56,7 +56,98 @@ defmodule PlattensammlungWeb.AlbumComponents do
     <span :if={@album.wanted} class="badge badge-sm badge-accent gap-1">
       <.icon name="hero-heart-micro" class="size-3" /> Wunschliste
     </span>
+    <span :if={!@album.owned and !@album.wanted} class="badge badge-sm badge-ghost">
+      nicht zugeordnet
+    </span>
     """
+  end
+
+  @doc """
+  Camera and photo barcode scanner (JS hook `BarcodeScanner`). A recognized
+  code is pushed to the LiveView as the `"scanned"` event with `%{"code" => …}`.
+  """
+  attr :id, :string, required: true
+
+  def barcode_scanner(assigns) do
+    ~H"""
+    <%!-- The JS hook manages this element (camera, status), so LiveView must not patch it --%>
+    <div
+      id={@id}
+      phx-hook="BarcodeScanner"
+      phx-update="ignore"
+      data-active="false"
+      class="group space-y-2"
+    >
+      <div class="flex flex-wrap gap-2 group-data-[active=true]:hidden">
+        <button type="button" data-start class="btn btn-sm btn-neutral" id="scan-camera">
+          <.icon name="hero-camera" class="size-4" /> Mit Kamera scannen
+        </button>
+        <label class="btn btn-sm btn-ghost" id="scan-photo">
+          <.icon name="hero-photo" class="size-4" /> Foto aufnehmen
+          <input type="file" accept="image/*" capture="environment" class="hidden" />
+        </label>
+      </div>
+      <div class="relative hidden overflow-hidden rounded-lg bg-black group-data-[active=true]:block">
+        <video playsinline muted class="aspect-[4/3] w-full object-cover"></video>
+        <div class="pointer-events-none absolute inset-x-[12%] inset-y-[30%] rounded-md border-2 border-white/80 shadow-[0_0_0_100vmax_rgba(0,0,0,0.35)]">
+        </div>
+        <div class="pointer-events-none absolute inset-x-[14%] top-1/2 h-0.5 animate-pulse bg-red-500">
+        </div>
+        <button
+          type="button"
+          data-stop
+          class="btn btn-sm btn-circle absolute right-2 top-2"
+          aria-label="Kamera schließen"
+        >
+          <.icon name="hero-x-mark" class="size-4" />
+        </button>
+      </div>
+      <p data-status class="min-h-5 text-sm opacity-70" aria-live="polite"></p>
+    </div>
+    """
+  end
+
+  @doc """
+  One lookup result (Discogs/MusicBrainz) as a list row: thumbnail, title,
+  artist, year, source and pressing. The default slot adds lines below the
+  details, the `actions` slot adds buttons on the right.
+  """
+  attr :id, :string, required: true
+  attr :result, :map, required: true
+  slot :inner_block
+  slot :actions
+
+  def lookup_result(assigns) do
+    ~H"""
+    <li id={@id} class="flex gap-4 py-4">
+      <.cover album={%{cover_url: @result.thumb_url, title: @result.title}} class="size-20 shrink-0" />
+      <div class="min-w-0 flex-1 space-y-1">
+        <p class="truncate font-medium">{@result.title}</p>
+        <p class="truncate text-sm opacity-70">{@result.artist_name}</p>
+        <p class="flex flex-wrap items-center gap-1.5 text-xs opacity-60">
+          <span :if={@result.year}>{@result.year}</span>
+          <span class="badge badge-ghost badge-xs">{source_label(@result.source)}</span>
+          <span :if={pressing_text(@result)}>{pressing_text(@result)}</span>
+        </p>
+        {render_slot(@inner_block)}
+      </div>
+      <div :if={@actions != []} class="flex shrink-0 flex-col gap-1.5">
+        {render_slot(@actions)}
+      </div>
+    </li>
+    """
+  end
+
+  defp source_label(:discogs), do: "Discogs"
+  defp source_label(:musicbrainz), do: "MusicBrainz"
+
+  defp pressing_text(result) do
+    [result.format, result.label, result.catalog_number, result.country]
+    |> Enum.reject(&(&1 in [nil, ""]))
+    |> case do
+      [] -> nil
+      parts -> Enum.join(parts, " · ")
+    end
   end
 
   @doc "Select options for the Goldmine grading scale."

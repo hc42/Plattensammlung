@@ -29,6 +29,15 @@ defmodule Plattensammlung.Lookup.Discogs do
     end
   end
 
+  @doc "The album (master) with this Discogs id."
+  def by_master_id(id) do
+    case get("/masters/#{id}", []) do
+      {:ok, %{} = master} -> {:ok, [from_master(master)]}
+      {:ok, nil} -> {:ok, []}
+      error -> error
+    end
+  end
+
   defp get(path, params) do
     [base_url: @base_url, headers: [authorization: "Discogs token=#{token()}"]]
     |> HTTP.new()
@@ -74,6 +83,21 @@ defmodule Plattensammlung.Lookup.Discogs do
       pressing_year: parse_year(result["year"]),
       format: format(result["format"]),
       discogs_release_id: result["id"]
+    }
+  end
+
+  defp from_master(master) do
+    images = Map.get(master, "images", [])
+
+    %{
+      source: :discogs,
+      artist_name: master_artist(master),
+      title: master["title"],
+      year: parse_year(master["year"]),
+      genres: master["genres"] || [],
+      cover_url: primary_image(images),
+      thumb_url: images |> List.first(%{}) |> Map.get("uri150") |> image(),
+      discogs_master_id: master["id"]
     }
   end
 

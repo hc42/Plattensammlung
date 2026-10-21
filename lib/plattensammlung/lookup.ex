@@ -26,6 +26,45 @@ defmodule Plattensammlung.Lookup do
     end
   end
 
+  @doc """
+  Candidates for updating an existing album (see `Plattensammlung.Records.AlbumMatch`).
+
+  Without a query, albums already linked to Discogs or MusicBrainz are fetched
+  directly by their ids; otherwise artist and title are searched. With a query,
+  that query is searched like on the import page.
+  """
+  @spec for_album(struct(), String.t() | nil) :: {:ok, [struct()]} | {:error, term()}
+  def for_album(album, query \\ nil)
+
+  def for_album(album, nil) do
+    linked =
+      [
+        album.discogs_master_id && Discogs.configured?() &&
+          fn -> Discogs.by_master_id(album.discogs_master_id) end,
+        album.musicbrainz_release_group_id &&
+          fn -> MusicBrainz.by_release_group_id(album.musicbrainz_release_group_id) end
+      ]
+      |> Enum.filter(&is_function/1)
+      |> Enum.flat_map(fn fetch ->
+        case fetch.() do
+          {:ok, results} ->
+            results
+
+          {:error, reason} ->
+            # Fall back to the text search below
+            Logger.warning("Lookup by id failed: #{inspect(reason)}")
+            []
+        end
+      end)
+
+    case linked do
+      [] -> search("#{album.artist.name} #{album.title}")
+      results -> to_structs({:ok, results})
+    end
+  end
+
+  def for_album(_album, query), do: search(query)
+
   @doc "Returns the normalized barcode if the query looks like one, otherwise nil."
   def barcode(query) do
     digits = String.replace(query, ~r/[\s-]/, "")
