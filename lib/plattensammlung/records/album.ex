@@ -8,6 +8,7 @@ defmodule Plattensammlung.Records.Album do
     otp_app: :plattensammlung,
     domain: Plattensammlung.Records,
     data_layer: AshPostgres.DataLayer,
+    authorizers: [Ash.Policy.Authorizer],
     extensions: [AshJsonApi.Resource]
 
   json_api do
@@ -182,6 +183,15 @@ defmodule Plattensammlung.Records.Album do
     read :wishlist do
       filter expr(wanted == true)
       prepare build(sort: [title: :asc], load: [:artist])
+    end
+  end
+
+  policies do
+    # One shared collection: every signed-in user (or API key) may do everything
+    policy always() do
+      # :strict raises Forbidden instead of silently returning no rows
+      access_type :strict
+      authorize_if actor_present()
     end
   end
 

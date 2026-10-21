@@ -15,7 +15,8 @@ defmodule Plattensammlung.Application do
       # Start a worker by calling: Plattensammlung.Worker.start_link(arg)
       # {Plattensammlung.Worker, arg},
       # Start to serve requests, typically the last entry
-      PlattensammlungWeb.Endpoint
+      PlattensammlungWeb.Endpoint,
+      {AshAuthentication.Supervisor, [otp_app: :plattensammlung]}
     ]
 
     # See https://elixir.hexdocs.pm/Supervisor.html

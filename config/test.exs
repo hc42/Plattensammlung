@@ -1,4 +1,5 @@
 import Config
+config :bcrypt_elixir, log_rounds: 1
 config :ash, policies: [show_policy_breakdowns?: true], disable_async?: true
 
 # Configure your database
@@ -45,4 +46,6 @@ config :phoenix,
 config :plattensammlung,
   req_options: [plug: {Req.Test, Plattensammlung.Lookup}, retry: false],
   discogs_token: "test-token",
-  covers_dir: Path.expand("../tmp/test/covers", __DIR__)
+  covers_dir: Path.expand("../tmp/test/covers", __DIR__),
+  allowed_emails: ["test@example.com"],
+  token_signing_secret: "s8e+mMsE8aMgXGy/5YS4X4/kvA6Yt2ou"

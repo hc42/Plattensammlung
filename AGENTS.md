@@ -65,12 +65,31 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   - `live/album_live/`: `Index` (Sammlung `/` und Wunschliste `/wishlist`, Suche über `?q=`),
     `Show` (`/albums/:id`), `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
   - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
+  - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: Passkeys, API-Keys)
+  - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: Anmeldung
   - `live/import_live.ex`: Import-Seite `/import` (Barcode oder Text, Ergebnis per Klick übernehmen)
   - `ash_json_api_router.ex`: JSON:API unter `/api/json`, Swagger-UI unter `/api/json/swaggerui`
   - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
 - `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
+
+## Anmeldung und Autorisierung (`Plattensammlung.Accounts`, ADR 0005)
+
+- AshAuthentication: `User` (Magic Link, API-Key), `Token`, `ApiKey`. Passkeys sind selbst
+  gebaut: Resource `Passkey`, Protokoll in `Accounts.WebAuthn` (wax_), Endpunkte im
+  `PasskeyController`, JS in `assets/js/hooks/passkey.js`.
+- Nur Adressen aus `ALLOWED_EMAILS` (`config :plattensammlung, :allowed_emails`) können sich
+  anmelden (`Accounts.allowed_email?/1`).
+- **Alle Records-Actions brauchen einen Actor.** In LiveViews `actor: socket.assigns.current_user`
+  übergeben, AshPhoenix-Formulare mit `actor:` erzeugen. In Changes die Optionen mit
+  `Ash.Context.to_opts(context)` weiterreichen. Nur Seeds und Test-Vorbereitung nutzen
+  `authorize?: false`.
+- LiveViews liegen in `ash_authentication_live_session :authenticated` im Router. Neue
+  Seiten gehören dort hinein und übergeben `current_user={@current_user}` an `Layouts.app`.
+- Tests: `register_and_sign_in_user` / `sign_in_user/2` (ConnCase), `user_fixture/1`,
+  `api_key_fixture/1` (`test/support/accounts_fixtures.ex`), `SoftAuthenticator` für
+  Passkeys. `test@example.com` ist in der Test-Freigabeliste.
 
 ## Domain `Plattensammlung.Records`
 
@@ -84,7 +103,9 @@ Wichtigste Funktionen des Code Interface (jeweils auch mit `!`):
   Pressungsdetails stehen unter `attrs.copy`.
 - `add_to_wishlist(artist_name, title, attrs)`: Album ohne Copy mit `wanted: true` anlegen.
 - `add_copy(album_id, attrs)`: weiteres Exemplar anlegen, entfernt das Album von der Wunschliste.
-- `search_albums(query \\ nil)`, `list_collection()`, `list_wishlist()`
+- `search_albums(query \\ nil, status \\ nil)`, `list_collection()`, `list_wishlist()`.
+  Achtung: Bei optionalen Argumenten immer alle angeben, bevor Optionen folgen
+  (`search_albums(nil, nil, actor: user)`), sonst wird die Keyword-Liste als Argument gelesen.
 - `get_album(id, load: [:artist, :copies, :owned, :copy_count, :discogs_url])`
 
 Regeln:
@@ -150,8 +171,10 @@ Ecto-Contexts.
 - MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
 - Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.
   Dann bleibt die Remote-URL stehen und die Oberfläche zeigt die Platzhalter-Platte.
-- `LAN=1 mix phx.server` öffnet HTTPS auf Port 4001 für das ganze WLAN (ADR 0008). Ohne
-  Login nur in vertrauenswürdigen Netzen verwenden. Das Zertifikat liegt in `priv/cert/`
-  (nicht im Git).
+- `LAN=1 mix phx.server` öffnet HTTPS auf Port 4001 für das ganze WLAN (ADR 0008). Das
+  Zertifikat liegt in `priv/cert/` (nicht im Git). `/dev` (Postfach mit Anmeldelinks) ist
+  nur von localhost aus erreichbar.
+- Code Interfaces mit optionalen Argumenten: Optionen erst nach allen Argumenten angeben,
+  sonst wird die Keyword-Liste als Argument gelesen.
 - Bei `podman compose` übernimmt das externe `docker-compose` die Ausführung. Der Hinweis
   dazu in der Ausgabe ist harmlos.

@@ -31,6 +31,8 @@ defmodule PlattensammlungWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://phoenix.hexdocs.pm/scopes.html)"
 
+  attr :current_user, :map, default: nil, doc: "the signed-in user; the menu is hidden without"
+
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -43,16 +45,26 @@ defmodule PlattensammlungWeb.Layouts do
           </span>
           <span class="hidden sm:inline">Plattensammlung</span>
         </.link>
-        <.link navigate={~p"/"} class="btn btn-ghost btn-sm" id="nav-collection">
-          Sammlung
-        </.link>
-        <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm" id="nav-wishlist">
-          Wunschliste
-        </.link>
-        <.link navigate={~p"/import"} class="btn btn-primary btn-sm" id="nav-new">
-          <.icon name="hero-plus" class="size-4" />
-          <span class="hidden sm:inline">Erfassen</span>
-        </.link>
+        <%= if @current_user do %>
+          <.link navigate={~p"/"} class="btn btn-ghost btn-sm" id="nav-collection">
+            Sammlung
+          </.link>
+          <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm" id="nav-wishlist">
+            Wunschliste
+          </.link>
+          <.link navigate={~p"/import"} class="btn btn-primary btn-sm" id="nav-new">
+            <.icon name="hero-plus" class="size-4" />
+            <span class="hidden sm:inline">Erfassen</span>
+          </.link>
+          <.link
+            navigate={~p"/account"}
+            class="btn btn-ghost btn-sm btn-square"
+            id="nav-account"
+            aria-label="Konto"
+          >
+            <.icon name="hero-user-circle" class="size-5" />
+          </.link>
+        <% end %>
         <div class="hidden sm:block"><.theme_toggle /></div>
       </nav>
     </header>

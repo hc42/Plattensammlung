@@ -10,7 +10,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold">{@page_title}</h1>
@@ -80,7 +80,11 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
     query = blank_to_nil(params["q"])
     status = socket.assigns.live_action
 
-    albums = Records.search_albums!(query, status, load: [:owned, :copy_count])
+    albums =
+      Records.search_albums!(query, status,
+        load: [:owned, :copy_count],
+        actor: socket.assigns.current_user
+      )
 
     {:noreply,
      socket

@@ -9,7 +9,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <.link navigate={back_path(@album)} class="text-sm opacity-70 hover:opacity-100">
         <.icon name="hero-arrow-left-micro" class="size-4" />
         {if @album.owned, do: "Sammlung", else: "Wunschliste"}
@@ -157,9 +157,9 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     album = socket.assigns.album
 
     if album.wanted do
-      Records.unmark_wanted!(album)
+      Records.unmark_wanted!(album, actor: socket.assigns.current_user)
     else
-      Records.mark_wanted!(album)
+      Records.mark_wanted!(album, actor: socket.assigns.current_user)
     end
 
     {:noreply, load_album(socket, album.id)}
@@ -167,7 +167,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
   def handle_event("delete", _params, socket) do
     album = socket.assigns.album
-    Records.destroy_album!(album)
+    Records.destroy_album!(album, actor: socket.assigns.current_user)
 
     {:noreply,
      socket
@@ -176,7 +176,8 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   end
 
   def handle_event("delete_copy", %{"id" => id}, socket) do
-    id |> Records.get_copy!() |> Records.destroy_copy!()
+    actor = socket.assigns.current_user
+    id |> Records.get_copy!(actor: actor) |> Records.destroy_copy!(actor: actor)
 
     {:noreply,
      socket
@@ -187,6 +188,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   defp load_album(socket, id) do
     album =
       Records.get_album!(id,
+        actor: socket.assigns.current_user,
         load: [:artist, :owned, :copy_count, :discogs_url, copies: [:discogs_url]]
       )
 

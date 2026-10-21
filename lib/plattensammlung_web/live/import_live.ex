@@ -11,7 +11,7 @@ defmodule PlattensammlungWeb.ImportLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="mx-auto max-w-2xl space-y-6">
         <div>
           <h1 class="text-2xl font-bold">Platte erfassen</h1>
@@ -188,7 +188,7 @@ defmodule PlattensammlungWeb.ImportLive do
   def handle_event("import", %{"index" => index, "target" => target}, socket) do
     item = Map.fetch!(socket.assigns.results, String.to_integer(index))
 
-    case add_album(item, target) do
+    case add_album(item, target, socket.assigns.current_user) do
       {:ok, album, message} ->
         {:noreply,
          socket
@@ -206,7 +206,11 @@ defmodule PlattensammlungWeb.ImportLive do
       results
       |> Enum.with_index()
       |> Enum.map(fn {result, index} ->
-        %{index: index, result: result, existing: existing_album(result)}
+        %{
+          index: index,
+          result: result,
+          existing: existing_album(result, socket.assigns.current_user)
+        }
       end)
 
     {:noreply,
@@ -222,14 +226,18 @@ defmodule PlattensammlungWeb.ImportLive do
 
   defp start_lookup(socket, query) do
     barcode = Lookup.barcode(query)
+    actor = socket.assigns.current_user
 
     socket
     |> reset_results()
     |> assign(:search_form, to_form(%{"query" => query}))
     |> assign(:searched?, true)
     |> assign(:loading, true)
-    |> assign(:owned_pressing, barcode && List.first(Records.find_by_barcode!(barcode)))
-    |> start_async(:lookup, fn -> Records.lookup_albums(query) end)
+    |> assign(
+      :owned_pressing,
+      barcode && List.first(Records.find_by_barcode!(barcode, actor: actor))
+    )
+    |> start_async(:lookup, fn -> Records.lookup_albums(query, actor: actor) end)
   end
 
   defp reset_results(socket) do
@@ -241,35 +249,37 @@ defmodule PlattensammlungWeb.ImportLive do
     |> stream(:results, [], reset: true, dom_id: &"result-#{&1.index}")
   end
 
-  defp existing_album(result) do
+  defp existing_album(result, actor) do
     result.artist_name
-    |> Records.find_duplicates!(result.title, load: [:owned])
+    |> Records.find_duplicates!(result.title, load: [:owned], actor: actor)
     |> List.first()
   end
 
   # Already known album: add another copy (collection) or just open it
-  defp add_album(%{existing: %{} = album, result: result}, "collection") do
-    with {:ok, _copy} <- Records.add_copy(album.id, Lookup.copy_attrs(result)) do
+  defp add_album(%{existing: %{} = album, result: result}, "collection", actor) do
+    with {:ok, _copy} <- Records.add_copy(album.id, Lookup.copy_attrs(result), actor: actor) do
       {:ok, album, "Exemplar von „#{album.title}“ hinzugefügt."}
     end
   end
 
-  defp add_album(%{existing: %{} = album}, "wishlist") do
+  defp add_album(%{existing: %{} = album}, "wishlist", _actor) do
     {:ok, album, "„#{album.title}“ ist schon erfasst."}
   end
 
-  defp add_album(%{result: result}, "collection") do
+  defp add_album(%{result: result}, "collection", actor) do
     attrs = result |> Lookup.album_attrs() |> Map.put(:copy, Lookup.copy_attrs(result))
 
-    with {:ok, album} <- Records.add_to_collection(result.artist_name, result.title, attrs) do
+    with {:ok, album} <-
+           Records.add_to_collection(result.artist_name, result.title, attrs, actor: actor) do
       {:ok, album, "„#{album.title}“ ist jetzt in deiner Sammlung."}
     end
   end
 
-  defp add_album(%{result: result}, "wishlist") do
+  defp add_album(%{result: result}, "wishlist", actor) do
     attrs = Lookup.album_attrs(result)
 
-    with {:ok, album} <- Records.add_to_wishlist(result.artist_name, result.title, attrs) do
+    with {:ok, album} <-
+           Records.add_to_wishlist(result.artist_name, result.title, attrs, actor: actor) do
       {:ok, album, "„#{album.title}“ steht auf der Wunschliste."}
     end
   end

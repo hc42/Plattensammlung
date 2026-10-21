@@ -6,6 +6,9 @@ defmodule PlattensammlungWeb.ImportLiveTest do
 
   import Phoenix.LiveViewTest
 
+  # Arrange/assert calls below skip authorization; the views run as this user
+  setup :register_and_sign_in_user
+
   alias Plattensammlung.{LookupStub, Records}
 
   setup do
@@ -23,10 +26,10 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     assert has_element?(view, "#result-0")
     view |> element("#import-collection-0") |> render_click()
 
-    [album] = Records.search_albums!("Abbey Road", :collection)
+    [album] = Records.search_albums!("Abbey Road", :collection, authorize?: false)
     assert_redirect(view, ~p"/albums/#{album}")
 
-    album = Ash.load!(album, [:copies, :artist])
+    album = Ash.load!(album, [:copies, :artist], authorize?: false)
     assert to_string(album.artist.name) == "The Beatles"
     assert album.year == 1969
     assert album.discogs_master_id == 24047
@@ -42,12 +45,16 @@ defmodule PlattensammlungWeb.ImportLiveTest do
 
     view |> element("#import-wishlist-1") |> render_click()
 
-    assert [%{title: title, wanted: true}] = Records.search_albums!(nil, :wishlist)
+    assert [%{title: title, wanted: true}] =
+             Records.search_albums!(nil, :wishlist, authorize?: false)
+
     assert to_string(title) == "Abbey Road Revisited"
   end
 
   test "marks albums that are already in the collection", %{conn: conn} do
-    Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{barcode: "0602547288530"}})
+    Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{barcode: "0602547288530"}},
+      authorize?: false
+    )
 
     {:ok, view, _html} = live(conn, ~p"/import?q=0602547288530")
     render_async(view)
@@ -58,14 +65,14 @@ defmodule PlattensammlungWeb.ImportLiveTest do
   end
 
   test "adding a known album from the results adds another copy", %{conn: conn} do
-    album = Records.add_to_collection!("The Beatles", "Abbey Road")
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
 
     {:ok, view, _html} = live(conn, ~p"/import?q=0602547288530")
     render_async(view)
     view |> element("#import-collection-0") |> render_click()
 
     assert_redirect(view, ~p"/albums/#{album}")
-    assert %{copy_count: 2} = Records.get_album!(album.id, load: [:copy_count])
+    assert %{copy_count: 2} = Records.get_album!(album.id, load: [:copy_count], authorize?: false)
   end
 
   test "a scanned barcode starts the lookup", %{conn: conn} do

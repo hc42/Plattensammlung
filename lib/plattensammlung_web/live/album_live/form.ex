@@ -12,7 +12,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="mx-auto max-w-xl space-y-6">
         <div>
           <.link navigate={@return_to} class="text-sm opacity-70 hover:opacity-100">
@@ -119,7 +119,10 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    artist_names = Records.list_artists!() |> Enum.map(&to_string(&1.name)) |> Enum.sort()
+    artist_names =
+      Records.list_artists!(actor: socket.assigns.current_user)
+      |> Enum.map(&to_string(&1.name))
+      |> Enum.sort()
 
     {:ok,
      socket
@@ -136,15 +139,16 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     |> assign(:album, nil)
     |> assign(:mode, mode)
     |> assign(:return_to, if(mode == "wishlist", do: ~p"/wishlist", else: ~p"/"))
-    |> assign(:form, new_form(mode))
+    |> assign(:form, new_form(mode, socket.assigns.current_user))
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    album = Records.get_album!(id, load: [:artist])
+    album = Records.get_album!(id, load: [:artist], actor: socket.assigns.current_user)
 
     form =
       AshPhoenix.Form.for_update(album, :update,
         as: "album",
+        actor: socket.assigns.current_user,
         prepare_params: &prepare_params/2,
         params: %{"artist_name" => to_string(album.artist.name)}
       )
@@ -162,7 +166,9 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     socket =
       case all_params["mode"] do
         mode when mode in ["collection", "wishlist"] and mode != socket.assigns.mode ->
-          socket |> assign(:mode, mode) |> assign(:form, new_form(mode))
+          socket
+          |> assign(:mode, mode)
+          |> assign(:form, new_form(mode, socket.assigns.current_user))
 
         _ ->
           socket
@@ -173,7 +179,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     {:noreply,
      socket
      |> assign(:form, form)
-     |> assign(:duplicates, find_duplicates(params, socket.assigns.album))}
+     |> assign(:duplicates, find_duplicates(params, socket.assigns))}
   end
 
   def handle_event("save", %{"album" => params}, socket) do
@@ -189,11 +195,15 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     end
   end
 
-  defp new_form(mode) do
+  defp new_form(mode, actor) do
     action = if mode == "wishlist", do: :add_to_wishlist, else: :add_to_collection
 
     Album
-    |> AshPhoenix.Form.for_create(action, as: "album", prepare_params: &prepare_params/2)
+    |> AshPhoenix.Form.for_create(action,
+      as: "album",
+      actor: actor,
+      prepare_params: &prepare_params/2
+    )
     |> to_form()
   end
 
@@ -208,13 +218,13 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   defp genres_value(genres) when is_list(genres), do: Enum.join(genres, ", ")
   defp genres_value(genres), do: genres
 
-  defp find_duplicates(%{"artist_name" => artist, "title" => title}, current)
+  defp find_duplicates(%{"artist_name" => artist, "title" => title}, assigns)
        when artist != "" and title != "" do
-    Records.find_duplicates!(artist, title, load: [:owned])
-    |> Enum.reject(&(current && &1.id == current.id))
+    Records.find_duplicates!(artist, title, load: [:owned], actor: assigns.current_user)
+    |> Enum.reject(&(assigns.album && &1.id == assigns.album.id))
   end
 
-  defp find_duplicates(_params, _current), do: []
+  defp find_duplicates(_params, _assigns), do: []
 
   defp saved_message(%{live_action: :edit}, _album), do: "Album gespeichert."
 

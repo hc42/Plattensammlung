@@ -10,7 +10,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="mx-auto max-w-xl space-y-6">
         <div>
           <.link navigate={~p"/albums/#{@album}"} class="text-sm opacity-70 hover:opacity-100">
@@ -75,11 +75,13 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   end
 
   defp apply_action(socket, :new, %{"id" => album_id}) do
-    album = Records.get_album!(album_id, load: [:artist])
+    actor = socket.assigns.current_user
+    album = Records.get_album!(album_id, load: [:artist], actor: actor)
 
     form =
       AshPhoenix.Form.for_create(Copy, :create,
         as: "copy",
+        actor: actor,
         # The album is fixed by the URL, not by a form field
         transform_params: fn params, _type -> Map.put(params, "album_id", album.id) end
       )
@@ -91,8 +93,9 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    copy = Records.get_copy!(id, load: [album: [:artist]])
-    form = AshPhoenix.Form.for_update(copy, :update, as: "copy")
+    actor = socket.assigns.current_user
+    copy = Records.get_copy!(id, load: [album: [:artist]], actor: actor)
+    form = AshPhoenix.Form.for_update(copy, :update, as: "copy", actor: actor)
 
     socket
     |> assign(:page_title, "Exemplar bearbeiten")

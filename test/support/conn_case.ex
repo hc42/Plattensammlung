@@ -28,11 +28,32 @@ defmodule PlattensammlungWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import PlattensammlungWeb.ConnCase
+      import Plattensammlung.AccountsFixtures
     end
   end
 
   setup tags do
     Plattensammlung.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
+  end
+
+  @doc """
+  Setup helper: creates a user and signs them in.
+
+      setup :register_and_sign_in_user
+  """
+  def register_and_sign_in_user(%{conn: conn}) do
+    user = Plattensammlung.AccountsFixtures.user_fixture()
+    %{conn: sign_in_user(conn, user), user: user}
+  end
+
+  @doc "Stores the user in the session like a real sign-in does."
+  def sign_in_user(conn, user) do
+    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
+    user = Ash.Resource.put_metadata(user, :token, token)
+
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{})
+    |> AshAuthentication.Plug.Helpers.store_in_session(user)
   end
 end

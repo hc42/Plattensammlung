@@ -3,10 +3,11 @@
 #     mix run priv/repo/seeds.exs
 #
 # Safe to run repeatedly: albums that already exist (same artist and title) are skipped.
+# Seeds run without a signed-in user, so authorization is skipped explicitly.
 alias Plattensammlung.Records
 
 existing =
-  Records.search_albums!()
+  Records.search_albums!(nil, nil, authorize?: false)
   |> MapSet.new(&{to_string(&1.artist.name), to_string(&1.title)})
 
 collection = [
@@ -38,9 +39,9 @@ wishlist = [
 ]
 
 for {artist, title, attrs} <- collection, {artist, title} not in existing do
-  Records.add_to_collection!(artist, title, attrs)
+  Records.add_to_collection!(artist, title, attrs, authorize?: false)
 end
 
 for {artist, title, attrs} <- wishlist, {artist, title} not in existing do
-  Records.add_to_wishlist!(artist, title, attrs)
+  Records.add_to_wishlist!(artist, title, attrs, authorize?: false)
 end

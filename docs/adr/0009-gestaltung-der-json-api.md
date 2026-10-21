@@ -49,3 +49,9 @@ aussehen und wie sie sich zu den vorhandenen Ash Actions verhalten.
   keine Aggregate laden, deshalb sind `mark_wanted`/`unmark_wanted` bewusst nicht atomar
   (Change als Funktion).
 - Ohne Login ist die API mit `LAN=1` im ganzen WLAN schreibbar ([ADR 0008](0008-https-im-lan.md)).
+
+## Nachtrag (2026-10-21)
+
+Die Authentifizierung ist umgesetzt: API-Keys per `Authorization: Bearer …`, siehe
+[ADR 0005](0005-passkey-login.md). Ohne Key antwortet die API mit 403. Die
+OpenAPI-Spezifikation und die Swagger-UI bleiben ohne Key lesbar.

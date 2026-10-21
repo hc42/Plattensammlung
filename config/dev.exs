@@ -52,7 +52,9 @@ if System.get_env("LAN") in ["1", "true"] do
 end
 
 # Enable dev routes for dashboard and mailbox
-config :plattensammlung, dev_routes: true
+config :plattensammlung,
+  dev_routes: true,
+  token_signing_secret: "L9D7RMRGImMcHhJmb4e2TxVB4wRtVpYu"
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

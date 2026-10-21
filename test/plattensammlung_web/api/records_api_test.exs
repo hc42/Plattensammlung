@@ -5,19 +5,51 @@ defmodule PlattensammlungWeb.RecordsApiTest do
 
   @json_api "application/vnd.api+json"
 
+  # Requests authenticate with an API key; arrange/assert calls skip authorization
   setup %{conn: conn} do
+    {api_key, _} = api_key_fixture(user_fixture())
+
     conn =
       conn
       |> put_req_header("accept", @json_api)
       |> put_req_header("content-type", @json_api)
+      |> put_req_header("authorization", "Bearer " <> api_key)
 
     %{conn: conn}
   end
 
+  describe "authentication" do
+    test "requests without an API key are forbidden", %{conn: conn} do
+      conn = delete_req_header(conn, "authorization")
+
+      body = conn |> get(~p"/api/json/albums") |> json_response(403)
+      assert [%{"code" => "forbidden"}] = body["errors"]
+    end
+
+    test "an unknown API key is rejected", %{conn: conn} do
+      conn = put_req_header(conn, "authorization", "Bearer plattensammlung_nope")
+
+      assert conn |> get(~p"/api/json/albums") |> response(401)
+    end
+
+    test "an expired API key is rejected", %{conn: conn} do
+      {expired, _} = api_key_fixture(user_fixture("expired@example.com"), DateTime.utc_now())
+      conn = put_req_header(conn, "authorization", "Bearer " <> expired)
+
+      assert conn |> get(~p"/api/json/albums") |> response(401)
+    end
+
+    test "the OpenAPI spec is readable without a key", %{conn: conn} do
+      conn = delete_req_header(conn, "authorization")
+
+      assert conn |> get(~p"/api/json/open_api") |> response(200)
+    end
+  end
+
   describe "GET /api/json/albums" do
     setup do
-      Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969})
-      Records.add_to_wishlist!("Can", "Tago Mago")
+      Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969}, authorize?: false)
+      Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
       :ok
     end
 
@@ -70,7 +102,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
       assert body["data"]["attributes"]["title"] == "Autobahn"
       assert body["data"]["attributes"]["owned"] == true
 
-      album = Records.get_album!(body["data"]["id"], load: [:artist, :copies])
+      album = Records.get_album!(body["data"]["id"], load: [:artist, :copies], authorize?: false)
       assert to_string(album.artist.name) == "Kraftwerk"
       assert [%{format: "LP", media_condition: :very_good_plus}] = album.copies
     end
@@ -101,7 +133,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
 
   describe "copies" do
     test "adding a copy marks the album as owned", %{conn: conn} do
-      album = Records.add_to_wishlist!("Can", "Tago Mago")
+      album = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
 
       payload = %{
         data: %{
@@ -112,11 +144,15 @@ defmodule PlattensammlungWeb.RecordsApiTest do
 
       conn |> post(~p"/api/json/copies", payload) |> json_response(201)
 
-      assert %{wanted: false, owned: true} = Records.get_album!(album.id, load: [:owned])
+      assert %{wanted: false, owned: true} =
+               Records.get_album!(album.id, load: [:owned], authorize?: false)
     end
 
     test "lists the copies of an album", %{conn: conn} do
-      album = Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{label: "Apple"}})
+      album =
+        Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{label: "Apple"}},
+          authorize?: false
+        )
 
       body = conn |> get(~p"/api/json/albums/#{album.id}/copies") |> json_response(200)
 
@@ -125,8 +161,8 @@ defmodule PlattensammlungWeb.RecordsApiTest do
   end
 
   test "PATCH updates album and copy", %{conn: conn} do
-    album = Records.add_to_collection!("The Beatles", "Abbey Road")
-    [copy] = Ash.load!(album, :copies).copies
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
+    [copy] = Ash.load!(album, :copies, authorize?: false).copies
 
     album_patch = %{
       data: %{type: "album", id: album.id, attributes: %{year: 1969, genres: ["Rock"]}}
@@ -141,11 +177,11 @@ defmodule PlattensammlungWeb.RecordsApiTest do
   end
 
   test "DELETE removes an album", %{conn: conn} do
-    album = Records.add_to_collection!("The Beatles", "Abbey Road")
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
 
     conn |> delete(~p"/api/json/albums/#{album.id}") |> response(200)
 
-    assert {:error, _} = Records.get_album(album.id)
+    assert {:error, _} = Records.get_album(album.id, authorize?: false)
   end
 
   test "GET /api/json/albums/lookup searches external catalogs", %{conn: conn} do

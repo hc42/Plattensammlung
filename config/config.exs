@@ -42,6 +42,9 @@ config :spark,
     remove_parens?: true,
     "Ash.Resource": [
       section_order: [
+        :authentication,
+        :token,
+        :user_identity,
         :json_api,
         :postgres,
         :resource,
@@ -67,9 +70,10 @@ config :spark,
 
 config :plattensammlung,
   ecto_repos: [Plattensammlung.Repo],
-  ash_domains: [Plattensammlung.Records],
+  ash_domains: [Plattensammlung.Accounts, Plattensammlung.Records],
   covers_dir: Path.expand("../uploads/covers", __DIR__),
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  ash_authentication: [return_error_on_invalid_magic_link_token?: true]
 
 # Configure the endpoint
 config :plattensammlung, PlattensammlungWeb.Endpoint,

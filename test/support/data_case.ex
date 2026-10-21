@@ -24,6 +24,7 @@ defmodule Plattensammlung.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import Plattensammlung.DataCase
+      import Plattensammlung.AccountsFixtures
     end
   end
 

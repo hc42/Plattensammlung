@@ -2,7 +2,7 @@
 
 Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 
-> **Status:** Sammlung, Wunschliste, Import über Discogs und MusicBrainz, Barcode-Scan mit Kamera oder Foto und die JSON-API funktionieren. Als Nächstes kommt der Login per Passkey.
+> **Status:** Alle geplanten Kernfunktionen sind umgesetzt: Sammlung, Wunschliste, Import, Barcode-Scan, JSON-API sowie der Login per Passkey oder Magic Link. Als Nächstes kommen die Extras (Statistiken, Export).
 
 ## Ziele
 
@@ -46,7 +46,7 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 4. ✅ Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
 5. ✅ Barcode-Scan mit der Kamera im Browser (HTTPS im WLAN: [ADR 0008](docs/adr/0008-https-im-lan.md))
 6. ✅ JSON-API (AshJsonApi) mit OpenAPI-Doku ([ADR 0009](docs/adr/0009-gestaltung-der-json-api.md))
-7. Login per Passkey, Magic Link als Rückfallebene
+7. ✅ Login per Passkey, Magic Link als Rückfallebene, API-Keys ([ADR 0005](docs/adr/0005-passkey-login.md))
 8. Extras: Statistiken, Export (JSON-LD / CSV)
 
 ## Entwicklung
@@ -59,17 +59,29 @@ mix setup              # Abhängigkeiten, Datenbank anlegen und migrieren, Asset
 mix phx.server         # App starten: http://localhost:4000
 ```
 
-Optionale Umgebungsvariablen für den Import (vor `mix phx.server` setzen):
+Umgebungsvariablen (vor `mix phx.server` setzen):
 
 | Variable | Zweck |
 |---|---|
+| `ALLOWED_EMAILS` | **Pflicht.** Kommagetrennte E-Mail-Adressen, die sich anmelden dürfen |
 | `DISCOGS_TOKEN` | Persönliches Token von https://www.discogs.com/settings/developers. Ohne Token wird nur MusicBrainz durchsucht. |
 | `MUSICBRAINZ_CONTACT` | E-Mail oder URL, die MusicBrainz im User-Agent sehen möchte |
 | `COVERS_DIR` | Ablage der heruntergeladenen Cover (Standard: `uploads/covers`, nicht im Git) |
 
 ```bash
-export DISCOGS_TOKEN=dein-token
+export ALLOWED_EMAILS=du@example.com DISCOGS_TOKEN=dein-token
 ```
+
+### Anmelden
+
+1. http://localhost:4000 öffnen, die E-Mail-Adresse eingeben und „Anmeldelink senden“ wählen.
+2. In der Entwicklung landet die E-Mail im Postfach http://localhost:4000/dev/mailbox.
+   Dort den Link öffnen und „Jetzt anmelden“ klicken.
+3. Unter „Konto“ (Personen-Symbol) einen Passkey hinzufügen. Danach geht die Anmeldung
+   per Fingerabdruck bzw. Face ID.
+
+Ein Passkey gilt nur für die Adresse, unter der er angelegt wurde (`localhost` oder
+`<name>.local`).
 
 ### Vom Handy aus scannen
 
@@ -104,14 +116,16 @@ JSON:API unter `/api/json`, interaktive Doku in der Swagger-UI unter
 http://localhost:4000/api/json/swaggerui (Spezifikation: `/api/json/open_api`).
 
 ```bash
-curl -H "Accept: application/vnd.api+json" "http://localhost:4000/api/json/albums?query=beatles&include=artist"
+curl -H "Authorization: Bearer $API_KEY" -H "Accept: application/vnd.api+json" "http://localhost:4000/api/json/albums?query=beatles&include=artist"
 ```
 
 ```bash
-curl -X POST http://localhost:4000/api/json/albums/collection -H "Content-Type: application/vnd.api+json" -d '{"data":{"type":"album","attributes":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":"LP"}}}}'
+curl -X POST http://localhost:4000/api/json/albums/collection -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/vnd.api+json" -d '{"data":{"type":"album","attributes":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":"LP"}}}}'
 ```
 
-Noch ohne Authentifizierung (siehe ADR 0005 und 0009).
+Jede Anfrage braucht einen API-Key (Seite „Konto“): `-H "Authorization: Bearer <Key>"`.
+Ohne Key antwortet die API mit 403. Die Swagger-UI ist ohne Key lesbar; für „Try it out“
+den Key über „Authorize“ eintragen.
 
 ## Dokumentation
 

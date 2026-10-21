@@ -30,6 +30,14 @@ if config_env() != :test do
   config :plattensammlung,
     discogs_token: System.get_env("DISCOGS_TOKEN"),
     musicbrainz_contact: System.get_env("MUSICBRAINZ_CONTACT")
+
+  # Who may sign in (see docs/adr/0005-passkey-login.md), comma separated:
+  # ALLOWED_EMAILS="me@example.com,partner@example.com"
+  config :plattensammlung,
+    allowed_emails:
+      System.get_env("ALLOWED_EMAILS", "")
+      |> String.split(",", trim: true)
+      |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
 end
 
 if covers_dir = System.get_env("COVERS_DIR") do
@@ -97,6 +105,11 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0, 0, 0, 0, 0}
     ],
     secret_key_base: secret_key_base
+
+  config :plattensammlung,
+    token_signing_secret:
+      System.get_env("TOKEN_SIGNING_SECRET") ||
+        raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
   # ## SSL Support
   #
