@@ -1,11 +1,29 @@
 defmodule PlattensammlungWeb.CopyLive.Form do
   @moduledoc """
-  Adds or edits a copy of an album. Every field is optional.
+  Adds or edits a copy of an album. Every field is optional and only shown
+  once it is added with "+" (see `PlattensammlungWeb.OptionalFields`).
   """
   use PlattensammlungWeb, :live_view
 
+  import PlattensammlungWeb.OptionalFields
+
   alias Plattensammlung.Records
   alias Plattensammlung.Records.Copy
+  alias PlattensammlungWeb.OptionalFields
+
+  @fields [
+    format: "Format",
+    label: "Label",
+    catalog_number: "Katalognummer",
+    barcode: "Barcode",
+    country: "Land",
+    pressing_year: "Jahr der Pressung",
+    media_condition: "Zustand Platte",
+    sleeve_condition: "Zustand Hülle",
+    purchased_on: "Gekauft am",
+    discogs_release_id: "Discogs-Release-ID",
+    notes: "Notizen"
+  ]
 
   @impl true
   def render(assigns) do
@@ -23,31 +41,24 @@ defmodule PlattensammlungWeb.CopyLive.Form do
         </div>
 
         <.form for={@form} id="copy-form" phx-change="validate" phx-submit="save">
-          <div class="grid gap-x-4 sm:grid-cols-2">
-            <.input field={@form[:format]} label="Format" placeholder="LP, 2LP, 7″ …" />
-            <.input field={@form[:label]} label="Label" />
-            <.input field={@form[:catalog_number]} label="Katalognummer" />
-            <.input field={@form[:barcode]} label="Barcode" inputmode="numeric" />
-            <.input field={@form[:country]} label="Land" />
-            <.input field={@form[:pressing_year]} type="number" label="Jahr der Pressung" />
-            <.input
-              field={@form[:media_condition]}
-              type="select"
-              label="Zustand Platte"
-              prompt="–"
-              options={condition_options()}
-            />
-            <.input
-              field={@form[:sleeve_condition]}
-              type="select"
-              label="Zustand Hülle"
-              prompt="–"
-              options={condition_options()}
-            />
-            <.input field={@form[:purchased_on]} type="date" label="Gekauft am" />
-            <.input field={@form[:discogs_release_id]} type="number" label="Discogs-Release-ID" />
+          <p :if={MapSet.size(@visible) == 0} class="pb-2 text-sm opacity-70" id="no-fields">
+            Noch keine Angaben. Füge hinzu, was du festhalten möchtest.
+          </p>
+
+          <.optional_field
+            :for={{field, label} <- @fields}
+            form={@form}
+            field={field}
+            label={label}
+            visible={@visible}
+            focus={@focus}
+          >
+            <.copy_input form={@form} field={field} label={label} />
+          </.optional_field>
+
+          <div class="mt-3 border-t border-base-300 pt-3">
+            <.add_field_buttons fields={@fields} visible={@visible} />
           </div>
-          <.input field={@form[:notes]} type="textarea" label="Notizen" rows="3" />
 
           <div class="flex gap-2 pt-4">
             <.button variant="primary" phx-disable-with="Speichern…" id="save-copy">
@@ -81,6 +92,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
     socket
     |> assign(:page_title, "Exemplar hinzufügen")
     |> assign(:album, album)
+    |> assign_fields(nil)
     |> assign(:form, to_form(form))
   end
 
@@ -92,10 +104,80 @@ defmodule PlattensammlungWeb.CopyLive.Form do
     socket
     |> assign(:page_title, "Exemplar bearbeiten")
     |> assign(:album, copy.album)
+    |> assign_fields(copy)
     |> assign(:form, to_form(form))
   end
 
+  defp assign_fields(socket, copy) do
+    socket
+    |> assign(:fields, @fields)
+    |> assign(:visible, OptionalFields.initially_visible(copy, @fields))
+    |> assign(:focus, nil)
+  end
+
+  attr :form, :any, required: true
+  attr :field, :atom, required: true
+  attr :label, :string, required: true
+
+  defp copy_input(%{field: field} = assigns)
+       when field in [:media_condition, :sleeve_condition] do
+    ~H"""
+    <.input
+      field={@form[@field]}
+      type="select"
+      label={@label}
+      prompt="–"
+      options={condition_options()}
+    />
+    """
+  end
+
+  defp copy_input(%{field: field} = assigns)
+       when field in [:pressing_year, :discogs_release_id] do
+    ~H"""
+    <.input field={@form[@field]} type="number" label={@label} />
+    """
+  end
+
+  defp copy_input(%{field: :purchased_on} = assigns) do
+    ~H"""
+    <.input field={@form[:purchased_on]} type="date" label={@label} />
+    """
+  end
+
+  defp copy_input(%{field: :notes} = assigns) do
+    ~H"""
+    <.input field={@form[:notes]} type="textarea" label={@label} rows="3" />
+    """
+  end
+
+  defp copy_input(%{field: :barcode} = assigns) do
+    ~H"""
+    <.input field={@form[:barcode]} label={@label} inputmode="numeric" />
+    """
+  end
+
+  defp copy_input(%{field: :format} = assigns) do
+    ~H"""
+    <.input field={@form[:format]} label={@label} placeholder="LP, 2LP, 7″ …" />
+    """
+  end
+
+  defp copy_input(assigns) do
+    ~H"""
+    <.input field={@form[@field]} label={@label} />
+    """
+  end
+
   @impl true
+  def handle_event("show_field", %{"field" => field}, socket) do
+    {:noreply, OptionalFields.show(socket, field, @fields)}
+  end
+
+  def handle_event("hide_field", %{"field" => field}, socket) do
+    {:noreply, OptionalFields.hide(socket, field, @fields)}
+  end
+
   def handle_event("validate", %{"copy" => params}, socket) do
     {:noreply, assign(socket, :form, AshPhoenix.Form.validate(socket.assigns.form, params))}
   end

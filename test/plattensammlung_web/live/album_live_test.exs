@@ -89,16 +89,50 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       assert has_element?(view, "#duplicate-warning")
     end
 
-    test "edits album with genres as comma separated text", %{conn: conn} do
+    test "edits optional fields and genre tags", %{conn: conn} do
+      Records.add_to_collection!("Pink Floyd", "Animals", %{genres: ["Rock"]}, authorize?: false)
       album = Records.add_to_collection!("The Beatles", "Abbey Road", authorize?: false)
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}/edit")
 
-      view
-      |> form("#album-form", album: %{genres: "Rock, Pop", year: "1969"})
-      |> render_submit()
+      assert has_element?(view, "#cover-preview")
+      refute has_element?(view, "#field-year")
+
+      view |> element("#add-year") |> render_click()
+      view |> element("#add-genres") |> render_click()
+
+      # Enter in the tag field submits only the small genre form; "rock" takes
+      # the spelling of the existing genre "Rock"
+      view |> element("#genre-entry") |> render_submit(%{genre: "rock, Pop"})
+      view |> element("#genre-entry") |> render_submit(%{genre: "Jazz"})
+      view |> element("#genre-jazz button") |> render_click()
+
+      assert has_element?(view, "#genre-rock")
+      assert has_element?(view, "#genre-pop")
+      refute has_element?(view, "#genre-jazz")
+
+      view |> form("#album-form", album: %{year: "1969"}) |> render_submit()
 
       assert %{genres: ["Rock", "Pop"], year: 1969} =
                Records.get_album!(album.id, authorize?: false)
+    end
+
+    test "removing an optional field clears its value", %{conn: conn} do
+      album =
+        Records.add_to_collection!("The Beatles", "Abbey Road", %{year: 1969, genres: ["Rock"]},
+          authorize?: false
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/albums/#{album}/edit")
+
+      # Fields with a value are visible from the start
+      assert has_element?(view, "#field-year")
+      view |> element("#remove-year") |> render_click()
+      view |> element("#remove-genres") |> render_click()
+      assert has_element?(view, "#add-year")
+
+      view |> form("#album-form") |> render_submit()
+
+      assert %{year: nil, genres: []} = Records.get_album!(album.id, authorize?: false)
     end
   end
 
@@ -115,6 +149,11 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
     test "adding a copy via the copy form marks the album as owned", %{conn: conn} do
       album = Records.add_to_wishlist!("Can", "Tago Mago", authorize?: false)
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}/copies/new")
+
+      # Optional fields appear only after their "+" button
+      refute has_element?(view, "#field-format")
+      view |> element("#add-format") |> render_click()
+      view |> element("#add-media_condition") |> render_click()
 
       view
       |> form("#copy-form", copy: %{format: "2LP", media_condition: "near_mint"})

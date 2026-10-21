@@ -205,7 +205,12 @@ Ecto-Contexts.
 
 - AshAuthentication hat keine eingebaute Passkey-Strategie, siehe [ADR 0005](docs/adr/0005-passkey-login.md).
 - Formulare nutzen `AshPhoenix.Form` (`for_create`/`for_update`, `validate`, `submit`), keine Ecto-Changesets.
-  Listen wie `genres` werden im Formular als kommagetrennter Text eingegeben und per `prepare_params` umgewandelt.
+- Optionale Formularfelder wie in Apples Kontakte-App: `PlattensammlungWeb.OptionalFields`
+  (`optional_field`, `add_field_buttons`, `show/3`, `hide/3`). Ausgeblendete Felder werden als
+  leerer Wert gesendet, "−" löscht also den Wert. Pflichtfelder bleiben immer sichtbar.
+- Genres im Album-Formular sind Tags: `album[genres][]` als Hidden-Inputs, Eingabe über das
+  separate Formular `#genre-entry` (Enter fügt hinzu statt zu speichern), Vorschläge aus der Sammlung.
+- Die Cover-URL wird nicht von Hand bearbeitet; das Formular zeigt nur eine Vorschau.
 - MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
 - Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.
   Dann bleibt die Remote-URL stehen und die Oberfläche zeigt die Platzhalter-Platte.

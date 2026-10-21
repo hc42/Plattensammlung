@@ -7,6 +7,7 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 ## Ziele
 
 - **Erfassen mit minimalem Aufwand**: Pflicht sind nur Artist und Albumtitel, alles andere ist optional
+  und erscheint erst auf Wunsch (⊕/⊖ wie in Apples Kontakte-App); Genres als Tags
 - Barcode scannen (oder nach Artist und Titel suchen), Daten und Cover von Discogs und MusicBrainz übernehmen, ohne eine Pressungsvariante auswählen zu müssen
 - Schnell beantworten: „Habe ich diese Platte?“, mit Links zu Discogs
 - **Wunschliste**: Alben merken, die man noch sucht. Der Scan im Plattenladen zeigt sofort „habe ich“ oder „steht auf der Wunschliste“
