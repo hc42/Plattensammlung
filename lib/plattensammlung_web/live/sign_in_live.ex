@@ -73,14 +73,9 @@ defmodule PlattensammlungWeb.SignInLive do
   @impl true
   def handle_event("request_link", %{"email" => email}, socket) do
     # The answer is the same whether the address exists or not
-    Accounts.request_magic_link(email, context: %{base_url: base_url(socket)})
+    base_url = PlattensammlungWeb.PublicUrl.base_url(socket.host_uri)
+    Accounts.request_magic_link(email, context: %{base_url: base_url})
 
     {:noreply, assign(socket, :requested_for, String.trim(email))}
-  end
-
-  # The link in the e-mail should lead back to the host the user is on
-  defp base_url(socket) do
-    %URI{scheme: scheme, host: host, port: port} = socket.host_uri
-    "#{scheme}://#{host}:#{port}"
   end
 end

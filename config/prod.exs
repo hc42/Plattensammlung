@@ -21,7 +21,11 @@ config :plattensammlung, PlattensammlungWeb.Endpoint,
   ]
 
 # Configure Swoosh API Client
-config :swoosh, api_client: Swoosh.ApiClient.Req
+# Mail goes out via SMTP (runtime.exs), no HTTP API client needed
+config :swoosh, api_client: false
+
+# Session cookie only over HTTPS (the app runs behind a TLS proxy, ADR 0011)
+config :plattensammlung, secure_session_cookie: true
 
 # Disable Swoosh Local Memory Storage
 config :swoosh, local: false

@@ -1,0 +1,46 @@
+# TrueNAS 25.10: Apps → Discover Apps → ⋮ → Install via YAML (see deploy/README.md)
+#
+# Replace before installing:
+#   /mnt/POOL/apps/plattensammlung  → your dataset path
+#   VERSION                          → the image tag printed by deploy/build-image.sh
+services:
+  app:
+    # Loaded with `docker load`, never pulled from a registry
+    image: localhost/plattensammlung:VERSION
+    pull_policy: never
+    restart: unless-stopped
+    # SECRET_KEY_BASE, TOKEN_SIGNING_SECRET, PHX_HOST, DATABASE_URL, SMTP_*, … (see app.env.example)
+    env_file:
+      - /mnt/POOL/apps/plattensammlung/app.env
+    environment:
+      COVERS_DIR: /data/covers
+    ports:
+      # nginx-proxy-manager forwards https://<your domain> to http://<NAS-IP>:4000
+      - "4000:4000"
+    volumes:
+      - /mnt/POOL/apps/plattensammlung/covers:/data/covers
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    # POSTGRES_PASSWORD and POSTGRES_DB (see db.env.example)
+    env_file:
+      - /mnt/POOL/apps/plattensammlung/db.env
+    volumes:
+      # Postgres 18 keeps its data in a versioned folder below /var/lib/postgresql
+      - /mnt/POOL/apps/plattensammlung/postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # No ports: the database is only reachable from the app container

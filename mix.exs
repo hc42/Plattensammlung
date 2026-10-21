@@ -44,6 +44,7 @@ defmodule Plattensammlung.MixProject do
       {:picosat_elixir, "~> 0.2"},
       {:wax_, "~> 0.7"},
       {:nimble_csv, "~> 1.2"},
+      {:gen_smtp, "~> 1.2"},
       {:ash_authentication_phoenix, "~> 2.0"},
       {:open_api_spex, "~> 3.0"},
       {:ash_json_api, "~> 1.0"},

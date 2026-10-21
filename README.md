@@ -48,6 +48,7 @@ Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 6. ✅ JSON-API (AshJsonApi) mit OpenAPI-Doku ([ADR 0009](docs/adr/0009-gestaltung-der-json-api.md))
 7. ✅ Login per Passkey, Magic Link als Rückfallebene, API-Keys ([ADR 0005](docs/adr/0005-passkey-login.md))
 8. ✅ Statistik und Export als CSV und JSON-LD ([ADR 0010](docs/adr/0010-statistik-und-export.md))
+9. ✅ Betrieb auf dem NAS (TrueNAS, nginx-proxy-manager, SMTP): Anleitung in [deploy/README.md](deploy/README.md), [ADR 0011](docs/adr/0011-betrieb-auf-truenas.md)
 
 ## Entwicklung
 
@@ -126,6 +127,11 @@ curl -X POST http://localhost:4000/api/json/albums/collection -H "Authorization:
 Jede Anfrage braucht einen API-Key (Seite „Konto“): `-H "Authorization: Bearer <Key>"`.
 Ohne Key antwortet die API mit 403. Die Swagger-UI ist ohne Key lesbar; für „Try it out“
 den Key über „Authorize“ eintragen.
+
+## Betrieb
+
+Die App läuft als Container auf einem TrueNAS-NAS hinter nginx-proxy-manager. Image
+bauen, Konfiguration, Backups und Updates: [deploy/README.md](deploy/README.md).
 
 ## Dokumentation
 

@@ -167,6 +167,17 @@ Regeln:
 - Diagramme: `PlattensammlungWeb.StatsComponents` (`stat_tile`, `bar_chart`). Balken in einer
   Farbe, Werte immer als Text, Diagramm als `<table>`.
 
+## Betrieb (ADR 0011, `deploy/`)
+
+- Produktion: Release-Image (Dockerfile, `rel/overlays/bin/start` = migrieren + starten),
+  TrueNAS Custom App (`deploy/truenas-compose.yaml`), TLS bei nginx-proxy-manager.
+- **Öffentliche Adresse immer über `PlattensammlungWeb.PublicUrl.base_url/1`** bilden,
+  nie aus `conn.host`/`conn.port`: Hinter dem Proxy sieht die App nur `http://nas:4000`.
+  In prod kommt sie aus `PHX_HOST` (`:public_url`).
+- Mail in prod per SMTP (`runtime.exs`, `gen_smtp`), Absender aus `MAIL_FROM` (`:mail_from`).
+- Neue Pflicht-Umgebungsvariablen in `deploy/app.env.example` und `deploy/README.md` eintragen.
+- Nichts Lokales ins Image: `.dockerignore` schließt `uploads/`, `priv/cert/` und `deploy/` aus.
+
 ## Phoenix-Richtlinien
 
 Bei Arbeit an Web-Code (LiveView, HEEx, Komponenten, Router) **unbedingt

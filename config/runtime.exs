@@ -111,6 +111,41 @@ if config_env() == :prod do
       System.get_env("TOKEN_SIGNING_SECRET") ||
         raise("Missing environment variable `TOKEN_SIGNING_SECRET`!")
 
+  # Behind nginx-proxy-manager the app only sees http://nas:4000; passkeys,
+  # magic links and exports use this public address instead (ADR 0011)
+  config :plattensammlung, public_url: "https://#{host}"
+
+  # Magic link e-mails via the SMTP server of your mail provider.
+  # Port 587 uses STARTTLS, port 465 implicit TLS.
+  smtp_host = System.get_env("SMTP_HOST") || raise("Missing environment variable `SMTP_HOST`!")
+  smtp_port = String.to_integer(System.get_env("SMTP_PORT", "587"))
+
+  tls_options = [
+    verify: :verify_peer,
+    cacerts: :public_key.cacerts_get(),
+    server_name_indication: String.to_charlist(smtp_host),
+    depth: 99,
+    customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)]
+  ]
+
+  config :plattensammlung, Plattensammlung.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: smtp_host,
+    port: smtp_port,
+    username: System.get_env("SMTP_USERNAME"),
+    password: System.get_env("SMTP_PASSWORD"),
+    auth: :always,
+    ssl: smtp_port == 465,
+    sockopts: if(smtp_port == 465, do: tls_options, else: []),
+    tls: if(smtp_port == 465, do: :never, else: :always),
+    tls_options: tls_options,
+    retries: 2
+
+  config :plattensammlung,
+    mail_from:
+      {"Plattensammlung",
+       System.get_env("MAIL_FROM") || raise("Missing environment variable `MAIL_FROM`!")}
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

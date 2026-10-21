@@ -36,6 +36,11 @@ defmodule PlattensammlungWeb.Router do
     plug :set_actor, :user
   end
 
+  # Container health check (TrueNAS): app and database reachable
+  scope "/", PlattensammlungWeb do
+    get "/health", HealthController, :show
+  end
+
   scope "/api/json" do
     pipe_through [:api]
 

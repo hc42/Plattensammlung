@@ -8,7 +8,8 @@ defmodule PlattensammlungWeb.Endpoint do
     store: :cookie,
     key: "_plattensammlung_key",
     signing_salt: "DrjqAYLz",
-    same_site: "Lax"
+    same_site: "Lax",
+    secure: Application.compile_env(:plattensammlung, :secure_session_cookie, false)
   ]
 
   socket "/live", Phoenix.LiveView.Socket,

@@ -27,7 +27,13 @@ defmodule Plattensammlung.Accounts.User.Senders.SendMagicLinkEmail do
       link = base_url(opts) <> ~p"/magic_link/#{token}"
 
       new()
-      |> from({"Plattensammlung", "noreply@plattensammlung.local"})
+      |> from(
+        Application.get_env(
+          :plattensammlung,
+          :mail_from,
+          {"Plattensammlung", "noreply@plattensammlung.local"}
+        )
+      )
       |> to(email)
       |> subject("Dein Anmeldelink für die Plattensammlung")
       |> html_body("""
@@ -37,12 +43,20 @@ defmodule Plattensammlung.Accounts.User.Senders.SendMagicLinkEmail do
       <p>Der Link ist 10 Minuten gültig. Wenn du ihn nicht angefordert hast, ignoriere diese E-Mail.</p>
       """)
       |> text_body("Mit diesem Link meldest du dich an (10 Minuten gültig): #{link}")
-      |> Mailer.deliver!()
+      |> deliver()
     else
       Logger.warning("Magic link requested for an address not in ALLOWED_EMAILS")
     end
 
     :ok
+  end
+
+  # A failing mail server must not break the sign-in page; the reason is logged
+  defp deliver(email) do
+    case Mailer.deliver(email) do
+      {:ok, _metadata} -> :ok
+      {:error, reason} -> Logger.error("Magic link e-mail could not be sent: #{inspect(reason)}")
+    end
   end
 
   defp base_url(opts) do

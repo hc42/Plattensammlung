@@ -7,13 +7,14 @@ defmodule PlattensammlungWeb.PasskeyController do
   use PlattensammlungWeb, :controller
 
   alias Plattensammlung.Accounts.WebAuthn
+  alias PlattensammlungWeb.PublicUrl
 
   require Logger
 
   @challenge_key :webauthn_challenge
 
   def sign_in_options(conn, _params) do
-    {challenge, options} = WebAuthn.authentication_options(origin(conn))
+    {challenge, options} = WebAuthn.authentication_options(PublicUrl.base_url(conn))
 
     conn
     |> put_session(@challenge_key, challenge)
@@ -46,7 +47,7 @@ defmodule PlattensammlungWeb.PasskeyController do
         conn |> put_status(:unauthorized) |> json(%{error: "Bitte zuerst anmelden."})
 
       user ->
-        {challenge, options} = WebAuthn.registration_options(user, origin(conn))
+        {challenge, options} = WebAuthn.registration_options(user, PublicUrl.base_url(conn))
 
         conn
         |> put_session(@challenge_key, challenge)
@@ -73,18 +74,6 @@ defmodule PlattensammlungWeb.PasskeyController do
 
   defp pop_challenge(conn) do
     {get_session(conn, @challenge_key), delete_session(conn, @challenge_key)}
-  end
-
-  # The page's own origin, so passkeys work on localhost and on <name>.local
-  defp origin(conn) do
-    port =
-      case {conn.scheme, conn.port} do
-        {:http, 80} -> ""
-        {:https, 443} -> ""
-        {_scheme, port} -> ":#{port}"
-      end
-
-    "#{conn.scheme}://#{conn.host}#{port}"
   end
 
   # The session stores a JWT that AshAuthentication also records in the token

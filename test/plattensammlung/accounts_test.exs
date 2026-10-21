@@ -27,6 +27,25 @@ defmodule Plattensammlung.AccountsTest do
       assert_no_email_sent()
     end
 
+    test "a failing mail server is logged, not raised" do
+      mailer_config = Application.get_env(:plattensammlung, Plattensammlung.Mailer)
+
+      Application.put_env(:plattensammlung, Plattensammlung.Mailer,
+        adapter: __MODULE__.FailingAdapter
+      )
+
+      on_exit(fn ->
+        Application.put_env(:plattensammlung, Plattensammlung.Mailer, mailer_config)
+      end)
+
+      log =
+        ExUnit.CaptureLog.capture_log(fn ->
+          assert :ok = Accounts.request_magic_link("test@example.com")
+        end)
+
+      assert log =~ "could not be sent"
+    end
+
     test "signs in an allowed address and creates the user" do
       assert {:ok, %User{} = user} = sign_in_with_token_for("test@example.com")
       assert to_string(user.email) == "test@example.com"
@@ -74,5 +93,13 @@ defmodule Plattensammlung.AccountsTest do
       AshAuthentication.Strategy.MagicLink.request_token_for_identity(strategy, email, [], %{})
 
     AshAuthentication.Strategy.action(strategy, :sign_in, %{"token" => token})
+  end
+
+  defmodule FailingAdapter do
+    @moduledoc false
+    use Swoosh.Adapter
+
+    @impl true
+    def deliver(_email, _config), do: {:error, :smtp_unreachable}
   end
 end

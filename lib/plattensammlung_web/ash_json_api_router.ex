@@ -13,18 +13,23 @@ defmodule PlattensammlungWeb.AshJsonApiRouter do
 
   @doc false
   # "Try it out" should call the host the docs were loaded from (localhost:4000,
-  # <name>.local:4001, …). Bearer auth is removed until there is a login (ADR 0005).
+  # <name>.local:4001, the public domain). API keys are sent as Bearer tokens.
   def modify_open_api(spec, conn, _opts) do
     servers =
       if conn,
-        do: [%OpenApiSpex.Server{url: "#{conn.scheme}://#{conn.host}:#{conn.port}"}],
+        do: [%OpenApiSpex.Server{url: PlattensammlungWeb.PublicUrl.base_url(conn)}],
         else: spec.servers
+
+    bearer = %OpenApiSpex.SecurityScheme{
+      type: "http",
+      scheme: "bearer",
+      description: "API-Key von der Kontoseite (/account), z. B. plattensammlung_…"
+    }
 
     %{
       spec
       | servers: servers,
-        security: [],
-        components: Map.put(spec.components, :securitySchemes, %{})
+        components: Map.put(spec.components, :securitySchemes, %{"bearerAuth" => bearer})
     }
   end
 end

@@ -54,4 +54,6 @@ aussehen und wie sie sich zu den vorhandenen Ash Actions verhalten.
 
 Die Authentifizierung ist umgesetzt: API-Keys per `Authorization: Bearer …`, siehe
 [ADR 0005](0005-passkey-login.md). Ohne Key antwortet die API mit 403. Die
-OpenAPI-Spezifikation und die Swagger-UI bleiben ohne Key lesbar.
+OpenAPI-Spezifikation und die Swagger-UI bleiben ohne Key lesbar. Die Spezifikation
+beschreibt wieder ein Bearer-Schema, sodass „Authorize“ in der Swagger-UI den API-Key
+mitschickt.
