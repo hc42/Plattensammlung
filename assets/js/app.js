@@ -25,6 +25,7 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/plattensammlung"
 import topbar from "../vendor/topbar"
 import {BarcodeScanner} from "./hooks/barcode_scanner"
+import {CoverTint} from "./hooks/cover_tint"
 import {PasskeySignIn, PasskeyRegister} from "./hooks/passkey"
 import {appPath} from "./app_path"
 
@@ -32,13 +33,27 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket(appPath("/live"), Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, BarcodeScanner, PasskeySignIn, PasskeyRegister},
+  hooks: {...colocatedHooks, BarcodeScanner, CoverTint, PasskeySignIn, PasskeyRegister},
 })
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#d0582a"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+
+// Live navigation as a view transition: the album cover morphs between the grid and the
+// album page (both carry view-transition-name: cover-<id>). Browsers without the API,
+// and "reduce motion", just switch pages as before.
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)")
+window.addEventListener("phx:page-loading-start", ({detail}) => {
+  if (detail.kind !== "redirect" || !document.startViewTransition || reduceMotion.matches) return
+
+  document.startViewTransition(() => new Promise(resolve => {
+    window.addEventListener("phx:page-loading-stop", resolve, {once: true})
+    // Never keep the page frozen if the server is slow
+    setTimeout(resolve, 1500)
+  }))
+})
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

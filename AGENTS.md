@@ -78,8 +78,10 @@ Update these documents **without being asked** as soon as something changes:
   - `live/import_live.ex`: import page `/import` (barcode or text, take over a result with a click)
   - `live/collectors_live.ex`: other users' collections and wishlists (`/collectors`)
   - `ash_json_api_router.ex`: JSON:API at `/api/json`, Swagger UI at `/api/json/swaggerui`
-  - `components/album_components.ex`: `cover`, `sleeve` (cover with the record sliding out in
-    the grid), `back_link`, `status_badge`, condition helpers, `format_date`,
+  - `components/album_components.ex`: `cover` (placeholder with initials; `morph` for the view
+    transition), `sleeve` (cover with the record sliding out in the grid), `record` (the record
+    with its label on the album page), `label_style/1` (label colour per album), `back_link`,
+    `local_cover_path/1`, `status_badge`, condition helpers, `format_date`,
     `user_name`, `field_label` (imported in all views)
   - `locale.ex`: language of a request and of LiveViews (plug and `on_mount`, ADR 0021)
   - `nav.ex`: `on_mount` hook for `@current_path`; `components/layouts.ex`: top navigation
@@ -142,6 +144,9 @@ Most important code interface functions (each also with `!`):
 - `mark_wanted(album)` / `unmark_wanted(album)`, `add_wish(album_id)`: the own wish.
 - `add_copy(album_id, attrs)`: add another copy; removes the album from the own wishlist.
 - `search_albums(query \\ nil, status \\ nil)`, `list_collection()`, `list_wishlist()`.
+  Order with the argument `order` (`:title`, `:artist`, `:year`, `:added`; preparation
+  `SortAlbums`, sort keys are the calculations `artist_sort_key` and `added_at`). Not `sort`:
+  that name is taken by the JSON:API sort parameter of the index route.
   Careful: with optional arguments always pass all of them before the options
   (`search_albums(nil, nil, actor: user)`), otherwise the keyword list is read as an argument.
 - `get_album(id, load: [:artist, :copies, :owned, :copy_count, :discogs_url])`
@@ -321,6 +326,13 @@ Deviating from it: data access goes through Ash instead of Ecto contexts.
   label vermilion, `accent` = amber for the wishlist, `neutral` = the record), never fixed
   colours, so both themes work. Headings use `--font-display` (rounded system font, no web
   font). The back link above a page is `<.back_link>` (an inline link ignores `space-y-*`).
+- **View transitions** (`app.js`): live navigation runs inside `document.startViewTransition`;
+  elements with the same `view-transition-name` on both pages morph (covers: `cover-<id>`, via
+  `<.cover morph>`). Names must be unique per page.
+- **Cover colour** (hook `CoverTint`, `assets/js/hooks/cover_tint.js`): computed in the browser,
+  not stored. Only local covers (`local_cover_path/1`), remote images can't be read (canvas taint).
+- Percentages in `padding` refer to the containing block, not the element: inside small round
+  elements (labels) size text with container units (`@container`, `cqw`) and limit its width.
 - **Icons:** Tailwind only generates `hero-*` classes it finds literally in the source; never
   build icon names at runtime (`@icon <> "-solid"`), pass both names instead.
 

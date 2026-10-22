@@ -13,11 +13,28 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
+      <%!-- Behind the top of the page: the cover's colour, computed in the browser --%>
+      <div
+        id="cover-tint"
+        phx-hook="CoverTint"
+        data-src={local_cover_path(@album)}
+        class="cover-tint pointer-events-none absolute inset-x-0 top-0 -z-10 h-[36rem]"
+      >
+      </div>
+
       <.back_link navigate={back_path(@album)}>{back_label(@album)}</.back_link>
 
-      <div class="grid gap-8 md:grid-cols-[18rem_1fr]">
-        <div class="mx-auto w-full max-w-72 space-y-2 md:mx-0">
-          <.cover album={@album} class="w-full" />
+      <div class="grid gap-8 md:grid-cols-[26rem_1fr]">
+        <div class="mx-auto w-fit space-y-2 md:mx-0">
+          <%!-- The record comes out of the sleeve (on phones only its edge, so the page
+               stays narrow) and spins on hover --%>
+          <div class="group/record relative mr-14 w-64 md:mr-40">
+            <.record
+              album={@album}
+              class="absolute inset-y-[3%] right-[3%] translate-x-[22%] md:translate-x-[70%] motion-safe:group-hover/record:animate-[spin_4s_linear_infinite]"
+            />
+            <.cover album={@album} class="w-full" morph />
+          </div>
           <%!-- Live upload: the image is sent as soon as it is chosen (auto_upload) --%>
           <form :if={@can_edit} id="cover-form" phx-change="validate_cover" phx-submit="noop">
             <.live_file_input upload={@uploads.cover} class="hidden" />

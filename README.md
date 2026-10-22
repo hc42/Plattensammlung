@@ -12,7 +12,8 @@ Web application for cataloguing and managing a private vinyl record collection
 - Scan a barcode (or search by artist and title) and take over data and cover from Discogs and MusicBrainz, without having to pick a pressing
 - Answer quickly: "Do I have this record?", with links to Discogs
 - **Wishlist**: remember albums you are still looking for. Scanning in a record shop immediately shows "have it" or "on the wishlist"
-- Search and filter the collection, e.g. by artist, genre or year
+- Search and filter the collection, e.g. by artist, genre or year; sort by title, artist, year or
+  recently added, as a cover grid or a compact list (with an A–Z bar on phones)
 - **Shared catalogue, own collection per person:** every album exists once, each person has
   their own copies and their own wishlist, visible to the others (page "Collectors", "Also with …" on
   the album page). Everyone who has an album maintains its data; it is deleted only once no one
@@ -25,6 +26,9 @@ Web application for cataloguing and managing a private vinyl record collection
   albums can also be added from a Spotify link or its QR code
 - **Covers**: upload (also with the phone camera), replace or remove; orphaned image files are cleaned up
 - **On the phone**: tab bar at the bottom with a large scan button that opens the camera directly
+- **Look and feel**: records slide out of their sleeves, albums without a cover get a label in
+  their own colour, the cover morphs into the album page, which is tinted in the cover's colour
+  and shows the record with its label
 - **English and German**: follows the browser language, can be fixed on the account page
   ([ADR 0021](docs/adr/0021-internationalization.md))
 - Statistics (size, genres, decades, condition) and export as CSV or JSON-LD (schema.org)
@@ -157,6 +161,9 @@ http://localhost:4000/api/json/swaggerui (specification: `/api/json/open_api`).
 ```bash
 curl -H "Authorization: Bearer $API_KEY" -H "Accept: application/vnd.api+json" "http://localhost:4000/api/json/albums?query=beatles&include=artist"
 ```
+
+`order=title|artist|year|added` chooses the order of `GET /albums` (`added`: newest first); the
+JSON:API `sort` parameter works as well.
 
 ```bash
 curl -X POST http://localhost:4000/api/json/albums/collection -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/vnd.api+json" -d '{"data":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":["LP"]}}}'

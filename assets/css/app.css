@@ -117,6 +117,31 @@
   }
 }
 
+/* Page changes (see app.js): quick cross-fade, the cover morphs a little slower */
+::view-transition-group(root) {
+  animation-duration: 0.2s;
+}
+
+::view-transition-group(*) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* The album page, tinted in the colour of its cover (hook CoverTint) */
+.cover-tint {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--cover-tint, transparent) 32%, transparent),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+}
+
+.cover-tint[data-tinted] {
+  opacity: 1;
+}
+
 /* The placeholder record under a cover image: only visible if the image doesn't load */
 @keyframes delayed-fade-in {
   from { opacity: 0; }

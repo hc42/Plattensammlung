@@ -15,19 +15,37 @@ defmodule PlattensammlungWeb.AlbumComponents do
   attr :album, :map, required: true
   attr :class, :any, default: nil
 
+  attr :morph, :boolean,
+    default: false,
+    doc: "the cover morphs between grid and album page (View Transitions API)"
+
   def cover(assigns) do
     ~H"""
     <div
-      class={["relative aspect-square overflow-hidden rounded-lg bg-base-300 shadow-sm", @class]}
+      class={[
+        "@container relative aspect-square overflow-hidden rounded-lg bg-base-300 shadow-sm",
+        @class
+      ]}
       role="img"
       aria-label={"Cover: #{@album.title}"}
+      style={@morph && "view-transition-name: cover-#{@album.id}"}
     >
       <%!-- With a cover the record only fades in late: it shows when the image is broken,
            but doesn't flicker while the image loads --%>
       <div class={["grid size-full place-items-center", @album.cover_url && "delayed-fade-in"]}>
-        <div class="grid aspect-square w-3/4 place-items-center rounded-full bg-neutral shadow-inner">
-          <div class="grid aspect-square w-1/3 place-items-center rounded-full bg-primary/70">
-            <div class="size-1.5 rounded-full bg-base-100"></div>
+        <div class="vinyl-grooves grid aspect-square w-3/4 place-items-center rounded-full bg-neutral shadow-inner">
+          <%!-- Each album gets its own label colour; without a cover it shows the initials --%>
+          <div
+            class="grid aspect-[1] w-[38%] place-items-center rounded-full"
+            style={label_style(@album)}
+          >
+            <span
+              :if={!@album.cover_url}
+              class="font-display text-[9cqw] font-bold leading-none tracking-tight"
+            >
+              {initials(@album.title)}
+            </span>
+            <span :if={@album.cover_url} class="size-[8%] rounded-full bg-base-100"></span>
           </div>
         </div>
       </div>
@@ -37,6 +55,66 @@ defmodule PlattensammlungWeb.AlbumComponents do
         class="absolute inset-0 bg-cover bg-center"
         style={"background-image: url('#{css_url(@album.cover_url)}')"}
       >
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Colours of an album's record label, derived from its title: every album gets
+  its own hue, always the same one. Lightness and chroma are fixed, so the
+  labels work in both themes.
+  """
+  def label_style(%{title: title}) do
+    # to_string: album titles are case-insensitive strings (Ash.CiString)
+    hue = :erlang.phash2(to_string(title), 360)
+    "background-color: oklch(72% 0.12 #{hue}); color: oklch(26% 0.05 #{hue})"
+  end
+
+  # "Trans Europa Express" → "TE", "Tago Mago" → "TM", "Kind of Blue" → "KB": short
+  # lower-case words ("of", "a") are skipped unless nothing else is left
+  defp initials(title) do
+    words = String.split(to_string(title), ~r/[^\p{L}\p{N}]+/u, trim: true)
+    main = Enum.reject(words, &(String.length(&1) < 3 and &1 == String.downcase(&1)))
+
+    if(main == [], do: words, else: main)
+    |> Enum.take(2)
+    |> Enum.map_join(&(&1 |> String.first() |> String.upcase()))
+  end
+
+  @doc """
+  The path of a cover the app stored itself (with the optional path prefix),
+  `nil` for remote covers. The browser can only read the pixels of these.
+  """
+  def local_cover_path(%{cover_url: "/" <> _ = path}), do: PlattensammlungWeb.Endpoint.path(path)
+  def local_cover_path(_album), do: nil
+
+  @doc """
+  The record of an album as on the turntable: label in the album's colour with
+  title and year. Used next to the cover on the album page; it spins on hover.
+  """
+  attr :album, :map, required: true
+  attr :class, :any, default: nil
+
+  def record(assigns) do
+    ~H"""
+    <div
+      aria-hidden="true"
+      class={[
+        "vinyl-grooves aspect-square rounded-full bg-neutral shadow-lg ring-1 ring-white/15",
+        @class
+      ]}
+    >
+      <div
+        class="@container absolute inset-[33%] grid place-items-center rounded-full text-center"
+        style={label_style(@album)}
+      >
+        <%!-- No padding here: percentages would refer to the record, not the label --%>
+        <div class="w-4/5">
+          <p class="line-clamp-2 text-[12cqw] leading-tight font-semibold">{@album.title}</p>
+          <p :if={@album.year} class="mt-[18cqw] text-[10cqw] opacity-80">{@album.year}</p>
+        </div>
+        <span class="absolute top-1/2 left-1/2 size-[7%] -translate-1/2 rounded-full bg-base-100"></span>
       </div>
     </div>
     """
@@ -81,12 +159,13 @@ defmodule PlattensammlungWeb.AlbumComponents do
         aria-hidden="true"
         class="vinyl-grooves absolute inset-y-[3%] right-[3%] aspect-square rounded-full bg-neutral shadow-md ring-1 ring-white/15 transition-transform duration-300 ease-out group-hover:translate-x-5 group-focus-visible:translate-x-5 motion-reduce:transition-none"
       >
-        <div class="absolute inset-[34%] rounded-full bg-primary">
+        <div class="absolute inset-[34%] rounded-full" style={label_style(@album)}>
           <div class="absolute inset-[44%] rounded-full bg-base-100"></div>
         </div>
       </div>
       <.cover
         album={@album}
+        morph
         class="origin-left transition duration-300 ease-out group-hover:scale-[0.94] group-hover:shadow-lg group-focus-visible:scale-[0.94] group-focus-visible:shadow-lg motion-reduce:transition-none"
       />
     </div>
