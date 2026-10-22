@@ -11,6 +11,8 @@ defmodule Plattensammlung.Application do
       [
         PlattensammlungWeb.Telemetry,
         Plattensammlung.Repo,
+        {Plattensammlung.RateLimit, clean_period: :timer.minutes(10)},
+        Plattensammlung.Lookup.Throttle,
         {DNSCluster, query: Application.get_env(:plattensammlung, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Plattensammlung.PubSub},
         # Start a worker by calling: Plattensammlung.Worker.start_link(arg)

@@ -25,7 +25,8 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 - **Cover** hochladen (auch per Handykamera), ersetzen oder entfernen; verwaiste Bilddateien werden aufgeräumt
 - Statistik (Umfang, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
 - **Sicherheit:** Cover nur von Discogs und dem Cover Art Archive (oder per Upload),
-  Content-Security-Policy für alle Seiten ([ADR 0014](docs/adr/0014-cover-quellen-und-csp.md))
+  Content-Security-Policy für alle Seiten ([ADR 0014](docs/adr/0014-cover-quellen-und-csp.md)),
+  begrenzte Anmeldelinks und gedrosselte MusicBrainz-Abfragen ([ADR 0017](docs/adr/0017-rate-limits.md))
 
 ## Technik
 

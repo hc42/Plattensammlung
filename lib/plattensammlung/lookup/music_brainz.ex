@@ -7,7 +7,7 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
   Text searches return *release groups* (albums); a barcode resolves to one
   release (pressing) and its release group.
   """
-  alias Plattensammlung.Lookup.HTTP
+  alias Plattensammlung.Lookup.{HTTP, Throttle}
 
   @base_url "https://musicbrainz.org/ws/2"
 
@@ -161,6 +161,8 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
   defp get(path, params) do
     [base_url: @base_url]
     |> HTTP.new()
+    # About one request per second for the whole app (ADR 0017)
+    |> Req.Request.prepend_request_steps(throttle: &throttle/1)
     |> HTTP.get_json(path, Keyword.put(params, :fmt, "json"))
   end
 
@@ -233,4 +235,13 @@ defmodule Plattensammlung.Lookup.MusicBrainz do
   end
 
   defp year(_date), do: nil
+
+  defp throttle(request) do
+    Throttle.wait(
+      :musicbrainz,
+      Application.fetch_env!(:plattensammlung, :musicbrainz_interval_ms)
+    )
+
+    request
+  end
 end

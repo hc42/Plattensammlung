@@ -108,7 +108,8 @@ defmodule Plattensammlung.Accounts.User do
         allow_nil? false
       end
 
-      run AshAuthentication.Strategy.MagicLink.Request
+      # AshAuthentication's request, with rate limits (ADR 0017)
+      run Plattensammlung.Accounts.RequestMagicLink
     end
 
     read :sign_in_with_api_key do

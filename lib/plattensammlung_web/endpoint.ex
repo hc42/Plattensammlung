@@ -13,8 +13,9 @@ defmodule PlattensammlungWeb.Endpoint do
   ]
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: [connect_info: [session: @session_options]]
+    # peer_data and x_headers: the client IP for rate limits (ClientIp)
+    websocket: [connect_info: [:peer_data, :x_headers, session: @session_options]],
+    longpoll: [connect_info: [:peer_data, :x_headers, session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -47,6 +48,8 @@ defmodule PlattensammlungWeb.Endpoint do
     param_key: "request_logger",
     cookie_key: "request_logger"
 
+  # Behind the proxy: the client's address from X-Forwarded-For
+  plug PlattensammlungWeb.ClientIp
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 

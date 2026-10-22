@@ -265,7 +265,11 @@ Ecto-Contexts.
   verschwindet). Stattdessen `<.loading_icon name="…" />` und am Button
   `phx-click-loading:pointer-events-none`.
 - Die Cover-URL wird nicht von Hand bearbeitet; das Formular zeigt nur eine Vorschau.
-- MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde. Bei 503 wiederholt Req automatisch.
+- MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde: `Lookup.Throttle` hält den Abstand für alle
+  Anfragen der App (Req-Step in `MusicBrainz.get/2`, ADR 0017). Bei 503 wiederholt Req automatisch.
+- **Rate Limits (ADR 0017):** Anmeldelinks pro Adresse und IP (`Accounts.RequestMagicLink`,
+  `Plattensammlung.RateLimit` = Hammer/ETS). Client-IP immer über `PlattensammlungWeb.ClientIp`
+  (`X-Forwarded-For`, letzter Eintrag; in LiveViews `from_socket/1` im Mount).
 - Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.
   Dann bleibt die Remote-URL stehen und die Oberfläche zeigt die Platzhalter-Platte.
 - `LAN=1 mix phx.server` öffnet HTTPS auf Port 4001 für das ganze WLAN (ADR 0008). Das

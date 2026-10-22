@@ -21,3 +21,4 @@ Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md
 | [0014](0014-cover-quellen-und-csp.md) | Cover-Quellen und Content-Security-Policy | Angenommen |
 | [0015](0015-gemeinsame-kuenstler.md) | Gemeinsame Künstler schützen | Angenommen |
 | [0016](0016-gemeinsame-alben.md) | Gemeinsame Alben, persönliche Exemplare und Wünsche | Angenommen |
+| [0017](0017-rate-limits.md) | Rate Limits | Angenommen |

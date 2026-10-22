@@ -67,6 +67,8 @@ defmodule PlattensammlungWeb.SignInLive do
      |> assign(:page_title, "Anmelden")
      |> assign(:form, to_form(%{"email" => ""}))
      |> assign(:requested_for, nil)
+     # Only available while mounting; used for the rate limit of magic links
+     |> assign(:client_ip, PlattensammlungWeb.ClientIp.from_socket(socket))
      |> assign(:dev_mailbox?, Application.get_env(:plattensammlung, :dev_routes, false))}
   end
 
@@ -74,7 +76,10 @@ defmodule PlattensammlungWeb.SignInLive do
   def handle_event("request_link", %{"email" => email}, socket) do
     # The answer is the same whether the address exists or not
     base_url = PlattensammlungWeb.PublicUrl.base_url(socket.host_uri)
-    Accounts.request_magic_link(email, context: %{base_url: base_url})
+
+    Accounts.request_magic_link(email,
+      context: %{base_url: base_url, client_ip: socket.assigns.client_ip}
+    )
 
     {:noreply, assign(socket, :requested_for, String.trim(email))}
   end

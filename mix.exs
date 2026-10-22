@@ -41,6 +41,7 @@ defmodule Plattensammlung.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:hammer, "~> 7.4"},
       {:picosat_elixir, "~> 0.2"},
       {:wax_, "~> 0.7"},
       {:nimble_csv, "~> 1.2"},

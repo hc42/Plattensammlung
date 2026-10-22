@@ -72,6 +72,10 @@ config :plattensammlung,
   ecto_repos: [Plattensammlung.Repo],
   ash_domains: [Plattensammlung.Accounts, Plattensammlung.Records],
   covers_dir: Path.expand("../uploads/covers", __DIR__),
+  # Magic link requests: {count, per milliseconds} (ADR 0017)
+  magic_link_limits: [per_address: {3, :timer.minutes(15)}, per_ip: {10, :timer.hours(1)}],
+  # MusicBrainz allows about one request per second
+  musicbrainz_interval_ms: 1_000,
   # Covers are only downloaded from these hosts (and their subdomains), see ADR 0014
   cover_hosts: ["i.discogs.com", "coverartarchive.org", "archive.org"],
   generators: [timestamp_type: :utc_datetime],

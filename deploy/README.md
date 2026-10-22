@@ -107,6 +107,31 @@ Neuer **Proxy Host**:
 Die Portfreigabe im Router (443, für Let's Encrypt meist auch 80) zeigt auf
 nginx-proxy-manager, **nicht** auf Port 4000 der App.
 
+NPM setzt den Header `X-Forwarded-For`; daraus liest die App die IP-Adresse der Besucher
+(für Rate Limits und Logs, ADR 0017). Wer Port 4000 direkt erreicht (im LAN), könnte
+den Header selbst setzen. Deshalb Port 4000 nicht ins Internet freigeben.
+
+### Grobschutz gegen Massenanfragen (optional, empfohlen)
+
+Die App begrenzt Anmeldelinks selbst. Zusätzlich kann NPM jede IP-Adresse drosseln:
+
+1. Auf dem NAS die Datei `/data/nginx/custom/http_top.conf` im Datenordner von NPM
+   anlegen (bei der TrueNAS-App von NPM im Volume für `/data`):
+
+   ```nginx
+   limit_req_zone $binary_remote_addr zone=plattensammlung:10m rate=10r/s;
+   ```
+
+2. Im Proxy Host unter **Advanced → Custom Nginx Configuration**:
+
+   ```nginx
+   limit_req zone=plattensammlung burst=50 nodelay;
+   limit_req_status 429;
+   ```
+
+3. NPM neu starten. Der erste Seitenaufruf lädt einige Dateien auf einmal; `burst=50`
+   lässt das zu, dauerhaft mehr als 10 Anfragen pro Sekunde werden mit 429 abgewiesen.
+
 ## 6. Erste Anmeldung
 
 1. `https://platten.example.de` öffnen, deine Adresse aus `ALLOWED_EMAILS` eingeben.
