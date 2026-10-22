@@ -23,6 +23,8 @@ Begründungen für Entscheidungen in [docs/adr/](docs/adr/).
 Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 
 - **README.md**: Status, Funktionsumfang, Technik, Fahrplan, Befehle für die Entwicklung.
+- **SECURITY.md**: Sicherheitsmodell und bekannte Grenzen, bei jeder Änderung an Anmeldung,
+  Berechtigungen, Eingabeprüfung, Rate Limits oder offenen Ports.
 - **AGENTS.md**: Konventionen, Befehle, Projektstruktur und Stolperfallen.
 - **docs/adr/**: Jede architekturrelevante Entscheidung (Technik, Datenmodell,
   Authentifizierung, Schnittstellen, Deployment) bekommt einen neuen ADR. Dafür die

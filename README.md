@@ -176,4 +176,5 @@ bauen, Konfiguration, Backups und Updates: [deploy/README.md](deploy/README.md).
 ## Dokumentation
 
 - [AGENTS.md](AGENTS.md): Hinweise für KI-Assistenten und Mitwirkende
+- [SECURITY.md](SECURITY.md): Sicherheitsmodell, bekannte Grenzen, Lücken melden
 - [docs/adr/](docs/adr/): Architekturentscheidungen (Architecture Decision Records)
