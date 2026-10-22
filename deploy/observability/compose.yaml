@@ -9,6 +9,8 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=90d
+      # Tempo writes span metrics and the service graph into Prometheus
+      - --web.enable-remote-write-receiver
     ports:
       - "9090:9090"
     volumes:
@@ -31,8 +33,10 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    # Admin password, SMTP for alert e-mails, ALERT_EMAIL (see grafana.env.example)
+    env_file:
+      - /mnt/POOL/apps/observability/grafana.env
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: CHANGE_ME
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - /mnt/POOL/apps/observability/grafana/provisioning:/etc/grafana/provisioning:ro

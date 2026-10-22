@@ -57,3 +57,23 @@ Entwicklung mit. Ereignisse (einzelne Vorgänge mit Kontext) und Logs folgen sp�
   ohne Verbindung zum auslösenden Event.
 - Der Zähler-Stand beginnt nach jedem Neustart bei null; Prometheus rechnet das bei `rate`
   und `increase` heraus.
+
+## Nachtrag (2026-10-22): Alarme und Trace-Dashboard
+
+- **Alarme mit Grafana Alerting**, als Dateien im Repo
+  (`deploy/observability/grafana/provisioning/alerting/`), lokal und auf dem NAS gleich.
+  Benachrichtigung per E-Mail über den SMTP-Zugang der App (`grafana.env`, `ALERT_EMAIL`).
+  Regeln mit Startwerten: App nicht erreichbar (5 min), mehr als 5 Anfragen/s (10 min), mehr
+  als 1 anonyme Anfrage/s (10 min), mehr als 10 fehlgeschlagene Anmeldungen pro Stunde,
+  gedrosselte Anmeldelinks, mehr als 5 % Serverfehler (10 min), p95 über 2 s ohne Import
+  und Abgleich (15 min), mehr als 20 % Fehler bei einem externen Dienst (15 min).
+  Nur „App nicht erreichbar“ wertet fehlende Daten als Alarm.
+- **Zähler starten bei 0:** Prometheus erkennt einen Anstieg erst, wenn die Zeitreihe schon
+  existiert. Die Anmelde-Zähler sind deshalb Summen, die beim Start für alle Kombinationen
+  mit 0 angelegt werden (`Metrics.init_counters/0`); sonst hätte der Alarm für
+  fehlgeschlagene Anmeldungen nie ausgelöst (im Test nachgestellt).
+- **Tempo Metrics Generator:** Span-Metriken und Service-Grafik (App, Datenbank, externe
+  Dienste) aus den Traces, per Remote Write in Prometheus. Dashboard „Plattensammlung –
+  Traces“ mit Service-Grafik, Kennzahlen pro Span und TraceQL-Listen (langsame Anfragen,
+  Fehler, langsame externe Abfragen, Ash-Actions, Datenbankabfragen). Tempo 2.8 kennt
+  `span:parent` noch nicht; Wurzel-Spans werden über `nestedSetParent < 0` gefunden.

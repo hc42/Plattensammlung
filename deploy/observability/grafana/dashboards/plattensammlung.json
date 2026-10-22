@@ -781,5 +781,12 @@
       ],
       "id": 27
     }
+  ],
+  "links": [
+    {
+      "title": "Plattensammlung – Traces",
+      "type": "link",
+      "url": "/d/plattensammlung-traces"
+    }
   ]
 }

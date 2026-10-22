@@ -1,0 +1,275 @@
+# Alert rules for Grafana Alerting (ADR 0019). Thresholds are starting points;
+# adjust them here, not in the UI (provisioned rules are read-only there).
+# "$$" is a literal "$": Grafana replaces "$NAME" with environment variables.
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Plattensammlung
+    folder: Plattensammlung
+    interval: 1m
+    rules:
+      - uid: app-down
+        title: "App nicht erreichbar"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "up{job=\"plattensammlung\"}"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: lt, params: [1] }
+        for: 5m
+        noDataState: Alerting
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus erreicht den Metrik-Port der App seit 5 Minuten nicht."
+      - uid: high-request-rate
+        title: "Ungewöhnlich viele Anfragen"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "sum(rate(plattensammlung_http_requests_count[5m]))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [5] }
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mehr als 5 Anfragen pro Sekunde seit 10 Minuten (üblich: weit unter 1/s). Scanner oder Schleife?"
+      - uid: anonymous-requests
+        title: "Viele Anfragen ohne Anmeldung"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "sum(rate(plattensammlung_http_requests_count{client=\"anonymous\",route!=\"/health\"}[5m]))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [1] }
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mehr als 1 Anfrage pro Sekunde ohne Anmeldung seit 10 Minuten, typisch für Bots."
+      - uid: sign-in-failures
+        title: "Fehlgeschlagene Anmeldungen"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "sum(increase(plattensammlung_auth_sign_ins_count{result=\"failure\"}[1h]))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [10] }
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mehr als 10 fehlgeschlagene Anmeldungen (Passkey, Anmeldelink, API-Key) in der letzten Stunde."
+      - uid: magic-link-rate-limited
+        title: "Anmeldelinks gedrosselt"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "sum(increase(plattensammlung_auth_magic_link_requests_count{result=\"rate_limited\"}[15m]))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [0] }
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Das Rate Limit für Anmeldelinks hat gegriffen: jemand ruft die Anmeldeseite wiederholt auf."
+      - uid: server-errors
+        title: "Serverfehler"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "sum(rate(plattensammlung_http_requests_count{status=~\"5..\"}[10m])) / sum(rate(plattensammlung_http_requests_count[10m]))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [0.05] }
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mehr als 5 % der Antworten sind Serverfehler (5xx)."
+      - uid: slow
+        title: "Langsame Antworten"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "max(histogram_quantile(0.95, sum by (le) (rate(plattensammlung_http_request_duration_milliseconds_bucket{route!~\"/import.*\"}[15m]))) or histogram_quantile(0.95, sum by (le) (rate(plattensammlung_live_view_event_duration_milliseconds_bucket{view!~\".*(ImportLive|Match)\"}[15m]))))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [2000] }
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "95 % der Antworten brauchen länger als 2 Sekunden (ohne Import und Abgleich)."
+      - uid: external-errors
+        title: "Externe Dienste gestört"
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: { from: 3600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: "sum by (host) (rate(plattensammlung_external_requests_count{status!~\"2..|3..|404\"}[30m])) / sum by (host) (rate(plattensammlung_external_requests_count[30m]))"
+              instant: true
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [0.2] }
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mehr als 20 % der Anfragen an {{ $$labels.host }} schlagen fehl. Import und Abgleich sind betroffen, die App selbst nicht."

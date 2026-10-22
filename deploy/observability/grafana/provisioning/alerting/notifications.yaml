@@ -1,0 +1,22 @@
+# Alerts go by e-mail (ADR 0019): SMTP comes from the GF_SMTP_* environment of
+# the Grafana container, the recipient from ALERT_EMAIL.
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: E-Mail
+    receivers:
+      - uid: email
+        type: email
+        settings:
+          addresses: ${ALERT_EMAIL}
+          singleEmail: true
+
+policies:
+  - orgId: 1
+    receiver: E-Mail
+    group_by: [grafana_folder, alertname]
+    group_wait: 30s
+    group_interval: 5m
+    # Still firing: remind twice a day
+    repeat_interval: 12h

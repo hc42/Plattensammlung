@@ -31,6 +31,8 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=7d
+      # Tempo writes span metrics and the service graph into Prometheus
+      - --web.enable-remote-write-receiver
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
@@ -60,6 +62,8 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
       GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      # Alert rules need a recipient; locally no SMTP, alerts show up in the UI only
+      ALERT_EMAIL: alerts@localhost
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

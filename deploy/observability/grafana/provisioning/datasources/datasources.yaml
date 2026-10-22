@@ -11,3 +11,9 @@ datasources:
     uid: tempo
     type: tempo
     url: http://tempo:3200
+    jsonData:
+      # Service graph from the metrics Tempo derives into Prometheus
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true

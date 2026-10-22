@@ -250,6 +250,10 @@ Regeln:
   `magic_link_request/1`, `[:plattensammlung, :data]` jede Minute). `/metrics` liefert
   `PlattensammlungWeb.MetricsPlug` auf eigenem Port (`METRICS_PORT`, aus = nil).
 - Tags nur mit wenigen Werten: Routen-Muster, View, Action, User-ID; nie Pfade, Album-IDs, IPs.
+- Zähler, auf die Alarme mit `increase()` schauen, als `sum` anlegen und in
+  `Metrics.init_counters/0` mit 0 starten (sonst sieht Prometheus den ersten Anstieg nicht).
+- Alarme: `deploy/observability/grafana/provisioning/alerting/` (in Grafana nur lesbar).
+  `$` in Annotationen als `$$` schreiben, Grafana ersetzt sonst Umgebungsvariablen.
 - Traces: OpenTelemetry für Bandit, Phoenix/LiveView, Ecto, Ash (`config :ash, :tracer`) und Req
   (`OpentelemetryReq.attach` in `Lookup.HTTP`). Export nur mit `OTEL_EXPORTER_OTLP_ENDPOINT`.
 - Betrieb: `deploy/observability/` (Prometheus, Tempo, Grafana mit Dashboard); lokal dieselben

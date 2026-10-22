@@ -45,6 +45,18 @@ defmodule PlattensammlungWeb.MetricsTest do
     assert body =~ ~r/plattensammlung_data_copies \d+/
   end
 
+  test "sign-in series exist from the start, so alerts on increase() see the first failure" do
+    Metrics.init_counters()
+    body = scrape()
+
+    for method <- ~w(passkey magic_link api_key), result <- ~w(success failure) do
+      assert body =~
+               ~r/plattensammlung_auth_sign_ins_count\{[^}]*#{method}[^}]*#{result}|plattensammlung_auth_sign_ins_count\{[^}]*#{result}[^}]*#{method}/
+    end
+
+    assert body =~ ~s(plattensammlung_auth_magic_link_requests_count{result="rate_limited"})
+  end
+
   test "other paths are not served" do
     assert Plug.Test.conn(:get, "/") |> MetricsPlug.call([]) |> Map.fetch!(:status) == 404
   end

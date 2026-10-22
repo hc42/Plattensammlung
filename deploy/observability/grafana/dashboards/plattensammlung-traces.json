@@ -1,0 +1,360 @@
+{
+  "uid": "plattensammlung-traces",
+  "title": "Plattensammlung – Traces",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "tags": [
+    "plattensammlung",
+    "traces"
+  ],
+  "panels": [
+    {
+      "type": "row",
+      "title": "Überblick",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "id": 1
+    },
+    {
+      "type": "nodeGraph",
+      "title": "Service-Grafik (App, Datenbank, externe Dienste)",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 24,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "serviceMap"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "type": "row",
+      "title": "Kennzahlen aus den Traces (Metrics Generator)",
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "id": 3
+    },
+    {
+      "type": "timeseries",
+      "title": "Spans/s (Top 10)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"plattensammlung\"}[5m])))",
+          "legendFormat": "{{span_name}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "id": 4
+    },
+    {
+      "type": "timeseries",
+      "title": "Dauer p95 (Top 10)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, histogram_quantile(0.95, sum by (le, span_name) (rate(traces_spanmetrics_latency_bucket{service=\"plattensammlung\"}[5m]))))",
+          "legendFormat": "{{span_name}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "id": 5
+    },
+    {
+      "type": "timeseries",
+      "title": "Fehler/s nach Span",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (span_name) (rate(traces_spanmetrics_calls_total{service=\"plattensammlung\",status_code=\"STATUS_CODE_ERROR\"}[5m]))",
+          "legendFormat": "{{span_name}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "id": 6
+    },
+    {
+      "type": "timeseries",
+      "title": "Verbindungen: Anfragen/s",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (client, server) (rate(traces_service_graph_request_total[5m]))",
+          "legendFormat": "{{client}} → {{server}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "id": 7
+    },
+    {
+      "type": "row",
+      "title": "Traces",
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": [],
+      "id": 8
+    },
+    {
+      "type": "table",
+      "title": "Langsamste Anfragen (über 500 ms)",
+      "description": "Ganze Anfragen bzw. LiveView-Ereignisse; Klick auf die Trace-ID öffnet den Ablauf.",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"plattensammlung\" && nestedSetParent < 0 && duration > 500ms }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "id": 9
+    },
+    {
+      "type": "table",
+      "title": "Traces mit Fehlern",
+      "description": "",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 31,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"plattensammlung\" && status = error }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "id": 10
+    },
+    {
+      "type": "table",
+      "title": "Langsame externe Abfragen (über 1 s)",
+      "description": "Discogs, MusicBrainz, Wikidata, Cover Art Archive (inklusive Wartezeit der MusicBrainz-Drossel)",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"plattensammlung\" && kind = client && span.server.address != nil && duration > 1s }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "id": 11
+    },
+    {
+      "type": "table",
+      "title": "Langsame Ash-Actions (über 300 ms)",
+      "description": "",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"plattensammlung\" && name =~ \"(records|accounts):.*\" && duration > 300ms }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "id": 12
+    },
+    {
+      "type": "table",
+      "title": "Langsame Datenbankabfragen (über 100 ms)",
+      "description": "",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 49,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name = \"plattensammlung\" && span.db.system = \"postgresql\" && duration > 100ms }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "id": 13
+    }
+  ],
+  "links": [
+    {
+      "title": "Plattensammlung (Metriken)",
+      "type": "link",
+      "url": "/d/plattensammlung"
+    }
+  ]
+}

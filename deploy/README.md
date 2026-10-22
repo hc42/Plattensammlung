@@ -185,6 +185,17 @@ Die App liefert Metriken für Prometheus auf Port **9568** (`METRICS_PORT`, in
 5. Grafana unter `http://NAS-IP:3000` öffnen (Benutzer `admin`): Dashboard
    **Plattensammlung**, Traces unter **Explore → Tempo**.
 
+6. **Alarme per E-Mail:** `deploy/observability/grafana.env.example` nach
+   `/mnt/POOL/apps/observability/grafana.env` kopieren und ausfüllen (Admin-Passwort,
+   `ALERT_EMAIL`, SMTP-Zugang wie in `app.env`). Die Regeln liegen in
+   `grafana/provisioning/alerting/rules.yaml` (App nicht erreichbar, viele Anfragen, viele
+   anonyme Anfragen, fehlgeschlagene Anmeldungen, gedrosselte Anmeldelinks, Serverfehler,
+   langsame Antworten, externe Dienste gestört). Schwellen dort anpassen, nicht in Grafana.
+   Testen: in Grafana unter **Alerting → Contact points → E-Mail → Test**.
+7. Dashboard **Plattensammlung – Traces**: Service-Grafik, Kennzahlen aus den Traces und
+   Listen langsamer bzw. fehlerhafter Traces. Die Kennzahlen berechnet Tempo selbst und
+   schreibt sie in Prometheus (`--web.enable-remote-write-receiver`, schon in `compose.yaml`).
+
 Port 9568 (Metriken), 4318 (Traces), 9090 (Prometheus) und 3000 (Grafana) nur im LAN nutzen,
 nicht in nginx-proxy-manager oder im Router freigeben. Prüfen:
 `curl http://NAS-IP:9568/metrics`.

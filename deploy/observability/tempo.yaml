@@ -1,4 +1,6 @@
 # Receives traces via OTLP/HTTP on 4318 and keeps them for 14 days on disk.
+# The metrics generator derives span metrics and the service graph from the
+# traces and writes them to Prometheus (needs --web.enable-remote-write-receiver).
 server:
   http_listen_port: 3200
 
@@ -20,3 +22,22 @@ storage:
 compactor:
   compaction:
     block_retention: 336h
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+  processor:
+    service_graphs:
+      # Database and external services as their own nodes in the graph
+      peer_attributes: [peer.service, db.system, server.address]
+    span_metrics: {}
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics]

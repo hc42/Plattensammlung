@@ -25,7 +25,26 @@ defmodule Plattensammlung.Metrics do
 
   @doc "Children for the application: the Peep reporter and the data poller."
   def child_specs do
-    [{Peep, name: @name, metrics: metrics()}] ++ data_poller()
+    [
+      {Peep, name: @name, metrics: metrics()},
+      Supervisor.child_spec({Task, &init_counters/0}, id: :init_metric_counters)
+    ] ++ data_poller()
+  end
+
+  @sign_in_methods [:passkey, :magic_link, :api_key]
+
+  @doc false
+  # Prometheus' increase()/rate() only see growth once a series exists. Without
+  # this, the first failed sign-in would create its series directly at 1 and an
+  # alert on increase() would never fire. So all known series start at 0.
+  def init_counters do
+    for method <- @sign_in_methods, result <- [:success, :failure] do
+      emit([:plattensammlung, :auth, :sign_in], 0, %{method: method, result: result})
+    end
+
+    for result <- [:accepted, :rate_limited] do
+      emit([:plattensammlung, :auth, :magic_link_request], 0, %{result: result})
+    end
   end
 
   # Off in tests: they measure explicitly inside their database sandbox
@@ -48,18 +67,15 @@ defmodule Plattensammlung.Metrics do
 
   @doc "Reports a sign-in attempt."
   def sign_in(method, result) when result in [:success, :failure] do
-    :telemetry.execute([:plattensammlung, :auth, :sign_in], %{count: 1}, %{
-      method: method,
-      result: result
-    })
+    emit([:plattensammlung, :auth, :sign_in], 1, %{method: method, result: result})
   end
 
   @doc "Reports a magic link request (`:accepted` or `:rate_limited`)."
   def magic_link_request(result) do
-    :telemetry.execute([:plattensammlung, :auth, :magic_link_request], %{count: 1}, %{
-      result: result
-    })
+    emit([:plattensammlung, :auth, :magic_link_request], 1, %{result: result})
   end
+
+  defp emit(event, count, metadata), do: :telemetry.execute(event, %{count: count}, metadata)
 
   @doc false
   # Periodic measurement (telemetry_poller). A system task without a user, so
@@ -188,13 +204,16 @@ defmodule Plattensammlung.Metrics do
 
   defp auth_metrics do
     [
-      counter("plattensammlung.auth.sign_ins.count",
+      # sum of `count` instead of counter(): series start at 0 (init_counters/0)
+      sum("plattensammlung.auth.sign_ins.count",
         event_name: [:plattensammlung, :auth, :sign_in],
+        measurement: :count,
         description: "Sign-in attempts by method and result",
         tags: [:method, :result]
       ),
-      counter("plattensammlung.auth.magic_link_requests.count",
+      sum("plattensammlung.auth.magic_link_requests.count",
         event_name: [:plattensammlung, :auth, :magic_link_request],
+        measurement: :count,
         description: "Magic link requests, accepted or over the rate limit",
         tags: [:result]
       )
