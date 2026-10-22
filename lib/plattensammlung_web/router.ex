@@ -111,6 +111,7 @@ defmodule PlattensammlungWeb.Router do
       live "/albums/:id", AlbumLive.Show, :show
       live "/albums/:id/edit", AlbumLive.Form, :edit
       live "/albums/:id/match", AlbumLive.Match
+      live "/albums/:id/merge", AlbumLive.Merge
       live "/albums/:id/copies/new", CopyLive.Form, :new
       live "/copies/:id/edit", CopyLive.Form, :edit
       live "/stats", StatsLive

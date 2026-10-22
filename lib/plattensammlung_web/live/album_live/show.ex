@@ -105,6 +105,13 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                   </.link>
                 </li>
                 <li>
+                  <.link navigate={~p"/albums/#{@album}/merge"} id="merge-album">
+                    <.icon name="hero-arrows-pointing-in" class="size-4" /> {gettext(
+                      "Merge duplicate"
+                    )}
+                  </.link>
+                </li>
+                <li>
                   <button
                     type="button"
                     phx-click="remove"

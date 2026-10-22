@@ -28,3 +28,4 @@ consequences. New ADRs start from the [template](template.md).
 | [0021](0021-internationalization.md) | Interface in English and German | Accepted |
 | [0022](0022-installable-app.md) | Installable app (PWA) | Accepted |
 | [0023](0023-deleting-an-account.md) | Deleting an account | Accepted |
+| [0024](0024-merging-duplicate-albums.md) | Merging duplicate albums | Accepted |

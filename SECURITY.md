@@ -36,6 +36,9 @@ image (see [deploy/README.md](deploy/README.md)).
 - Albums and artists are shared. Album data is changed by whoever has the album in collection
   or wishlist; an album no one has may be changed (and deleted) by every signed-in user. An
   album is deleted only once no one has it any more.
+- Duplicate albums can be merged by whoever has one of the two (or anyone if no one has
+  either); copies and wishes of all users move along unchanged
+  ([ADR 0024](docs/adr/0024-merging-duplicate-albums.md)).
 - Users can delete their own account (after typing their e-mail address): copies, wishes,
   passkeys, API keys and all tokens go, every session ends; albums others have stay
   ([ADR 0023](docs/adr/0023-deleting-an-account.md)). An artist can only be

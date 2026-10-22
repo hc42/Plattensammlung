@@ -22,6 +22,7 @@ Web application for cataloguing and managing a private vinyl record collection
 - Access through a web interface **and** a JSON API
 - Sign-in with passkeys; users can delete their own account
 - **All albums**: the shared catalogue, filterable to "Not mine"
+- **Merging duplicates**: two entries of the same record become one, with everyone's copies and wishes
 - **Matching** existing albums with Discogs/MusicBrainz, also by scanning a barcode later; pressing details go into the copy
 - **Spotify and Tidal**: links are found automatically (Wikidata, MusicBrainz) or pasted;
   albums can also be added from a Spotify link or its QR code

@@ -70,7 +70,7 @@ Update these documents **without being asked** as soon as something changes:
 - `lib/plattensammlung_web/`: Phoenix (router, LiveViews, components)
   - `live/album_live/`: `Index` (collection `/`, wishlist `/wishlist`, catalogue `/albums`,
     search via `?q=`), `Show` (`/albums/:id`), `Form` (quick capture `/albums/new`, edit
-    `/albums/:id/edit`), `Match` (`/albums/:id/match`)
+    `/albums/:id/edit`), `Match` (`/albums/:id/match`), `Merge` (`/albums/:id/merge`)
   - `live/copy_live/form.ex`: add a copy (`/albums/:id/copies/new`) and edit it (`/copies/:id/edit`)
   - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: display name, language, passkeys, API keys)
   - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: sign-in
@@ -149,6 +149,10 @@ Most important code interface functions (each also with `!`):
   Both are generic actions (no surrounding transaction) and only fill gaps when reusing an
   album (`Album.complete`).
 - `remove_album(album_id)`: delete the own copies and wish, the album only once no one has it.
+- `merge_albums(source_id, target_id)` (ADR 0024, `Records.MergeAlbums`, policy check
+  `Checks.CanMerge`): moves copies and wishes of all users, fills gaps (`Album.absorb`), deletes
+  the source. `Copy.move`, `Wish.move` and `Album.absorb` are internal steps of it only.
+  New per-user data that points to an album must be moved there too.
 - `mark_wanted(album)` / `unmark_wanted(album)`, `add_wish(album_id)`: the own wish.
 - `add_copy(album_id, attrs)`: add another copy; removes the album from the own wishlist.
 - `search_albums(query \\ nil, status \\ nil)`, `list_collection()`, `list_wishlist()`.

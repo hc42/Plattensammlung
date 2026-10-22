@@ -70,6 +70,7 @@ defmodule Plattensammlung.Records do
       define :add_to_collection, args: [:artist_name, :title]
       define :add_to_wishlist, args: [:artist_name, :title]
       define :remove_album, action: :remove, args: [:album_id]
+      define :merge_albums, action: :merge, args: [:source_id, :target_id]
       define :create_album, action: :create, args: [:artist_name]
       define :complete_album, action: :complete
       define :get_album, action: :read, get_by: [:id]

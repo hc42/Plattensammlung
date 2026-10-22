@@ -91,6 +91,11 @@ defmodule Plattensammlung.Records.Copy do
       change Plattensammlung.Records.Changes.RemoveFromWishlist
     end
 
+    # Internal step of Album.merge (no policy allows it otherwise)
+    update :move do
+      accept [:album_id]
+    end
+
     update :update do
       primary? true
       accept @fields

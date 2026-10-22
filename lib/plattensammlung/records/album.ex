@@ -50,6 +50,16 @@ defmodule Plattensammlung.Records.Album do
   end
 
   actions do
+    # Shared album data a merge carries over to the remaining album
+    @absorbed_fields [
+      :year,
+      :genres,
+      :discogs_master_id,
+      :musicbrainz_release_group_id,
+      :spotify_album_id,
+      :tidal_album_id
+    ]
+
     @fields [
       :title,
       :year,
@@ -143,6 +153,10 @@ defmodule Plattensammlung.Records.Album do
       # Only once the delete is committed, so a rollback keeps the cover
       change fn changeset, _context ->
         Ash.Changeset.after_transaction(changeset, fn
+          # A merge deletes the file itself, or keeps it for the remaining album
+          %{context: %{keep_cover: true}}, result ->
+            result
+
           _changeset, {:ok, album} = result ->
             Plattensammlung.Covers.delete(album.cover_url)
             result
@@ -170,6 +184,28 @@ defmodule Plattensammlung.Records.Album do
       # Plain edits stay offline; a new Discogs/MusicBrainz link triggers the lookup
       change {Plattensammlung.Records.Changes.FillStreamingLinks, when: :links_changed}
       change Plattensammlung.Records.Changes.SetWanted
+    end
+
+    # Internal step of merge (MergeAlbums): fills empty fields from the duplicate.
+    # Without CoverSource: the cover is the duplicate's own, set by the app
+    update :absorb do
+      description "Fills empty fields from a duplicate that is merged into this album."
+      accept [:cover_url | @absorbed_fields]
+      require_atomic? false
+      change Plattensammlung.Records.Changes.KeepExistingValues
+    end
+
+    action :merge, :struct do
+      description """
+      Merges the duplicate album `source_id` into `target_id`: copies and wishes
+      of all users move over, empty fields are filled, the duplicate is deleted.
+      """
+
+      constraints instance_of: __MODULE__
+      argument :source_id, :uuid, allow_nil?: false
+      argument :target_id, :uuid, allow_nil?: false
+      # Transaction inside: the cover file is deleted only after the commit
+      run Plattensammlung.Records.MergeAlbums
     end
 
     update :complete do
@@ -361,6 +397,10 @@ defmodule Plattensammlung.Records.Album do
       authorize_if actor_present()
     end
 
+    policy action(:merge) do
+      authorize_if Plattensammlung.Records.Checks.CanMerge
+    end
+
     policy action_type(:update) do
       forbid_unless actor_present()
       # Putting an album on the own wishlist needs no copy or wish yet
@@ -446,6 +486,9 @@ defmodule Plattensammlung.Records.Album do
     calculate :owned, :boolean, expr(exists(copies, owner_id == ^actor(:id))), public?: true
     calculate :wanted, :boolean, expr(exists(wishes, owner_id == ^actor(:id))), public?: true
 
+    # Does anyone have the album in collection or wishlist?
+    calculate :held, :boolean, expr(exists(copies, true) or exists(wishes, true)), public?: true
+
     # May the actor change the album data? (see the update policy)
     calculate :editable,
               :boolean,
@@ -515,4 +558,7 @@ defmodule Plattensammlung.Records.Album do
               ),
               public?: true
   end
+
+  @doc "Fields `Album.absorb` takes from a merged duplicate (with the cover)."
+  def absorbed_fields, do: [:cover_url | @absorbed_fields]
 end

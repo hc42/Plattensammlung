@@ -40,6 +40,11 @@ defmodule Plattensammlung.Records.Wish do
              )
     end
 
+    # Internal step of Album.merge (no policy allows it otherwise)
+    update :move do
+      accept [:album_id]
+    end
+
     create :create do
       primary? true
       accept [:album_id]
