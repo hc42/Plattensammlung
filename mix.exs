@@ -143,10 +143,7 @@ defmodule Plattensammlung.MixProject do
   defp npm_install(_args) do
     if System.find_executable("npm") == nil do
       Mix.raise("""
-      npm was not found. The assets need Node.js (assets/package.json).
-
-      With nvm in the project folder:  nvm use     (version from .nvmrc)
-      Or install Node.js, e.g. with Homebrew:  brew install node
+      npm was not found. The assets need Node.js (version in .nvmrc).
       """)
     end
 

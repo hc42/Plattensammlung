@@ -192,9 +192,7 @@ Rules:
 ## Assets
 
 - npm packages are in `assets/package.json` (`mix setup` runs `npm install` via `npm_install/1`
-  in `mix.exs` and stops with a hint if npm is missing), currently only `@zxing/*`. Node
-  version in `.nvmrc`. The owner loads nvm lazily: in fresh terminals `npm` is only available
-  after `nvm use`.
+  in `mix.exs`), currently only `@zxing/*`. Node version in `.nvmrc`.
 - esbuild builds ES modules with code splitting. Load large, rarely used libraries with
   `await import("…")` so they end up in their own chunk.
 
