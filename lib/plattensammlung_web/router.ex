@@ -11,7 +11,18 @@ defmodule PlattensammlungWeb.Router do
     plug :put_root_layout, html: {PlattensammlungWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug PlattensammlungWeb.Plugs.ContentSecurityPolicy
     plug :load_from_session
+  end
+
+  # Development tools (LiveDashboard, mailbox preview) bring inline scripts and
+  # styles, so they get the browser pipeline without the CSP
+  pipeline :dev_browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
   end
 
   # JSON endpoints used by the passkey JavaScript (session + CSRF like the browser)
@@ -107,7 +118,7 @@ defmodule PlattensammlungWeb.Router do
 
     scope "/dev" do
       # The mailbox shows magic links: never expose it to the network (LAN=1)
-      pipe_through [:browser, :local_only]
+      pipe_through [:dev_browser, :local_only]
 
       live_dashboard "/dashboard", metrics: PlattensammlungWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview

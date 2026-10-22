@@ -261,21 +261,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
   # Copies the album data (not the copies) to the own wishlist
   def handle_event("add_to_my_wishlist", _params, socket) do
-    album = socket.assigns.album
-
-    attrs =
-      album
-      |> Map.take([
-        :year,
-        :genres,
-        :discogs_master_id,
-        :musicbrainz_release_group_id,
-        :spotify_album_id,
-        :tidal_album_id
-      ])
-      |> Map.put(:cover_url, Plattensammlung.Covers.duplicate(album.cover_url))
-
-    case Records.add_to_wishlist(album.artist.name, album.title, attrs,
+    case Records.copy_to_wishlist(socket.assigns.album.id,
            actor: socket.assigns.current_user
          ) do
       {:ok, mine} ->

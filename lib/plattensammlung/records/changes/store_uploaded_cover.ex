@@ -16,7 +16,9 @@ defmodule Plattensammlung.Records.Changes.StoreUploadedCover do
       with %Ash.Type.File{} = file <- Ash.Changeset.get_argument(changeset, :image),
            {:ok, path} <- Ash.Type.File.path(file),
            {:ok, cover_url} <- Covers.store_file(path) do
-        Ash.Changeset.force_change_attribute(changeset, :cover_url, cover_url)
+        changeset
+        |> Ash.Changeset.force_change_attribute(:cover_url, cover_url)
+        |> Ash.Changeset.put_context(:stored_cover, cover_url)
       else
         _error ->
           Ash.Changeset.add_error(changeset,
@@ -32,8 +34,7 @@ defmodule Plattensammlung.Records.Changes.StoreUploadedCover do
 
       changeset, error ->
         # Saving failed: remove the file stored before the transaction
-        new = Ash.Changeset.get_attribute(changeset, :cover_url)
-        if new != previous, do: Covers.delete(new)
+        Covers.delete(changeset.context[:stored_cover])
         error
     end)
   end

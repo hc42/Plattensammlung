@@ -91,6 +91,7 @@ defmodule Plattensammlung.Records.Album do
 
       change set_attribute(:wanted, false)
       change relate_actor(:owner)
+      validate Plattensammlung.Records.Validations.CoverSource
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
       change Plattensammlung.Records.Changes.NormalizeStreamingIds
@@ -106,16 +107,30 @@ defmodule Plattensammlung.Records.Album do
 
       change set_attribute(:wanted, true)
       change relate_actor(:owner)
+      validate Plattensammlung.Records.Validations.CoverSource
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
       change Plattensammlung.Records.Changes.NormalizeStreamingIds
       change Plattensammlung.Records.Changes.FillStreamingLinks
     end
 
+    create :copy_to_wishlist do
+      description "Puts an album (usually someone else's) on the actor's wishlist, with an own copy of its cover."
+      argument :album_id, :uuid, allow_nil?: false
+      # Set by CopyAlbum from the source album, read by FindOrCreateArtist
+      argument :artist_name, :ci_string, public?: false
+
+      change set_attribute(:wanted, true)
+      change relate_actor(:owner)
+      change Plattensammlung.Records.Changes.CopyAlbum
+      change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
+    end
+
     update :update do
       accept @fields ++ [:wanted]
       argument :artist_name, :ci_string
       require_atomic? false
+      validate Plattensammlung.Records.Validations.CoverSource
 
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
       change Plattensammlung.Records.Changes.StoreCover
@@ -261,6 +276,8 @@ defmodule Plattensammlung.Records.Album do
 
       # Order matters: StoreCover downloads the cover that ApplyMatch set
       change Plattensammlung.Records.Changes.ApplyMatch
+      # After ApplyMatch: the lookup result is an argument and may come from the API
+      validate Plattensammlung.Records.Validations.CoverSource
       change Plattensammlung.Records.Changes.StoreCover
       change Plattensammlung.Records.Changes.FillStreamingLinks
     end

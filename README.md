@@ -23,6 +23,8 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
   Alben lassen sich auch über einen Spotify-Link oder dessen QR-Code erfassen
 - **Cover** hochladen (auch per Handykamera), ersetzen oder entfernen; verwaiste Bilddateien werden aufgeräumt
 - Statistik (Umfang, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
+- **Sicherheit:** Cover nur von Discogs und dem Cover Art Archive (oder per Upload),
+  Content-Security-Policy für alle Seiten ([ADR 0014](docs/adr/0014-cover-quellen-und-csp.md))
 
 ## Technik
 

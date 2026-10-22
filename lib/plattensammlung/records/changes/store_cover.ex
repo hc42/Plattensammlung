@@ -25,9 +25,9 @@ defmodule Plattensammlung.Records.Changes.StoreCover do
           result
 
         changeset, error ->
-          # Saving failed: remove the file stored before the transaction
-          new = Ash.Changeset.get_attribute(changeset, :cover_url)
-          if new != previous, do: Covers.delete(new)
+          # Saving failed: remove only the file this action downloaded, never
+          # a path that came in as input (it may be someone else's cover)
+          Covers.delete(changeset.context[:stored_cover])
           error
       end)
     else
@@ -41,7 +41,9 @@ defmodule Plattensammlung.Records.Changes.StoreCover do
     if Covers.remote?(url) do
       case Covers.store(url) do
         {:ok, local_url} ->
-          Ash.Changeset.force_change_attribute(changeset, :cover_url, local_url)
+          changeset
+          |> Ash.Changeset.force_change_attribute(:cover_url, local_url)
+          |> Ash.Changeset.put_context(:stored_cover, local_url)
 
         {:error, reason} ->
           Logger.warning("Could not store cover #{url}: #{inspect(reason)}")

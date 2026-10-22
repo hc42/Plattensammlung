@@ -60,6 +60,7 @@ defmodule Plattensammlung.Records do
     resource Plattensammlung.Records.Album do
       define :add_to_collection, args: [:artist_name, :title]
       define :add_to_wishlist, args: [:artist_name, :title]
+      define :copy_to_wishlist, args: [:album_id]
       define :get_album, action: :read, get_by: [:id]
       define :search_albums, action: :search, args: [{:optional, :query}, {:optional, :status}]
       define :find_duplicates, action: :duplicates, args: [:artist_name, :title]

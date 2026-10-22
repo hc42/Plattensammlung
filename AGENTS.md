@@ -63,7 +63,8 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 - `lib/plattensammlung/`: Geschäftslogik (Ash-Domains und -Resources, `Repo`)
 - `lib/plattensammlung_web/`: Phoenix (Router, LiveViews, Komponenten)
   - `live/album_live/`: `Index` (Sammlung `/` und Wunschliste `/wishlist`, Suche über `?q=`),
-    `Show` (`/albums/:id`), `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
+    `Show` (`/albums/:id`, „Auf meine Wunschliste“ = `Records.copy_to_wishlist/2`),
+    `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
   - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
   - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: Passkeys, API-Keys)
   - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: Anmeldung
@@ -179,6 +180,11 @@ Regeln:
 - Cover: `Album.upload_cover` (Argument `:image`, Typ `:file`, Bildtyp per Magic Bytes in
   `Covers.store_file/1`) und `Album.remove_cover`. Upload in `AlbumLive.Show` per LiveView
   `allow_upload` mit `auto_upload`.
+- **Cover-Quellen (ADR 0014):** `cover_url` von außen nur leer oder https von `:cover_hosts`
+  (Validation `CoverSource`, `Covers.allowed_url?/1`). Lokale `/covers/…`-Pfade setzt nur die App
+  (Download, Upload, `copy_to_wishlist`). Neue Import-Quellen mit Bildern dort eintragen.
+- Beim Fehlschlag nur Dateien löschen, die die Action selbst angelegt hat
+  (`changeset.context[:stored_cover]`), nie einen Pfad aus der Eingabe.
 - Cover-Dateien: neue Datei vor der Transaktion speichern, alte erst nach erfolgreichem Commit
   löschen, bei Fehlern die neue wieder entfernen. `Covers.cleanup_orphans/0` löscht
   unreferenzierte Dateien (älter als 1 h) beim App-Start (`:cleanup_covers_on_start`, in Tests aus).
@@ -224,6 +230,10 @@ vom Phoenix-Generator. Abweichend davon gilt hier: Datenzugriff über Ash statt 
 Ecto-Contexts.
 
 ## Stolperfallen
+
+- **CSP** (`Plugs.ContentSecurityPolicy`, ADR 0014): Inline-Skripte brauchen
+  `nonce={assigns[:csp_nonce]}`, inline `<style>` ist verboten, `style`-Attribute sind erlaubt.
+  Bilder nur von der App und den Cover-Quellen. `/dev` läuft ohne CSP (Pipeline `:dev_browser`).
 
 - AshAuthentication hat keine eingebaute Passkey-Strategie, siehe [ADR 0005](docs/adr/0005-passkey-login.md).
 - Formulare nutzen `AshPhoenix.Form` (`for_create`/`for_update`, `validate`, `submit`), keine Ecto-Changesets.
