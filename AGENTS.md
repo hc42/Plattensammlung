@@ -51,6 +51,8 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 ## Befehle
 
 - `podman compose up -d`: Postgres starten (vor allem anderen nötig)
+- `podman compose --profile observability up -d`: Prometheus, Tempo, Grafana lokal
+  (http://localhost:3000); Traces mit `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 mix phx.server`
 - `mix setup`: Abhängigkeiten, Datenbank, Assets, Seeds
 - `mix phx.server`: Entwicklungsserver auf http://localhost:4000
 - `mix test`: Tests
@@ -250,7 +252,11 @@ Regeln:
 - Tags nur mit wenigen Werten: Routen-Muster, View, Action, User-ID; nie Pfade, Album-IDs, IPs.
 - Traces: OpenTelemetry für Bandit, Phoenix/LiveView, Ecto, Ash (`config :ash, :tracer`) und Req
   (`OpentelemetryReq.attach` in `Lookup.HTTP`). Export nur mit `OTEL_EXPORTER_OTLP_ENDPOINT`.
-- Betrieb: `deploy/observability/` (Prometheus, Tempo, Grafana mit Dashboard).
+- Betrieb: `deploy/observability/` (Prometheus, Tempo, Grafana mit Dashboard); lokal dieselben
+  Dateien über das Compose-Profil `observability` (`prometheus.local.yml` fragt
+  `host.containers.internal:9568` ab).
+- Der Metrik-Port startet nur, wenn die App HTTP bedient (`mix phx.server`), nicht bei
+  `mix run` oder Seeds. In dev auf 9568, nur an `127.0.0.1`.
 - Tests: Datenmessung im Hintergrund aus (`measure_data?: false`), Tests rufen
   `Metrics.measure_data/0` selbst auf.
 

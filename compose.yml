@@ -1,6 +1,11 @@
 # Datenbank für die lokale Entwicklung (siehe docs/adr/0003-postgresql-mit-podman.md)
 # Starten:  podman compose up -d
 # Stoppen:  podman compose down   (Daten bleiben im Volume erhalten)
+#
+# Optional Prometheus, Tempo und Grafana (ADR 0019), nur mit dem Profil:
+#   podman compose --profile observability up -d
+#   Grafana: http://localhost:3000 (ohne Anmeldung), Prometheus: http://localhost:9090
+# Konfiguration wie auf dem NAS aus deploy/observability/
 services:
   db:
     image: docker.io/library/postgres:18
@@ -19,5 +24,52 @@ services:
       retries: 10
     restart: unless-stopped
 
+  prometheus:
+    image: docker.io/prom/prometheus:v3.4.0
+    profiles: [observability]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./deploy/observability/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+
+  tempo:
+    image: docker.io/grafana/tempo:2.8.1
+    profiles: [observability]
+    command: ["-config.file=/etc/tempo.yaml"]
+    # The named volume belongs to root; Tempo would otherwise run as user 10001
+    user: "0"
+    ports:
+      # OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+      - "127.0.0.1:4318:4318"
+    volumes:
+      - ./deploy/observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    restart: unless-stopped
+
+  grafana:
+    image: docker.io/grafana/grafana:12.0.2
+    profiles: [observability]
+    environment:
+      # Local only: no login, everyone is admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  prometheus-data:
+  tempo-data:
+  grafana-data:

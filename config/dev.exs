@@ -76,3 +76,8 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Prometheus metrics on http://localhost:9568/metrics (ADR 0019); the local
+# Prometheus (compose profile "observability") scrapes it. METRICS_PORT overrides.
+# Only on the Mac itself; Podman containers reach it via host.containers.internal
+config :plattensammlung, metrics_port: 9568, metrics_ip: {127, 0, 0, 1}

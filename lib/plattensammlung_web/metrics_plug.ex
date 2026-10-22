@@ -20,11 +20,21 @@ defmodule PlattensammlungWeb.MetricsPlug do
 
   def call(conn, _opts), do: send_resp(conn, 404, "Not found")
 
-  @doc "Bandit child for the metrics port, or none without `:metrics_port`."
+  @doc """
+  Bandit child for the metrics port. None without `:metrics_port`, and none
+  when the app doesn't serve HTTP (`mix run`, seeds, a second `iex -S mix`), so
+  those don't fail on a port the dev server already uses.
+  """
   def child_specs do
-    case Application.get_env(:plattensammlung, :metrics_port) do
-      nil -> []
-      port -> [{Bandit, plug: __MODULE__, port: port, ip: {0, 0, 0, 0}, startup_log: false}]
+    port = Application.get_env(:plattensammlung, :metrics_port)
+    serving? = Phoenix.Endpoint.server?(:plattensammlung, PlattensammlungWeb.Endpoint)
+
+    if port && serving? do
+      # All interfaces in the container (prod); dev.exs limits it to the Mac
+      ip = Application.get_env(:plattensammlung, :metrics_ip, {0, 0, 0, 0})
+      [{Bandit, plug: __MODULE__, port: port, ip: ip, startup_log: false}]
+    else
+      []
     end
   end
 end

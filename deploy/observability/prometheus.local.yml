@@ -1,0 +1,10 @@
+# Local development (compose.yml, profile "observability"): scrapes the
+# Phoenix dev server on the Mac. host.containers.internal is the Mac as seen
+# from a Podman container.
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: plattensammlung
+    static_configs:
+      - targets: ["host.containers.internal:9568"]

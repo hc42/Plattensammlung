@@ -121,6 +121,21 @@ Zertifikatswarnung einmal bestätigen. Den Namen zeigt `scutil --get LocalHostNa
 Ohne HTTPS funktioniert „Foto aufnehmen“. Die App hat noch keinen Login, deshalb nur in
 einem vertrauenswürdigen Netz verwenden.
 
+### Metriken und Traces lokal
+
+Der Entwicklungsserver liefert Metriken unter http://localhost:9568/metrics. Prometheus,
+Tempo und Grafana laufen auf Wunsch in Podman (Compose-Profil, gleiche Konfiguration und
+gleiches Dashboard wie auf dem NAS):
+
+```bash
+podman compose --profile observability up -d
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 mix phx.server
+```
+
+Grafana: http://localhost:3000 (ohne Anmeldung), Dashboard „Plattensammlung“, Traces unter
+„Explore → Tempo“. Prometheus: http://localhost:9090. Ohne die Variable verschickt die App
+keine Traces. Stoppen: `podman compose --profile observability down`.
+
 Weitere Befehle:
 
 ```bash
