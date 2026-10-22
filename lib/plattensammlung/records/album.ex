@@ -217,6 +217,13 @@ defmodule Plattensammlung.Records.Album do
         constraints one_of: [:collection, :wishlist, :other]
       end
 
+      # Not "sort": that is the JSON:API sort parameter of the index route
+      argument :order, :atom do
+        description "Order: title (default), artist, year or added (newest first)"
+        constraints one_of: [:title, :artist, :year, :added]
+        default :title
+      end
+
       filter expr(
                is_nil(^arg(:query)) or contains(title, ^arg(:query)) or
                  contains(artist.name, ^arg(:query))
@@ -224,7 +231,8 @@ defmodule Plattensammlung.Records.Album do
 
       prepare Plattensammlung.Records.Preparations.ScopeToOwner
       prepare Plattensammlung.Records.Preparations.AlbumFilters
-      prepare build(sort: [title: :asc], load: [:artist])
+      prepare Plattensammlung.Records.Preparations.SortAlbums
+      prepare build(load: [:artist])
     end
 
     read :by_barcode do
@@ -439,6 +447,27 @@ defmodule Plattensammlung.Records.Album do
               :integer,
               expr(count(copies, query: [filter: expr(owner_id == ^actor(:id))])),
               public?: true
+
+    # Sort keys of Album.search (see Preparations.SortAlbums)
+    calculate :artist_sort_key,
+              :string,
+              expr(fragment("lower(coalesce(?, ?::text))", artist.sort_name, artist.name))
+
+    calculate :added_at,
+              :utc_datetime_usec,
+              expr(
+                max(copies,
+                  field: :inserted_at,
+                  query: [filter: expr(owner_id == ^arg(:owner_id))]
+                ) ||
+                  max(wishes,
+                    field: :inserted_at,
+                    query: [filter: expr(owner_id == ^arg(:owner_id))]
+                  ) ||
+                  inserted_at
+              ) do
+      argument :owner_id, :uuid
+    end
 
     calculate :spotify_url,
               :string,

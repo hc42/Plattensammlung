@@ -54,3 +54,9 @@ Authentication is implemented: API keys via `Authorization: Bearer …`, see
 [ADR 0005](0005-passkey-login.md). Without a key the API answers 403. The OpenAPI specification
 and the Swagger UI stay readable without a key. The specification describes a bearer scheme
 again, so "Authorize" in the Swagger UI sends the API key along.
+
+## Addendum (2026-10-22): order of the album list
+
+`GET /albums` accepts `order=title|artist|year|added` (`added`: newest first, by when the user
+added a copy or wish). The argument of `Album.search` is deliberately not called `sort`: that is
+the JSON:API sort parameter of index routes, which keeps working (`?sort=-year`).

@@ -3,7 +3,9 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   Collection, wishlist and all albums as a searchable grid of covers.
   Search term (`?q=`), the filter of the all-albums view (`?show=unassigned`)
   and the drill-down filters from the statistics (`?genre=`, `?decade=`,
-  `?artist=`, `?condition=`) live in the URL, so every view can be bookmarked.
+  `?artist=`, `?condition=`), the order (`?sort=artist|year|added`) and the
+  list view (`?view=list`) live in the URL, so every view can be bookmarked.
+  Sorted by artist, the albums get letter headings and, on phones, an A–Z bar.
   """
   use PlattensammlungWeb, :live_view
 
@@ -11,6 +13,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   alias Plattensammlung.Records.Condition
 
   @filters ~w(genre decade artist condition)
+  @sorts %{"title" => :title, "artist" => :artist, "year" => :year, "added" => :added}
 
   @impl true
   def render(assigns) do
@@ -63,15 +66,51 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
         </.form>
       </div>
 
-      <div :if={@live_action == :all} class="join" id="album-filter">
-        <.link
-          :for={{value, label} <- [{nil, gettext("All")}, {"unassigned", gettext("Not mine")}]}
-          patch={view_path(:all, Map.put(@params, "show", value))}
-          class={["join-item btn btn-sm", @show == value && "btn-active"]}
-          id={"filter-#{value || "all"}"}
-        >
-          {label}
-        </.link>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div :if={@live_action == :all} class="join" id="album-filter">
+          <.link
+            :for={{value, label} <- [{nil, gettext("All")}, {"unassigned", gettext("Not mine")}]}
+            patch={view_path(:all, Map.put(@params, "show", value))}
+            class={["join-item btn btn-sm", @show == value && "btn-active"]}
+            id={"filter-#{value || "all"}"}
+          >
+            {label}
+          </.link>
+        </div>
+
+        <div class="ml-auto flex items-center gap-2" id="list-controls">
+          <form id="sort-form" phx-change="sort">
+            <select name="sort" class="select select-sm w-auto" aria-label={gettext("Sort by")}>
+              <option
+                :for={{value, label} <- sort_options()}
+                value={value}
+                selected={value == (@sort || "title")}
+              >
+                {label}
+              </option>
+            </select>
+          </form>
+          <div class="join" id="view-switch">
+            <.link
+              patch={view_path(@live_action, Map.put(@params, "view", nil))}
+              class={["join-item btn btn-sm btn-square", @view != "list" && "btn-active"]}
+              aria-label={gettext("Show as grid")}
+              aria-pressed={to_string(@view != "list")}
+              id="view-grid"
+            >
+              <.icon name="hero-squares-2x2" class="size-4" />
+            </.link>
+            <.link
+              patch={view_path(@live_action, Map.put(@params, "view", "list"))}
+              class={["join-item btn btn-sm btn-square", @view == "list" && "btn-active"]}
+              aria-label={gettext("Show as list")}
+              aria-pressed={to_string(@view == "list")}
+              id="view-list"
+            >
+              <.icon name="hero-list-bullet" class="size-4" />
+            </.link>
+          </div>
+        </div>
       </div>
 
       <div
@@ -94,7 +133,16 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       <div
         id="albums"
         phx-update="stream"
-        class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        class={
+          [
+            if(@view == "list",
+              do: "divide-y divide-base-300",
+              else: "grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+            ),
+            # Room for the A–Z bar on phones
+            @letters != [] && "pr-5 sm:pr-0"
+          ]
+        }
       >
         <div class="col-span-full hidden py-16 text-center only:block" id="albums-empty">
           <.icon name="hero-musical-note" class="mx-auto size-10 opacity-30" />
@@ -110,23 +158,65 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
           </.link>
         </div>
 
-        <.link
-          :for={{id, album} <- @streams.albums}
-          id={id}
-          navigate={~p"/albums/#{album}"}
-          class="group block"
-        >
-          <.sleeve album={album} />
-          <div class="mt-2 space-y-0.5">
-            <p class="truncate font-medium leading-tight" title={album.title}>{album.title}</p>
-            <p class="truncate text-sm opacity-70">{album.artist.name}</p>
-            <div class="flex items-center gap-1.5 text-xs opacity-60">
-              <span :if={album.year}>{album.year}</span>
-              <.status_badge album={album} />
+        <%= for {id, item} <- @streams.albums do %>
+          <%!-- Letter headings when sorted by artist (targets of the A–Z bar) --%>
+          <h2
+            :if={is_map_key(item, :letter)}
+            id={id}
+            class="scroll-mt-24 pt-5 pb-1 font-display text-lg font-bold text-primary"
+          >
+            {item.letter}
+          </h2>
+          <.link
+            :if={!is_map_key(item, :letter) and @view == "list"}
+            id={id}
+            navigate={~p"/albums/#{item}"}
+            class="group flex scroll-mt-24 items-center gap-4 py-3"
+          >
+            <.cover album={item} morph class="size-14 shrink-0" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-medium leading-tight" title={item.title}>{item.title}</p>
+              <p class="truncate text-sm opacity-70">{item.artist.name}</p>
             </div>
-          </div>
-        </.link>
+            <div class="flex shrink-0 items-center gap-1.5 text-xs opacity-60">
+              <span :if={item.year} class="hidden sm:inline">{item.year}</span>
+              <.status_badge album={item} />
+            </div>
+          </.link>
+          <.link
+            :if={!is_map_key(item, :letter) and @view != "list"}
+            id={id}
+            navigate={~p"/albums/#{item}"}
+            class="group block scroll-mt-24"
+          >
+            <.sleeve album={item} />
+            <div class="mt-2 space-y-0.5">
+              <p class="truncate font-medium leading-tight" title={item.title}>{item.title}</p>
+              <p class="truncate text-sm opacity-70">{item.artist.name}</p>
+              <div class="flex items-center gap-1.5 text-xs opacity-60">
+                <span :if={item.year}>{item.year}</span>
+                <.status_badge album={item} />
+              </div>
+            </div>
+          </.link>
+        <% end %>
       </div>
+
+      <%!-- Phones, sorted by artist: jump to a letter, like in the Contacts app --%>
+      <nav
+        :if={@letters != []}
+        id="letter-bar"
+        class="fixed top-1/2 right-0.5 z-10 flex -translate-y-1/2 flex-col items-center rounded-full bg-base-100/80 py-1 backdrop-blur sm:hidden"
+        aria-label={gettext("Jump to letter")}
+      >
+        <a
+          :for={{letter, id} <- @letters}
+          href={"##{id}"}
+          class="px-1.5 text-[0.6875rem] leading-4 font-semibold text-primary"
+        >
+          {letter}
+        </a>
+      </nav>
     </Layouts.app>
     """
   end
@@ -140,6 +230,8 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   def handle_params(params, _url, socket) do
     query = blank_to_nil(params["q"])
     show = if params["show"] == "unassigned", do: "unassigned", else: nil
+    sort = if params["sort"] in Map.keys(@sorts), do: params["sort"]
+    view = if params["view"] == "list", do: "list"
     action = socket.assigns.live_action
 
     filters =
@@ -150,7 +242,10 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       params["user_id"] &&
         Accounts.get_collector!(params["user_id"], actor: socket.assigns.current_user)
 
-    search_params = if collector, do: Map.put(filters, "owner_id", collector.id), else: filters
+    search_params =
+      filters
+      |> Map.put("order", Map.get(@sorts, sort, :title))
+      |> then(&if collector, do: Map.put(&1, "owner_id", collector.id), else: &1)
 
     albums =
       Records.search_albums!(query, status(action, show), search_params,
@@ -164,16 +259,76 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
      |> assign(:page_title, page_title(action, collector))
      |> assign(
        :params,
-       Map.merge(filters, %{"q" => query, "show" => show, "user_id" => params["user_id"]})
+       Map.merge(filters, %{
+         "q" => query,
+         "show" => show,
+         "sort" => sort,
+         "view" => view,
+         "user_id" => params["user_id"]
+       })
      )
      |> assign(:query, query)
      |> assign(:show, show)
+     |> assign(:sort, sort)
+     |> assign(:view, view)
      |> assign(:count, length(albums))
      |> assign(:search_form, to_form(%{"q" => query}))
-     |> stream(:albums, albums, reset: true)}
+     |> assign_items(albums, sort, view)}
+  end
+
+  # Sorted by artist: the A–Z bar jumps to the first album of each letter; the
+  # list also gets a heading per letter (in the grid it would waste whole rows)
+  defp assign_items(socket, albums, "artist", view) do
+    groups = albums |> Enum.chunk_by(&letter/1) |> Enum.with_index()
+
+    # In the list the bar jumps to the heading, in the grid to the first album
+    letters =
+      groups
+      |> Enum.map(fn {[first | _], index} ->
+        {letter(first),
+         if(view == "list", do: "albums-letter-#{index}", else: "albums-#{first.id}")}
+      end)
+      |> Enum.uniq_by(&elem(&1, 0))
+
+    items =
+      if view == "list" do
+        Enum.flat_map(groups, fn {[first | _] = group, index} ->
+          [%{id: "letter-#{index}", letter: letter(first)} | group]
+        end)
+      else
+        albums
+      end
+
+    socket |> assign(:letters, letters) |> stream(:albums, items, reset: true)
+  end
+
+  defp assign_items(socket, albums, _sort, _view) do
+    socket |> assign(:letters, []) |> stream(:albums, albums, reset: true)
+  end
+
+  defp letter(album) do
+    name = album.artist.sort_name || to_string(album.artist.name)
+    first = name |> String.first() |> to_string() |> String.upcase()
+    if first =~ ~r/^\p{L}$/u, do: first, else: "#"
+  end
+
+  defp sort_options do
+    [
+      {"title", gettext("Title")},
+      {"artist", gettext("Artist")},
+      {"year", gettext("Year")},
+      {"added", gettext("Recently added")}
+    ]
   end
 
   @impl true
+  def handle_event("sort", %{"sort" => sort}, socket) do
+    sort = if sort in Map.keys(@sorts) and sort != "title", do: sort
+    params = Map.put(socket.assigns.params, "sort", sort)
+
+    {:noreply, push_patch(socket, to: view_path(socket.assigns.live_action, params))}
+  end
+
   def handle_event("search", %{"q" => q}, socket) do
     params = Map.put(socket.assigns.params, "q", blank_to_nil(q))
 

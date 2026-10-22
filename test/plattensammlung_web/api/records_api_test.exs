@@ -82,6 +82,19 @@ defmodule PlattensammlungWeb.RecordsApiTest do
       assert titles.(~p"/api/json/albums?status=wishlist") == ["Tago Mago"]
       assert titles.(~p"/api/json/albums?status=collection") == ["Abbey Road"]
     end
+
+    test "sorts with the order argument and with JSON:API sort", %{conn: conn} do
+      titles = fn path ->
+        conn
+        |> get(path)
+        |> json_response(200)
+        |> Map.fetch!("data")
+        |> Enum.map(& &1["attributes"]["title"])
+      end
+
+      assert titles.(~p"/api/json/albums?order=artist") == ["Tago Mago", "Abbey Road"]
+      assert titles.(~p"/api/json/albums?sort=-title") == ["Tago Mago", "Abbey Road"]
+    end
   end
 
   # Generic actions: the arguments sit directly under "data", the answer is the
