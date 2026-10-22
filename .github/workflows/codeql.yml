@@ -1,0 +1,50 @@
+# CodeQL code scanning (see SECURITY.md). CodeQL has no Elixir support: it
+# checks the JavaScript in assets/js (hooks, passkeys, scanner) and the
+# workflows themselves. Results: Security → Code scanning.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, so new queries also run over unchanged code
+    - cron: "17 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, actions]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Interpreted languages: nothing to build
+          build-mode: none
+          queries: security-extended
+          config: |
+            paths-ignore:
+              - deps
+              - _build
+              - priv/static
+              - assets/vendor
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}

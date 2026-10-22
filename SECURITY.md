@@ -97,3 +97,14 @@ neuen Image ausgerollt (siehe [deploy/README.md](deploy/README.md)).
 - Pfade nie als feste Zeichenkette, URLs zu Bildern nur von erlaubten Quellen.
 - Vor einem Release: `mix precommit` und `mix hex.audit` (zurückgezogene oder als unsicher
   gemeldete Pakete).
+
+## Automatische Prüfungen auf GitHub
+
+- **Dependabot** (`.github/dependabot.yml`): wöchentliche Update-PRs für Elixir-Pakete,
+  npm (`assets/`), die Images in den Compose-Dateien und GitHub Actions; Sicherheitsupdates
+  sofort, sobald sie in den Repository-Einstellungen aktiviert sind. Die Basis-Images im
+  `Dockerfile` (Elixir/Erlang/Debian, per `ARG` zusammengesetzt) erkennt Dependabot nicht;
+  sie werden von Hand aktualisiert.
+- **CodeQL** (`.github/workflows/codeql.yml`): Code Scanning bei jedem Push, Pull Request und
+  wöchentlich. CodeQL unterstützt **kein Elixir**; geprüft werden das JavaScript in
+  `assets/js` und die Workflows. Ergebnisse unter **Security → Code scanning**.

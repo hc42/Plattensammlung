@@ -1,0 +1,45 @@
+# Dependabot: weekly update PRs (see SECURITY.md). Security updates come
+# independently of this schedule as soon as an advisory is published, once
+# "Dependabot security updates" is enabled in the repository settings.
+version: 2
+
+updates:
+  # Elixir dependencies (mix.exs / mix.lock)
+  - package-ecosystem: mix
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # Minor and patch updates in one PR; majors one by one
+      mix-minor-and-patch:
+        update-types: [minor, patch]
+      # Ash and its extensions are released together
+      ash:
+        patterns: ["ash", "ash_*", "spark", "reactor"]
+      opentelemetry:
+        patterns: ["opentelemetry*"]
+
+  # Barcode scanner (assets/package.json)
+  - package-ecosystem: npm
+    directory: /assets
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      zxing:
+        patterns: ["@zxing/*"]
+
+  # Postgres, Prometheus, Tempo, Grafana images in the compose files
+  - package-ecosystem: docker-compose
+    directories: [/, /deploy, /deploy/observability]
+    schedule:
+      interval: weekly
+      day: monday
+
+  # Actions used in .github/workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

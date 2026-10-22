@@ -78,6 +78,7 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
+- `.github/`: Dependabot (`dependabot.yml`) und CodeQL (`workflows/codeql.yml`), siehe SECURITY.md
 - `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
 
 ## Anmeldung und Autorisierung (`Plattensammlung.Accounts`, ADR 0005)
