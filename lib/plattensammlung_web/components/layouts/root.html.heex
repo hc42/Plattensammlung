@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <%!-- Optional path prefix (PHX_PATH) for paths built in JavaScript --%>
+    <meta name="base-path" content={PlattensammlungWeb.Endpoint.path("")} />
     <.live_title
       default="Plattensammlung"
       suffix={assigns[:page_title] && " · Plattensammlung"}

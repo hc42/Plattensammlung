@@ -16,7 +16,8 @@ defmodule PlattensammlungWeb.ExportController do
   end
 
   def json_ld(conn, _params) do
-    base_url = PlattensammlungWeb.PublicUrl.base_url(conn)
+    # Local cover paths become absolute URLs (with the optional path prefix)
+    base_url = PlattensammlungWeb.PublicUrl.url(conn, "")
     json_ld = Export.json_ld([actor: conn.assigns.current_user], base_url)
 
     send_download(conn, {:binary, Phoenix.json_library().encode_to_iodata!(json_ld)},

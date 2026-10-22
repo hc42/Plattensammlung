@@ -17,7 +17,7 @@ defmodule PlattensammlungWeb.AshJsonApiRouter do
   def modify_open_api(spec, conn, _opts) do
     servers =
       if conn,
-        do: [%OpenApiSpex.Server{url: PlattensammlungWeb.PublicUrl.base_url(conn)}],
+        do: [%OpenApiSpex.Server{url: PlattensammlungWeb.PublicUrl.url(conn, "")}],
         else: spec.servers
 
     bearer = %OpenApiSpex.SecurityScheme{

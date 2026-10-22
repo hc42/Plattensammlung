@@ -1,6 +1,6 @@
 defmodule PlattensammlungWeb.PublicUrlTest do
   # Not async: changes the global public_url config
-  use ExUnit.Case, async: false
+  use PlattensammlungWeb.ConnCase, async: false
 
   alias PlattensammlungWeb.PublicUrl
 
@@ -18,5 +18,15 @@ defmodule PlattensammlungWeb.PublicUrlTest do
 
     assert PublicUrl.base_url(%URI{scheme: "http", host: "nas", port: 4000}) ==
              "https://platten.example.de"
+  end
+
+  test "url/2 adds the path prefix (none in tests) to a local path" do
+    uri = %URI{scheme: "https", host: "mac.local", port: 4001}
+    assert PublicUrl.url(uri, "/covers/a.jpg") == "https://mac.local:4001/covers/a.jpg"
+  end
+
+  test "pages tell JavaScript the path prefix", %{conn: conn} do
+    html = conn |> get(~p"/sign-in") |> html_response(200)
+    assert html =~ ~s(<meta name="base-path" content="")
   end
 end

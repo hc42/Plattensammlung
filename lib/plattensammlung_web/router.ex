@@ -56,7 +56,8 @@ defmodule PlattensammlungWeb.Router do
     pipe_through [:api]
 
     forward "/swaggerui", OpenApiSpex.Plug.SwaggerUI,
-      path: "/api/json/open_api",
+      # Relative, so it also works under a path prefix (ADR 0018)
+      path: "open_api",
       default_model_expand_depth: 4
 
     forward "/", PlattensammlungWeb.AshJsonApiRouter

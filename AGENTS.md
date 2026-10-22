@@ -231,6 +231,10 @@ Regeln:
 
 - Produktion: Release-Image (Dockerfile, `rel/overlays/bin/start` = migrieren + starten),
   TrueNAS Custom App (`deploy/truenas-compose.yaml`), TLS bei nginx-proxy-manager.
+- **Optionaler Pfad-Präfix (`PHX_PATH`, ADR 0018):** Der Proxy schneidet ihn ab, die App setzt
+  ihn in Links. Pfade nur über `~p`, in JavaScript über `appPath()` (`assets/js/app_path.js`),
+  absolute URLs mit Pfad über `PublicUrl.url/2`. Lokale Cover-Pfade beim Anzeigen mit
+  `Endpoint.path/1` versehen. Nie `"/…"` fest in JS oder Strings schreiben.
 - **Öffentliche Adresse immer über `PlattensammlungWeb.PublicUrl.base_url/1`** bilden,
   nie aus `conn.host`/`conn.port`: Hinter dem Proxy sieht die App nur `http://nas:4000`.
   In prod kommt sie aus `PHX_HOST` (`:public_url`).

@@ -26,9 +26,10 @@ import {hooks as colocatedHooks} from "phoenix-colocated/plattensammlung"
 import topbar from "../vendor/topbar"
 import {BarcodeScanner} from "./hooks/barcode_scanner"
 import {PasskeySignIn, PasskeyRegister} from "./hooks/passkey"
+import {appPath} from "./app_path"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-const liveSocket = new LiveSocket("/live", Socket, {
+const liveSocket = new LiveSocket(appPath("/live"), Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   hooks: {...colocatedHooks, BarcodeScanner, PasskeySignIn, PasskeyRegister},

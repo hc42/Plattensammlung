@@ -196,3 +196,16 @@ if config_env() == :prod do
   #
   # See https://swoosh.hexdocs.pm/Swoosh.html#module-installation for details.
 end
+
+# Optional path prefix, e.g. PHX_PATH=/plattensammlung for
+# https://cloud.example.com/plattensammlung (ADR 0018). The proxy strips the
+# prefix before forwarding; the app adds it to every link it generates.
+if config_env() != :test do
+  case System.get_env("PHX_PATH", "") |> String.trim("/") do
+    "" ->
+      :ok
+
+    path ->
+      config :plattensammlung, PlattensammlungWeb.Endpoint, url: [path: "/" <> path]
+  end
+end

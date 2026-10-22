@@ -111,6 +111,40 @@ NPM setzt den Header `X-Forwarded-For`; daraus liest die App die IP-Adresse der 
 (für Rate Limits und Logs, ADR 0017). Wer Port 4000 direkt erreicht (im LAN), könnte
 den Header selbst setzen. Deshalb Port 4000 nicht ins Internet freigeben.
 
+### Unter einem Pfad statt einer eigenen Domain (optional)
+
+Soll die App unter `https://cloud.example.com/plattensammlung` laufen, neben anderen Apps
+auf derselben Domain (ADR 0018):
+
+1. In `app.env`: `PHX_HOST=cloud.example.com` und `PHX_PATH=/plattensammlung`, dann die
+   App neu starten.
+2. Im Proxy Host von `cloud.example.com` unter **Advanced → Custom Nginx Configuration**:
+
+   ```nginx
+   location /plattensammlung/ {
+     # The trailing slash strips the prefix: the app itself serves under /
+     proxy_pass http://NAS-IP:4000/;
+     proxy_http_version 1.1;
+     proxy_set_header Upgrade $http_upgrade;
+     proxy_set_header Connection "upgrade";
+     proxy_set_header Host $host;
+     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+     proxy_set_header X-Forwarded-Proto $scheme;
+   }
+
+   location = /plattensammlung {
+     return 301 /plattensammlung/;
+   }
+   ```
+
+   Wichtig sind der Schrägstrich am Ende von `proxy_pass` (er schneidet das Präfix ab) und
+   die beiden Upgrade-Zeilen (Websockets für die Oberfläche).
+3. Passkeys hängen nur an der Domain, nicht am Pfad. Ein Passkey für `cloud.example.com`
+   gilt also auch für andere Apps auf dieser Domain, die Passkeys anbieten. Das ist
+   harmlos, sie sehen ihn nur in der Auswahl.
+
+Ohne `PHX_PATH` läuft die App wie bisher unter `/`.
+
 ### Grobschutz gegen Massenanfragen (optional, empfohlen)
 
 Die App begrenzt Anmeldelinks selbst. Zusätzlich kann NPM jede IP-Adresse drosseln:

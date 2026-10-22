@@ -152,7 +152,8 @@ den Key über „Authorize“ eintragen.
 
 ## Betrieb
 
-Die App läuft als Container auf einem TrueNAS-NAS hinter nginx-proxy-manager. Image
+Die App läuft als Container auf einem TrueNAS-NAS hinter nginx-proxy-manager. Wahlweise unter einer eigenen Domain oder unter
+einem Pfad wie `cloud.example.com/plattensammlung` (`PHX_PATH`, [ADR 0018](docs/adr/0018-pfad-praefix.md)). Image
 bauen, Konfiguration, Backups und Updates: [deploy/README.md](deploy/README.md).
 
 ## Dokumentation

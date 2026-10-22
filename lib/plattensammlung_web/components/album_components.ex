@@ -40,7 +40,11 @@ defmodule PlattensammlungWeb.AlbumComponents do
   end
 
   # Percent-encode characters that could break out of url('…')
-  defp css_url(url), do: URI.encode(url, &(&1 not in ~c"'\"()\\ "))
+  # Local covers ("/covers/…") get the optional path prefix (ADR 0018)
+  defp css_url("/" <> _ = path), do: path |> PlattensammlungWeb.Endpoint.path() |> encode_css()
+  defp css_url(url), do: encode_css(url)
+
+  defp encode_css(url), do: URI.encode(url, &(&1 not in ~c"'\"()\\ "))
 
   @doc """
   Shows whether the actor owns an album (with number of copies), wants it, or

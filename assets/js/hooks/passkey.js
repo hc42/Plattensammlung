@@ -15,10 +15,12 @@ const toBase64url = buffer =>
     .replace(/\//g, "_")
     .replace(/=+$/, "")
 
+import {appPath} from "../app_path"
+
 const csrfToken = () => document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
 async function request(method, path, body) {
-  const response = await fetch(path, {
+  const response = await fetch(appPath(path), {
     method,
     headers: {"content-type": "application/json", "x-csrf-token": csrfToken()},
     body: body && JSON.stringify(body),
