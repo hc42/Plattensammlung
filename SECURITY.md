@@ -95,8 +95,12 @@ neuen Image ausgerollt (siehe [deploy/README.md](deploy/README.md)).
   [AGENTS.md](AGENTS.md)).
 - Neue Felder bekommen Längen- bzw. Wertgrenzen, private Felder eine Field Policy.
 - Pfade nie als feste Zeichenkette, URLs zu Bildern nur von erlaubten Quellen.
-- Vor einem Release: `mix precommit` und `mix hex.audit` (zurückgezogene oder als unsicher
-  gemeldete Pakete).
+- `mix precommit` enthält **Sobelow** (Sicherheitsscanner für Phoenix, `mix sobelow --config`).
+  Jeder Fund lässt den Lauf scheitern. Geprüfte Fehlalarme werden direkt am Code mit
+  `# sobelow_skip [...]` und einer Begründung markiert; global ausgenommen sind nur die
+  CSP- und HTTPS-Prüfung (`.sobelow-conf` erklärt, warum).
+- Vor einem Release zusätzlich `mix hex.audit` (zurückgezogene oder als unsicher gemeldete
+  Pakete).
 
 ## Automatische Prüfungen auf GitHub
 
@@ -108,3 +112,7 @@ neuen Image ausgerollt (siehe [deploy/README.md](deploy/README.md)).
 - **CodeQL** (`.github/workflows/codeql.yml`): Code Scanning bei jedem Push, Pull Request und
   wöchentlich. CodeQL unterstützt **kein Elixir**; geprüft werden das JavaScript in
   `assets/js` und die Workflows. Ergebnisse unter **Security → Code scanning**.
+- **CI** (`.github/workflows/ci.yml`) bei jedem Push und Pull Request, auch Dependabots:
+  Kompilieren ohne Warnungen, Formatierung, ungenutzte Pakete, Ash-Snapshots
+  (`ash.codegen --check`), Sobelow, `hex.audit` und Tests gegen Postgres 18. Sobelow lädt
+  seine Ergebnisse zusätzlich ins Code Scanning (Kategorie `sobelow`), neben CodeQL.

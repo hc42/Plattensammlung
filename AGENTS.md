@@ -58,7 +58,9 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
 - `mix setup`: Abhängigkeiten, Datenbank, Assets, Seeds
 - `mix phx.server`: Entwicklungsserver auf http://localhost:4000
 - `mix test`: Tests
-- `mix precommit`: **vor jedem Commit ausführen** und alle Probleme beheben
+- `mix precommit`: **vor jedem Commit ausführen** und alle Probleme beheben (enthält Sobelow)
+- `mix sobelow --config`: Sicherheitsscan; geprüfte Fehlalarme mit `# sobelow_skip ["Check"]`
+  und Begründung direkt über der Funktion markieren, nicht global ausnehmen
 - `mix ash.codegen <name>`: Migrationen aus Ash-Resources erzeugen, danach `mix ash.migrate`
 - `mix ash.reset`: Entwicklungsdatenbank neu aufbauen, danach `mix run priv/repo/seeds.exs`
 
@@ -78,7 +80,8 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
 - `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
 - `docs/adr/`: Architekturentscheidungen
-- `.github/`: Dependabot (`dependabot.yml`) und CodeQL (`workflows/codeql.yml`), siehe SECURITY.md
+- `.github/`: Dependabot (`dependabot.yml`), CodeQL (`workflows/codeql.yml`) und CI mit Sobelow
+  (`workflows/ci.yml`), siehe SECURITY.md
 - `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
 
 ## Anmeldung und Autorisierung (`Plattensammlung.Accounts`, ADR 0005)

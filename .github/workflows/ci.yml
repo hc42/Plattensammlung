@@ -1,0 +1,94 @@
+# Tests and checks for every push to main and every pull request (including
+# Dependabot's), plus the Sobelow security scan for GitHub code scanning.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  ELIXIR_VERSION: "1.20.4"
+  OTP_VERSION: "29.1.2"
+
+jobs:
+  test:
+    name: Tests and checks
+    runs-on: ubuntu-latest
+    env:
+      MIX_ENV: test
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+
+      - run: mix deps.get
+      # Like `mix precommit`, but checking instead of changing files
+      - run: mix compile --warnings-as-errors
+      - run: mix deps.unlock --check-unused
+      - run: mix format --check-formatted
+      - run: mix ash.codegen --check
+      - run: mix sobelow --config --quiet
+      - run: mix hex.audit
+      - run: mix test
+
+  sobelow:
+    name: Sobelow (code scanning)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - run: mix deps.get
+
+      # Findings make Sobelow exit non-zero: upload them anyway, then fail
+      - name: Scan
+        id: scan
+        continue-on-error: true
+        run: mix sobelow --config --format sarif > sobelow.sarif
+
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: sobelow.sarif
+          category: sobelow
+
+      - if: steps.scan.outcome == 'failure'
+        run: exit 1

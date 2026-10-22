@@ -1,0 +1,22 @@
+# Sobelow (security scanner for Phoenix), see SECURITY.md. Run: mix sobelow --config
+[
+  # Honour "# sobelow_skip [...]" comments; each one says why the finding is safe
+  skip: true,
+  router: "lib/plattensammlung_web/router.ex",
+  # Any finding fails the run (precommit, CI)
+  exit: "low",
+  format: "txt",
+  verbose: false,
+  private: false,
+  version: false,
+  ignore: [
+    # The CSP comes from PlattensammlungWeb.Plugs.ContentSecurityPolicy in the
+    # browser pipeline (tested), not from put_secure_browser_headers; the dev
+    # pipeline is without CSP on purpose (ADR 0014)
+    "Config.CSP",
+    # TLS ends at nginx-proxy-manager; prod.exs sets force_ssl with
+    # rewrite_on: [:x_forwarded_proto] (HSTS), there is no https listener
+    "Config.HTTPS"
+  ],
+  ignore_files: []
+]

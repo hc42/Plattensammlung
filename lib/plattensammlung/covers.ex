@@ -35,6 +35,8 @@ defmodule Plattensammlung.Covers do
   from the file content, not from the name or what the browser claims.
   """
   @spec store_file(Path.t()) :: {:ok, String.t()} | {:error, term()}
+  # The path is LiveView's temporary upload file, never user input
+  # sobelow_skip ["Traversal.FileModule"]
   def store_file(path) do
     with {:ok, binary} <- File.read(path),
          :ok <- check_size(binary),
@@ -43,6 +45,8 @@ defmodule Plattensammlung.Covers do
     end
   end
 
+  # Name generated here (UUID + fixed extension)
+  # sobelow_skip ["Traversal.FileModule"]
   defp write(binary, extension) do
     name = Ash.UUIDv7.generate() <> extension
     File.mkdir_p!(dir())
@@ -67,6 +71,8 @@ defmodule Plattensammlung.Covers do
 
   Returns `{:ok, deleted_file_names}`.
   """
+  # Only names listed from the covers directory itself
+  # sobelow_skip ["Traversal.FileModule"]
   def cleanup_orphans(min_age \\ 3600) do
     referenced = referenced_files()
     oldest_allowed = System.os_time(:second) - min_age
@@ -103,6 +109,8 @@ defmodule Plattensammlung.Covers do
   end
 
   @doc "Removes a locally stored cover; remote URLs and nil are ignored."
+  # Path.basename/1 strips any directory part ("../")
+  # sobelow_skip ["Traversal.FileModule"]
   def delete("/covers/" <> name) do
     _ = File.rm(Path.join(dir(), Path.basename(name)))
     :ok

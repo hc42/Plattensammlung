@@ -94,6 +94,9 @@ defmodule Plattensammlung.Accounts.WebAuthn do
   end
 
   @doc "Verifies a sign-in assertion and returns the user."
+  # binary_to_term only reads the public key this module stored itself after a
+  # verified registration, and with [:safe] (no new atoms, no functions)
+  # sobelow_skip ["Misc.BinToTerm"]
   def authenticate(challenge, params) do
     with {:ok, credential_id} <- decode(params["rawId"]),
          {:ok, authenticator_data} <- decode(params["authenticatorData"]),

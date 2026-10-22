@@ -65,6 +65,7 @@ defmodule Plattensammlung.MixProject do
       {:open_api_spex, "~> 3.0"},
       {:ash_json_api, "~> 1.0"},
       {:sourceror, "~> 1.8", only: [:dev, :test]},
+      {:sobelow, "~> 0.16", only: [:dev, :test], runtime: false},
       {:ash_phoenix, "~> 2.0"},
       {:ash_postgres, "~> 2.0"},
       {:ash, "~> 3.0"},
@@ -128,7 +129,13 @@ defmodule Plattensammlung.MixProject do
         "esbuild plattensammlung --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "sobelow --config --quiet",
+        "test"
+      ]
     ]
   end
 
