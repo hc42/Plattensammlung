@@ -60,6 +60,16 @@ defmodule Plattensammlung.Accounts.User do
       accept [:display_name, :locale]
     end
 
+    destroy :delete_account do
+      description """
+      Deletes the user with everything that is theirs: copies, wishes, passkeys,
+      API keys, sessions. Shared albums others have stay (ADR 0023).
+      """
+
+      require_atomic? false
+      change Plattensammlung.Accounts.Changes.DeleteAccountData
+    end
+
     read :get_by_subject do
       description "Get a user by the subject claim in a JWT"
       argument :subject, :string, allow_nil?: false
@@ -139,7 +149,7 @@ defmodule Plattensammlung.Accounts.User do
       authorize_if actor_present()
     end
 
-    policy action(:update_profile) do
+    policy action([:update_profile, :delete_account]) do
       authorize_if expr(id == ^actor(:id))
     end
   end

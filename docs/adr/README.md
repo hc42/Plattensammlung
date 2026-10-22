@@ -27,3 +27,4 @@ consequences. New ADRs start from the [template](template.md).
 | [0020](0020-documentation-in-english.md) | Documentation in English | Accepted, UI language superseded by 0021 |
 | [0021](0021-internationalization.md) | Interface in English and German | Accepted |
 | [0022](0022-installable-app.md) | Installable app (PWA) | Accepted |
+| [0023](0023-deleting-an-account.md) | Deleting an account | Accepted |

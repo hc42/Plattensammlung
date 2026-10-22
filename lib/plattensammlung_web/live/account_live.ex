@@ -1,6 +1,7 @@
 defmodule PlattensammlungWeb.AccountLive do
   @moduledoc """
-  Account settings: display name, language (ADR 0021), passkeys and API keys
+  Account settings: display name, language (ADR 0021), passkeys, API keys and
+  deleting the account (ADR 0023)
   for the JSON API.
   """
   use PlattensammlungWeb, :live_view
@@ -214,6 +215,43 @@ defmodule PlattensammlungWeb.AccountLive do
             </button>
           </.form>
         </section>
+
+        <section class="space-y-4 rounded-lg border border-error/40 p-4" id="delete-account">
+          <div>
+            <h2 class="text-lg font-semibold text-error">{gettext("Delete account")}</h2>
+            <p class="text-sm opacity-70">
+              {gettext(
+                "Deletes your copies, wishes, passkeys and API keys and signs you out everywhere. Albums others have stay for them, albums only you have are deleted. This can't be undone."
+              )}
+            </p>
+            <p class="mt-1 text-sm opacity-70">
+              {gettext("Keep a copy first?")}
+              <.link href={~p"/export/plattensammlung.csv"} class="link" download>
+                {gettext("Download CSV")}
+              </.link>
+            </p>
+          </div>
+          <.form
+            for={%{}}
+            id="delete-account-form"
+            phx-submit="delete_account"
+            class="flex flex-wrap gap-2"
+          >
+            <input
+              type="email"
+              name="email"
+              class="input w-72 max-w-full"
+              placeholder={gettext("Your e-mail address to confirm")}
+              aria-label={gettext("Your e-mail address to confirm")}
+              autocomplete="off"
+              maxlength="320"
+              required
+            />
+            <button class="btn btn-error" id="delete-account-button">
+              <.icon name="hero-trash" class="size-4" /> {gettext("Delete account")}
+            </button>
+          </.form>
+        </section>
       </div>
     </Layouts.app>
     """
@@ -267,6 +305,23 @@ defmodule PlattensammlungWeb.AccountLive do
   end
 
   # A full reload, so the layout and every later page use the new language
+  # The e-mail address has to be typed in to confirm: no deletion by a stray click
+  def handle_event("delete_account", %{"email" => email}, socket) do
+    user = actor(socket)
+
+    if String.downcase(String.trim(email)) == String.downcase(to_string(user.email)) do
+      :ok = Accounts.delete_account!(user, actor: user)
+
+      {:noreply,
+       socket
+       |> put_flash(:info, gettext("Your account has been deleted."))
+       |> redirect(to: ~p"/sign-in")}
+    else
+      {:noreply,
+       put_flash(socket, :error, gettext("The e-mail address doesn't match your account."))}
+    end
+  end
+
   def handle_event("save_locale", %{"locale" => locale}, socket) do
     user = actor(socket)
 

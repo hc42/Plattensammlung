@@ -15,6 +15,7 @@ defmodule Plattensammlung.Accounts do
       define :list_collectors, action: :collectors
       define :get_collector, action: :collectors, get_by: [:id]
       define :update_profile, args: [:display_name]
+      define :delete_account
     end
 
     resource Plattensammlung.Accounts.ApiKey do

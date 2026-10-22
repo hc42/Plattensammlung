@@ -61,6 +61,10 @@ defmodule Plattensammlung.Accounts.Token do
       change AshAuthentication.TokenResource.StoreTokenChange
     end
 
+    destroy :expunge_for_subject do
+      description "Deletes tokens (filter by subject when calling); used when an account is deleted."
+    end
+
     destroy :expunge_expired do
       description "Deletes expired tokens."
       change filter(expr(expires_at < now()))

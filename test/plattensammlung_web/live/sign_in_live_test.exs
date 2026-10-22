@@ -38,6 +38,25 @@ defmodule PlattensammlungWeb.SignInLiveTest do
       assert has_element?(view, "#api-keys li[id^=api-key-]")
     end
 
+    test "deleting the account needs the own e-mail address", %{conn: conn, user: user} do
+      Plattensammlung.Records.add_to_collection!("Can", "Tago Mago", actor: user)
+      {:ok, view, _html} = live(conn, ~p"/account")
+
+      view |> form("#delete-account-form", email: "someone@example.com") |> render_submit()
+      assert render(view) =~ "doesn&#39;t match"
+      assert {:ok, _} = Plattensammlung.Accounts.get_user(user.id, authorize?: false)
+
+      assert {:error, {:redirect, %{to: "/sign-in"}}} =
+               view
+               |> form("#delete-account-form", email: " TEST@example.com ")
+               |> render_submit()
+
+      assert {:error, _} = Plattensammlung.Accounts.get_user(user.id, authorize?: false)
+
+      # The old session no longer signs in
+      assert {:error, {:redirect, %{to: "/sign-in"}}} = live(conn, ~p"/")
+    end
+
     test "signing out ends the session", %{conn: conn} do
       conn = delete(conn, ~p"/sign-out")
       assert redirected_to(conn) == ~p"/sign-in"

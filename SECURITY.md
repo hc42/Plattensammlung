@@ -35,7 +35,10 @@ image (see [deploy/README.md](deploy/README.md)).
 - All access goes through Ash actions with policies; without signing in nothing is readable.
 - Albums and artists are shared. Album data is changed by whoever has the album in collection
   or wishlist; an album no one has may be changed (and deleted) by every signed-in user. An
-  album is deleted only once no one has it any more. An artist can only be
+  album is deleted only once no one has it any more.
+- Users can delete their own account (after typing their e-mail address): copies, wishes,
+  passkeys, API keys and all tokens go, every session ends; albums others have stay
+  ([ADR 0023](docs/adr/0023-deleting-an-account.md)). An artist can only be
   renamed or deleted while no one else has an album of theirs.
 - Copies and wishes belong to one person; only they change or delete them.
 - A copy's **purchase date and notes** are readable only by its owner (field policy), also

@@ -114,6 +114,9 @@ Update these documents **without being asked** as soon as something changes:
   or `require_copy_owner/2`; `album.copies` holds the copies of all users, load your own with
   `Ownership.own_copies(user)`. Show other users only `Accounts.list_collectors` (ID + display
   name), never the e-mail address.
+- **Deleting an account (ADR 0023):** `Accounts.delete_account/2` (action `User.delete_account`,
+  change `Accounts.Changes.DeleteAccountData`). New user-owned data needs `on_delete: :delete`
+  on its reference or a step there.
 - `Copy.purchased_on` and `Copy.notes` are readable only by the owner (field policy). Others
   get `%Ash.ForbiddenField{}` (truthy!); in the API the fields are missing. Add new private
   fields to `field_policies` there.
