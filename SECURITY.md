@@ -34,7 +34,8 @@ image (see [deploy/README.md](deploy/README.md)).
 
 - All access goes through Ash actions with policies; without signing in nothing is readable.
 - Albums and artists are shared. Album data is changed by whoever has the album in collection
-  or wishlist. An album is deleted only once no one has it any more. An artist can only be
+  or wishlist; an album no one has may be changed (and deleted) by every signed-in user. An
+  album is deleted only once no one has it any more. An artist can only be
   renamed or deleted while no one else has an album of theirs.
 - Copies and wishes belong to one person; only they change or delete them.
 - A copy's **purchase date and notes** are readable only by its owner (field policy), also
@@ -83,7 +84,7 @@ image (see [deploy/README.md](deploy/README.md)).
   per-address limit still applies. Port 4000 must therefore not be exposed to the internet.
 - **Rate limits** are kept in memory and start over after a restart.
 - **Signed-in users are trusted:** there are no rate limits for them, and whoever has an album
-  can change its shared data (cover, links) for everyone.
+  can change its shared data (cover, links) for everyone; an album no one has, anyone can.
 - **Passkeys** are bound to the whole domain. If the app runs under a path of a shared domain
   ([ADR 0018](docs/adr/0018-path-prefix.md)), other apps there see the passkey in the
   selection.

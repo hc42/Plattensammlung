@@ -366,9 +366,12 @@ defmodule Plattensammlung.Records.Album do
       # Putting an album on the own wishlist needs no copy or wish yet
       authorize_if action([:mark_wanted, :unmark_wanted])
 
+      # Those who have the album in collection or wishlist; an album nobody has
+      # anyone may change (as anyone may delete it). Same rule as `editable`.
       authorize_if expr(
                      exists(copies, owner_id == ^actor(:id)) or
-                       exists(wishes, owner_id == ^actor(:id))
+                       exists(wishes, owner_id == ^actor(:id)) or
+                       (not exists(copies, true) and not exists(wishes, true))
                    )
     end
 
@@ -442,6 +445,16 @@ defmodule Plattensammlung.Records.Album do
     # The actor's view of a shared album, computed by the database on demand
     calculate :owned, :boolean, expr(exists(copies, owner_id == ^actor(:id))), public?: true
     calculate :wanted, :boolean, expr(exists(wishes, owner_id == ^actor(:id))), public?: true
+
+    # May the actor change the album data? (see the update policy)
+    calculate :editable,
+              :boolean,
+              expr(
+                exists(copies, owner_id == ^actor(:id)) or
+                  exists(wishes, owner_id == ^actor(:id)) or
+                  (not exists(copies, true) and not exists(wishes, true))
+              ),
+              public?: true
 
     calculate :copy_count,
               :integer,

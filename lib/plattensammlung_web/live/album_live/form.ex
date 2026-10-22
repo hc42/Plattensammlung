@@ -240,7 +240,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
         {:ok, socket}
 
       album ->
-        case PlattensammlungWeb.Ownership.require_holder(socket, album) do
+        case PlattensammlungWeb.Ownership.require_editable(socket, album) do
           :ok -> {:ok, socket}
           {:redirect, socket} -> {:ok, socket}
         end
@@ -262,7 +262,10 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     album =
-      Records.get_album!(id, load: [:artist, :owned, :wanted], actor: socket.assigns.current_user)
+      Records.get_album!(id,
+        load: [:artist, :owned, :wanted, :editable],
+        actor: socket.assigns.current_user
+      )
 
     form =
       AshPhoenix.Form.for_update(album, :update,

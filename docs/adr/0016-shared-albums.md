@@ -60,3 +60,11 @@ wishlist.
   own entry, `DELETE /albums/:id` only works for albums no one has. New: `/wishes`.
 - "Auf meine Wunschliste" no longer copies anything; `Covers.duplicate/1` and the action
   `copy_to_wishlist` are gone.
+
+## Addendum (2026-10-22): albums nobody has
+
+An album that no one has in collection or wishlist (e.g. after its last copy was deleted) could
+be deleted by everyone, but not changed. Now the same holds for changing it: whoever may delete
+the album may also edit, match and give it a cover. The update policy allows holders and, for
+albums without copies and wishes, every signed-in user. The web layer uses the calculation
+`editable` with the same expression (`Ownership.require_editable/2`, the "⋯" menu on the album page).

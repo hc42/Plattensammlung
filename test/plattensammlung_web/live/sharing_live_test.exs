@@ -27,6 +27,23 @@ defmodule PlattensammlungWeb.SharingLiveTest do
     %{alice: alice, album: album}
   end
 
+  test "an album nobody has can be edited, matched and removed by anyone",
+       %{conn: conn, alice: alice} do
+    album = Records.add_to_wishlist!("Can", "Ege Bamyasi", actor: alice)
+    Records.unmark_wanted!(album, actor: alice)
+
+    {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
+    assert has_element?(view, "#edit-album")
+    assert has_element?(view, "#match-album")
+    assert has_element?(view, "#remove-album")
+    assert has_element?(view, "#change-cover")
+
+    assert {:ok, _view, _html} = live(conn, ~p"/albums/#{album}/edit")
+    assert {:ok, match, _html} = live(conn, ~p"/albums/#{album}/match")
+    # Let the lookup the page starts finish within the test
+    render_async(match)
+  end
+
   test "the collectors page lists the others", %{conn: conn, alice: alice} do
     {:ok, view, _html} = live(conn, ~p"/collectors")
 

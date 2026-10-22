@@ -20,9 +20,12 @@ defmodule PlattensammlungWeb.Ownership do
     |> Ash.Query.sort(:inserted_at)
   end
 
-  @doc "`:ok` if the actor has the album (`owned`/`wanted` loaded), else a redirect."
-  def require_holder(socket, album) do
-    if album.owned or album.wanted do
+  @doc """
+  `:ok` if the actor may change the album (calculation `editable` loaded: they
+  have it in collection or wishlist, or nobody has it), else a redirect.
+  """
+  def require_editable(socket, album) do
+    if album.editable do
       :ok
     else
       redirect_back(

@@ -75,9 +75,10 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
         <div class="space-y-4">
           <div class="relative pr-10">
-            <%!-- Rarely needed, so out of the way: edit, match, remove --%>
+            <%!-- Rarely needed, so out of the way: edit, match, remove. For those who have
+                 the album, and for everyone if nobody has it (calculation editable) --%>
             <div
-              :if={@can_edit or @holders == []}
+              :if={@can_edit}
               class="dropdown dropdown-end absolute top-0 right-0"
             >
               <div
@@ -93,17 +94,16 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 tabindex="-1"
                 class="dropdown-content menu z-10 mt-1 w-52 rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
               >
-                <li :if={@can_edit}>
+                <li>
                   <.link navigate={~p"/albums/#{@album}/edit"} id="edit-album">
                     <.icon name="hero-pencil-square" class="size-4" /> {gettext("Edit")}
                   </.link>
                 </li>
-                <li :if={@can_edit}>
+                <li>
                   <.link navigate={~p"/albums/#{@album}/match"} id="match-album">
                     <.icon name="hero-arrow-path" class="size-4" /> {gettext("Match")}
                   </.link>
                 </li>
-                <%!-- An album no one has (e.g. after deleting the last copy) can go entirely --%>
                 <li>
                   <button
                     type="button"
@@ -411,6 +411,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
           :artist,
           :owned,
           :wanted,
+          :editable,
           :copy_count,
           :discogs_url,
           :spotify_url,
@@ -421,7 +422,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
     socket
     |> assign(:album, album)
-    |> assign(:can_edit, album.owned or album.wanted)
+    |> assign(:can_edit, album.editable)
     |> assign(:holders, holders(album.id, actor))
     |> assign(:page_title, "#{album.artist.name} – #{album.title}")
   end

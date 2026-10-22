@@ -105,7 +105,9 @@ Update these documents **without being asked** as soon as something changes:
   copies only by their owner. `owned`, `wanted`, `copy_count` are calculations from the actor's
   point of view (always load them with `actor:`, otherwise they are `false`). Collection,
   wishlist and statistics show the actor's without `owner_id` (preparation `ScopeToOwner`),
-  without a status the whole catalogue. Edit pages check with `Ownership.require_holder/2`
+  without a status the whole catalogue. Album data may also be changed by everyone while no one has the album (like deleting it):
+  calculation `editable`, same expression as the update policy. Edit pages check with
+  `Ownership.require_editable/2` (load `:editable`)
   or `require_copy_owner/2`; `album.copies` holds the copies of all users, load your own with
   `Ownership.own_copies(user)`. Show other users only `Accounts.list_collectors` (ID + display
   name), never the e-mail address.

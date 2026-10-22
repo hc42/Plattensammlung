@@ -152,11 +152,11 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
 
     album =
       Records.get_album!(id,
-        load: [:artist, :owned, :wanted, copies: Ownership.own_copies(actor)],
+        load: [:artist, :owned, :wanted, :editable, copies: Ownership.own_copies(actor)],
         actor: actor
       )
 
-    case Ownership.require_holder(socket, album) do
+    case Ownership.require_editable(socket, album) do
       :ok -> mount_holder(socket, album)
       {:redirect, socket} -> {:ok, socket}
     end

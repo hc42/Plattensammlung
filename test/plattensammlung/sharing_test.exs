@@ -50,6 +50,23 @@ defmodule Plattensammlung.SharingTest do
     assert owner_id == bob.id
   end
 
+  test "an album nobody has may be changed by anyone, like it may be deleted",
+       %{alice: alice, bob: bob} do
+    album = Records.add_to_wishlist!("Can", "Ege Bamyasi", actor: alice)
+    album = Records.get_album!(album.id, load: [:editable], actor: bob)
+    refute album.editable
+
+    assert {:error, %Ash.Error.Forbidden{}} =
+             Records.update_album(album, %{year: 1972}, actor: bob)
+
+    # Alice takes it off her wishlist: now nobody has it
+    Records.unmark_wanted!(album, actor: alice)
+    album = Records.get_album!(album.id, load: [:editable], actor: bob)
+
+    assert album.editable
+    assert {:ok, %{year: 1972}} = Records.update_album(album, %{year: 1972}, actor: bob)
+  end
+
   test "purchase date and notes of a copy are readable by the owner only",
        %{alice: alice, bob: bob, album: album} do
     [copy] = Ash.load!(album, :copies, authorize?: false).copies
