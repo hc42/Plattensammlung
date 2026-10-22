@@ -11,7 +11,7 @@ defmodule PlattensammlungWeb.ImportLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div class="mx-auto max-w-2xl space-y-6">
         <div>
           <h1 class="text-2xl font-bold">{gettext("Add a record")}</h1>
@@ -22,7 +22,7 @@ defmodule PlattensammlungWeb.ImportLive do
           </p>
         </div>
 
-        <.barcode_scanner id="barcode-scanner" />
+        <.barcode_scanner id="barcode-scanner" autostart={@autostart} />
 
         <.form for={@search_form} id="lookup-form" phx-submit="lookup" class="flex gap-2">
           <label class="input flex-1">
@@ -117,9 +117,11 @@ defmodule PlattensammlungWeb.ImportLive do
   end
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     {:ok,
      socket
+     # The scan button of the mobile navigation links to ?scan=1
+     |> assign(:autostart, params["scan"] == "1")
      |> assign(:page_title, gettext("Add a record"))
      |> assign(:discogs?, Lookup.Discogs.configured?())
      |> assign(:search_form, to_form(%{"query" => ""}))

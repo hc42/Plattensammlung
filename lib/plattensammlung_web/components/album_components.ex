@@ -48,6 +48,50 @@ defmodule PlattensammlungWeb.AlbumComponents do
   defp encode_css(url), do: URI.encode(url, &(&1 not in ~c"'\"()\\ "))
 
   @doc """
+  The small "← back" link above a page. A block-level flex box, so the
+  spacing of the surrounding `space-y-*` applies (inline links ignore it).
+  """
+  attr :navigate, :string, required: true
+  slot :inner_block, required: true
+
+  def back_link(assigns) do
+    ~H"""
+    <.link
+      navigate={@navigate}
+      class="flex w-fit items-center gap-1 text-sm opacity-70 transition-opacity hover:opacity-100"
+    >
+      <.icon name="hero-arrow-left-micro" class="size-4" /> {render_slot(@inner_block)}
+    </.link>
+    """
+  end
+
+  @doc """
+  An album cover as a record sleeve: on hover the sleeve shrinks a little to
+  the left and the record slides out to the right, only as far as the grid gap
+  (so it never covers the next album). Only on devices with a mouse.
+  """
+  attr :album, :map, required: true
+
+  def sleeve(assigns) do
+    ~H"""
+    <div class="relative">
+      <div
+        aria-hidden="true"
+        class="vinyl-grooves absolute inset-y-[3%] right-[3%] aspect-square rounded-full bg-neutral shadow-md ring-1 ring-white/15 transition-transform duration-300 ease-out group-hover:translate-x-5 group-focus-visible:translate-x-5 motion-reduce:transition-none"
+      >
+        <div class="absolute inset-[34%] rounded-full bg-primary">
+          <div class="absolute inset-[44%] rounded-full bg-base-100"></div>
+        </div>
+      </div>
+      <.cover
+        album={@album}
+        class="origin-left transition duration-300 ease-out group-hover:scale-[0.94] group-hover:shadow-lg group-focus-visible:scale-[0.94] group-focus-visible:shadow-lg motion-reduce:transition-none"
+      />
+    </div>
+    """
+  end
+
+  @doc """
   Shows whether the actor owns an album (with number of copies), wants it, or
   neither. Expects the `owned`, `wanted` and `copy_count` calculations to be loaded.
   """
@@ -72,6 +116,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
   code is pushed to the LiveView as the `"scanned"` event with `%{"code" => …}`.
   """
   attr :id, :string, required: true
+  attr :autostart, :boolean, default: false, doc: "start the camera right away"
 
   def barcode_scanner(assigns) do
     ~H"""
@@ -81,6 +126,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
       phx-hook="BarcodeScanner"
       phx-update="ignore"
       data-active="false"
+      data-autostart={to_string(@autostart)}
       data-msg-needs-https={gettext("The live camera needs HTTPS. Take a photo instead.")}
       data-msg-denied={gettext("Camera access was not allowed.")}
       data-msg-failed={gettext("The camera could not be started.")}

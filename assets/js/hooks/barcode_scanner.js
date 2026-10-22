@@ -60,6 +60,9 @@ export const BarcodeScanner = {
     this.el.querySelector("[data-start]").addEventListener("click", () => this.start())
     this.el.querySelector("[data-stop]").addEventListener("click", () => this.stop())
     this.photoInput.addEventListener("change", () => this.scanPhoto(this.photoInput.files[0]))
+
+    // The scan button of the mobile navigation opens the import page with ?scan=1
+    if (this.el.dataset.autostart === "true") this.start()
   },
 
   destroyed() {

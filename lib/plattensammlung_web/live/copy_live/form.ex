@@ -35,13 +35,11 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div class="mx-auto max-w-xl space-y-6">
         <div>
-          <.link navigate={~p"/albums/#{@album}"} class="text-sm opacity-70 hover:opacity-100">
-            <.icon name="hero-arrow-left-micro" class="size-4" /> {@album.title}
-          </.link>
-          <h1 class="mt-2 text-2xl font-bold">{@page_title}</h1>
+          <.back_link navigate={~p"/albums/#{@album}"}>{@album.title}</.back_link>
+          <h1 class="mt-3 text-2xl font-bold">{@page_title}</h1>
           <p class="text-sm opacity-70">
             {@album.artist.name} – {@album.title}. {gettext("Everything is optional.")}
           </p>

@@ -16,13 +16,11 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div class="mx-auto max-w-2xl space-y-6">
         <div>
-          <.link navigate={~p"/albums/#{@album}"} class="text-sm opacity-70 hover:opacity-100">
-            <.icon name="hero-arrow-left-micro" class="size-4" /> {@album.title}
-          </.link>
-          <h1 class="mt-2 text-2xl font-bold">{gettext("Match data")}</h1>
+          <.back_link navigate={~p"/albums/#{@album}"}>{@album.title}</.back_link>
+          <h1 class="mt-3 text-2xl font-bold">{gettext("Match data")}</h1>
           <p class="text-sm opacity-70">
             {@album.artist.name} – {@album.title}. {gettext(
               "Artist and title stay as you entered them."

@@ -12,7 +12,7 @@ defmodule PlattensammlungWeb.StatsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <h1 class="text-2xl font-bold">{gettext("Statistics")}</h1>
 
       <div id="kpis" class="grid grid-cols-2 gap-3 md:grid-cols-4">

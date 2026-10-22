@@ -78,9 +78,12 @@ Update these documents **without being asked** as soon as something changes:
   - `live/import_live.ex`: import page `/import` (barcode or text, take over a result with a click)
   - `live/collectors_live.ex`: other users' collections and wishlists (`/collectors`)
   - `ash_json_api_router.ex`: JSON:API at `/api/json`, Swagger UI at `/api/json/swaggerui`
-  - `components/album_components.ex`: `cover`, `status_badge`, condition helpers, `format_date`,
+  - `components/album_components.ex`: `cover`, `sleeve` (cover with the record sliding out in
+    the grid), `back_link`, `status_badge`, condition helpers, `format_date`,
     `user_name`, `field_label` (imported in all views)
   - `locale.ex`: language of a request and of LiveViews (plug and `on_mount`, ADR 0021)
+  - `nav.ex`: `on_mount` hook for `@current_path`; `components/layouts.ex`: top navigation
+    (desktop) and bottom tab bar with the scan button (phones, `/import?scan=1` starts the camera)
 - `priv/gettext/`: `*.pot` templates, German translations in `de/LC_MESSAGES/`
 - `priv/repo/migrations/`: generated migrations, `priv/resource_snapshots/`: their Ash snapshots
 - `docs/adr/`: architecture decision records
@@ -112,7 +115,9 @@ Update these documents **without being asked** as soon as something changes:
   `Ash.Context.to_opts(context)`. Only seeds, test setup and system tasks (startup cleanup,
   metrics) use `authorize?: false`.
 - LiveViews live in `ash_authentication_live_session :authenticated` in the router. New pages
-  go there and pass `current_user={@current_user}` to `Layouts.app`.
+  go there and pass `current_user={@current_user} current_path={@current_path}` to
+  `Layouts.app` (`@current_path` comes from the `on_mount` hook `PlattensammlungWeb.Nav` and
+  marks the active page in the navigation).
 - Create test data in web tests with `actor: user` (otherwise the owner is missing); reading
   for assertions may use `authorize?: false`.
 - Tests: `register_and_sign_in_user` / `sign_in_user/2` (ConnCase), `user_fixture/1`,
@@ -311,6 +316,13 @@ When working on web code (LiveView, HEEx, components, router) **read and follow
 Deviating from it: data access goes through Ash instead of Ecto contexts.
 
 ## Pitfalls
+
+- **Design:** colours only via the daisyUI theme tokens in `assets/css/app.css` (`primary` =
+  label vermilion, `accent` = amber for the wishlist, `neutral` = the record), never fixed
+  colours, so both themes work. Headings use `--font-display` (rounded system font, no web
+  font). The back link above a page is `<.back_link>` (an inline link ignores `space-y-*`).
+- **Icons:** Tailwind only generates `hero-*` classes it finds literally in the source; never
+  build icon names at runtime (`@icon <> "-solid"`), pass both names instead.
 
 - **CSP** (`Plugs.ContentSecurityPolicy`, ADR 0014): inline scripts need
   `nonce={assigns[:csp_nonce]}`, inline `<style>` is forbidden, `style` attributes are allowed.

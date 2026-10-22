@@ -10,7 +10,7 @@ defmodule PlattensammlungWeb.CollectorsLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div>
         <h1 class="text-2xl font-bold">{gettext("Collectors")}</h1>
         <p class="text-sm opacity-70">

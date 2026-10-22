@@ -12,14 +12,11 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
-      <.link navigate={back_path(@album)} class="text-sm opacity-70 hover:opacity-100">
-        <.icon name="hero-arrow-left-micro" class="size-4" />
-        {back_label(@album)}
-      </.link>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
+      <.back_link navigate={back_path(@album)}>{back_label(@album)}</.back_link>
 
       <div class="grid gap-8 md:grid-cols-[18rem_1fr]">
-        <div class="w-full max-w-72 space-y-2">
+        <div class="mx-auto w-full max-w-72 space-y-2 md:mx-0">
           <.cover album={@album} class="w-full" />
           <%!-- Live upload: the image is sent as soon as it is chosen (auto_upload) --%>
           <form :if={@can_edit} id="cover-form" phx-change="validate_cover" phx-submit="noop">
@@ -90,7 +87,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               <span :for={{holder, index} <- Enum.with_index(@holders)}>
                 <.link
                   navigate={holder_path(holder)}
-                  class="link font-medium"
+                  class="link inline-block font-medium"
                   id={"holder-#{holder.id}"}
                 >
                   {holder.name}

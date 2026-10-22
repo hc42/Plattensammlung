@@ -24,6 +24,7 @@ Web application for cataloguing and managing a private vinyl record collection
 - **Spotify and Tidal**: links are found automatically (Wikidata, MusicBrainz) or pasted;
   albums can also be added from a Spotify link or its QR code
 - **Covers**: upload (also with the phone camera), replace or remove; orphaned image files are cleaned up
+- **On the phone**: tab bar at the bottom with a large scan button that opens the camera directly
 - **English and German**: follows the browser language, can be fixed on the account page
   ([ADR 0021](docs/adr/0021-internationalization.md))
 - Statistics (size, genres, decades, condition) and export as CSV or JSON-LD (schema.org)

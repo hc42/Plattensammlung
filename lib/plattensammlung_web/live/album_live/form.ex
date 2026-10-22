@@ -21,13 +21,11 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div class="mx-auto max-w-xl space-y-6">
         <div>
-          <.link navigate={@return_to} class="text-sm opacity-70 hover:opacity-100">
-            <.icon name="hero-arrow-left-micro" class="size-4" /> {gettext("Back")}
-          </.link>
-          <div class="mt-2 flex items-center gap-4">
+          <.back_link navigate={@return_to}>{gettext("Back")}</.back_link>
+          <div class="mt-3 flex items-center gap-4">
             <div :if={@album} class="w-20 shrink-0" id="cover-preview">
               <.cover album={@album} class="w-full" />
             </div>

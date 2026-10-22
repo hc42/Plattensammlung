@@ -15,7 +15,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold">{@page_title}</h1>
@@ -94,7 +94,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       <div
         id="albums"
         phx-update="stream"
-        class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
       >
         <div class="col-span-full hidden py-16 text-center only:block" id="albums-empty">
           <.icon name="hero-musical-note" class="mx-auto size-10 opacity-30" />
@@ -116,10 +116,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
           navigate={~p"/albums/#{album}"}
           class="group block"
         >
-          <.cover
-            album={album}
-            class="transition duration-200 group-hover:-translate-y-1 group-hover:shadow-lg"
-          />
+          <.sleeve album={album} />
           <div class="mt-2 space-y-0.5">
             <p class="truncate font-medium leading-tight" title={album.title}>{album.title}</p>
             <p class="truncate text-sm opacity-70">{album.artist.name}</p>

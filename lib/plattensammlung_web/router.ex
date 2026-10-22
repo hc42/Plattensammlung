@@ -98,7 +98,8 @@ defmodule PlattensammlungWeb.Router do
     ash_authentication_live_session :authenticated,
       on_mount: [
         {PlattensammlungWeb.LiveUserAuth, :live_user_required},
-        {PlattensammlungWeb.Locale, :default}
+        {PlattensammlungWeb.Locale, :default},
+        {PlattensammlungWeb.Nav, :default}
       ] do
       live "/", AlbumLive.Index, :collection
       live "/wishlist", AlbumLive.Index, :wishlist

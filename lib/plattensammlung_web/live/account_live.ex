@@ -10,7 +10,7 @@ defmodule PlattensammlungWeb.AccountLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_user={@current_user}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_path={@current_path}>
       <div class="mx-auto max-w-2xl space-y-10">
         <div class="flex flex-wrap items-end justify-between gap-4">
           <div>

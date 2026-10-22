@@ -32,68 +32,196 @@ defmodule PlattensammlungWeb.Layouts do
     doc: "the current [scope](https://phoenix.hexdocs.pm/scopes.html)"
 
   attr :current_user, :map, default: nil, doc: "the signed-in user; the menu is hidden without"
+  attr :current_path, :string, default: nil, doc: "marks the active page in the navigation"
 
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <header class="sticky top-0 z-10 border-b border-base-300 bg-base-100/90 backdrop-blur">
+    <header class="sticky top-0 z-20 border-b border-base-300 bg-base-100/90 backdrop-blur">
       <nav class="mx-auto flex max-w-5xl items-center gap-1 px-4 py-3 sm:gap-2 sm:px-6">
-        <.link navigate={~p"/"} class="mr-auto flex items-center gap-2 font-semibold">
-          <span class="grid size-8 place-items-center rounded-full bg-base-content text-base-100">
-            <span class="size-2 rounded-full bg-base-100"></span>
+        <.link navigate={~p"/"} class="mr-auto flex items-center gap-2.5 font-semibold">
+          <span class="grid size-8 place-items-center rounded-full bg-neutral shadow-sm">
+            <span class="grid size-3.5 place-items-center rounded-full bg-primary">
+              <span class="size-1 rounded-full bg-base-100"></span>
+            </span>
           </span>
-          <span class="hidden sm:inline">Plattensammlung</span>
+          <span class="font-display text-lg tracking-tight">Plattensammlung</span>
         </.link>
         <%= if @current_user do %>
-          <.link navigate={~p"/"} class="btn btn-ghost btn-sm px-2 sm:px-3" id="nav-collection">
+          <.nav_link
+            navigate={~p"/"}
+            active={@current_path == ~p"/"}
+            id="nav-collection"
+            class="hidden sm:inline-flex"
+          >
             {gettext("Collection")}
-          </.link>
-          <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm px-2 sm:px-3" id="nav-wishlist">
+          </.nav_link>
+          <.nav_link
+            navigate={~p"/wishlist"}
+            active={@current_path == ~p"/wishlist"}
+            id="nav-wishlist"
+            class="hidden sm:inline-flex"
+          >
             {gettext("Wishlist")}
-          </.link>
-          <.link navigate={~p"/import"} class="btn btn-primary btn-sm px-2 sm:px-3" id="nav-new">
-            <.icon name="hero-plus" class="size-4" />
-            <span class="hidden sm:inline">{pgettext("navigation", "Add")}</span>
-          </.link>
+          </.nav_link>
           <.link
+            navigate={~p"/import"}
+            class="btn btn-primary btn-sm hidden sm:inline-flex"
+            id="nav-new"
+          >
+            <.icon name="hero-plus" class="size-4" /> {pgettext("navigation", "Add")}
+          </.link>
+          <.nav_link
             navigate={~p"/collectors"}
-            class="btn btn-ghost btn-sm btn-square"
+            active={active?(@current_path, ~p"/collectors")}
             id="nav-collectors"
-            aria-label={gettext("Collectors")}
+            class="btn-square"
+            label={gettext("Collectors")}
           >
             <.icon name="hero-users" class="size-5" />
-          </.link>
-          <.link
+          </.nav_link>
+          <.nav_link
             navigate={~p"/stats"}
-            class="btn btn-ghost btn-sm btn-square"
+            active={@current_path == ~p"/stats"}
             id="nav-stats"
-            aria-label={gettext("Statistics")}
+            class="btn-square hidden sm:inline-flex"
+            label={gettext("Statistics")}
           >
             <.icon name="hero-chart-bar" class="size-5" />
-          </.link>
-          <.link
+          </.nav_link>
+          <.nav_link
             navigate={~p"/account"}
-            class="btn btn-ghost btn-sm btn-square"
+            active={@current_path == ~p"/account"}
             id="nav-account"
-            aria-label={gettext("Account")}
+            class="btn-square hidden sm:inline-flex"
+            label={gettext("Account")}
           >
             <.icon name="hero-user-circle" class="size-5" />
-          </.link>
+          </.nav_link>
         <% end %>
-        <div class="hidden sm:block"><.theme_toggle /></div>
+        <div class="ml-1"><.theme_toggle /></div>
       </nav>
     </header>
 
-    <main class="px-4 py-8 sm:px-6">
-      <div class="mx-auto max-w-5xl space-y-6">
+    <%!-- overflow-x-clip: records sliding out of their sleeve must not widen the page --%>
+    <main class={[
+      "overflow-x-clip px-4 pt-6 sm:px-6 sm:pt-10",
+      if(@current_user, do: "pb-28 sm:pb-12", else: "pb-12")
+    ]}>
+      <div class="mx-auto max-w-5xl space-y-8">
         {render_slot(@inner_block)}
       </div>
     </main>
 
+    <%!-- Phones: the main pages at the bottom, within reach of the thumb, with the scanner in the middle --%>
+    <nav
+      :if={@current_user}
+      id="bottom-nav"
+      class="fixed inset-x-0 bottom-0 z-20 border-t border-base-300 bg-base-100/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+      aria-label={gettext("Main navigation")}
+    >
+      <div class="grid h-16 grid-cols-5 items-center">
+        <.tab_link
+          navigate={~p"/"}
+          active={@current_path == ~p"/"}
+          icon="hero-squares-2x2"
+          active_icon="hero-squares-2x2-solid"
+          id="tab-collection"
+        >
+          {gettext("Collection")}
+        </.tab_link>
+        <.tab_link
+          navigate={~p"/wishlist"}
+          active={@current_path == ~p"/wishlist"}
+          icon="hero-heart"
+          active_icon="hero-heart-solid"
+          id="tab-wishlist"
+        >
+          {gettext("Wishlist")}
+        </.tab_link>
+        <.link
+          navigate={~p"/import?scan=1"}
+          id="tab-scan"
+          class="mx-auto -mt-7 grid size-16 place-items-center rounded-full bg-primary text-primary-content shadow-lg ring-4 ring-base-100 transition active:scale-95"
+          aria-label={gettext("Scan a barcode")}
+        >
+          <.icon name="hero-camera" class="size-7" />
+        </.link>
+        <.tab_link
+          navigate={~p"/stats"}
+          active={@current_path == ~p"/stats"}
+          icon="hero-chart-bar"
+          active_icon="hero-chart-bar-solid"
+          id="tab-stats"
+        >
+          {gettext("Statistics")}
+        </.tab_link>
+        <.tab_link
+          navigate={~p"/account"}
+          active={@current_path == ~p"/account"}
+          icon="hero-user-circle"
+          active_icon="hero-user-circle-solid"
+          id="tab-account"
+        >
+          {gettext("Account")}
+        </.tab_link>
+      </div>
+    </nav>
+
     <.flash_group flash={@flash} />
     """
   end
+
+  attr :navigate, :string, required: true
+  attr :active, :boolean, default: false
+  attr :id, :string, required: true
+  attr :class, :any, default: nil
+  attr :label, :string, default: nil, doc: "aria-label for icon-only links"
+  slot :inner_block, required: true
+
+  defp nav_link(assigns) do
+    ~H"""
+    <.link
+      navigate={@navigate}
+      id={@id}
+      class={["btn btn-ghost btn-sm", @active && "bg-base-200 text-primary", @class]}
+      aria-current={@active && "page"}
+      aria-label={@label}
+    >
+      {render_slot(@inner_block)}
+    </.link>
+    """
+  end
+
+  attr :navigate, :string, required: true
+  attr :active, :boolean, default: false
+  attr :icon, :string, required: true
+  # Literal names: Tailwind only generates icon classes it finds in the source
+  attr :active_icon, :string, required: true
+  attr :id, :string, required: true
+  slot :inner_block, required: true
+
+  defp tab_link(assigns) do
+    ~H"""
+    <.link
+      navigate={@navigate}
+      id={@id}
+      class={[
+        "flex flex-col items-center gap-0.5 text-[0.6875rem] font-medium",
+        if(@active, do: "text-primary", else: "opacity-70")
+      ]}
+      aria-current={@active && "page"}
+    >
+      <.icon name={if @active, do: @active_icon, else: @icon} class="size-6" />
+      {render_slot(@inner_block)}
+    </.link>
+    """
+  end
+
+  # Active for the page and the pages below it, e.g. /collectors/…
+  defp active?(nil, _path), do: false
+  defp active?(current, path), do: current == path or String.starts_with?(current, path <> "/")
 
   @doc """
   Shows the flash group with standard titles and content.
