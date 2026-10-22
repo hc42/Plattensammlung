@@ -76,15 +76,19 @@ jobs:
           elixir-version: ${{ env.ELIXIR_VERSION }}
           otp-version: ${{ env.OTP_VERSION }}
 
+      # Compile first: otherwise the dependency compiler output ("==> …") ends
+      # up in front of the SARIF and the upload rejects the file
       - run: mix deps.get
+      - run: mix deps.compile
 
-      # Findings make Sobelow exit non-zero: upload them anyway, then fail
+      # Findings make Sobelow exit non-zero: upload them anyway, then fail.
+      # --out writes only the SARIF to the file, nothing else
       - name: Scan
         id: scan
         continue-on-error: true
-        run: mix sobelow --config --format sarif > sobelow.sarif
+        run: mix sobelow --config --format sarif --out sobelow.sarif
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: sobelow.sarif
