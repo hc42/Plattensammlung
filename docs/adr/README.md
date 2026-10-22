@@ -23,3 +23,4 @@ Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md
 | [0016](0016-gemeinsame-alben.md) | Gemeinsame Alben, persönliche Exemplare und Wünsche | Angenommen |
 | [0017](0017-rate-limits.md) | Rate Limits | Angenommen |
 | [0018](0018-pfad-praefix.md) | Optionaler Pfad-Präfix | Angenommen |
+| [0019](0019-metriken-und-traces.md) | Metriken (Prometheus) und Traces (OpenTelemetry) | Angenommen |

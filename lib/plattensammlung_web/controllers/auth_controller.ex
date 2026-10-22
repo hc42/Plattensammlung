@@ -6,7 +6,8 @@ defmodule PlattensammlungWeb.AuthController do
   use PlattensammlungWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  def success(conn, _activity, user, _token) do
+  def success(conn, activity, user, _token) do
+    Plattensammlung.Metrics.sign_in(strategy(activity), :success)
     return_to = get_session(conn, :return_to) || ~p"/"
 
     conn
@@ -17,11 +18,17 @@ defmodule PlattensammlungWeb.AuthController do
     |> redirect(to: return_to)
   end
 
-  def failure(conn, _activity, _reason) do
+  def failure(conn, activity, _reason) do
+    Plattensammlung.Metrics.sign_in(strategy(activity), :failure)
+
     conn
     |> put_flash(:error, "Der Anmeldelink ist ungültig oder abgelaufen.")
     |> redirect(to: ~p"/sign-in")
   end
+
+  # activity is {strategy, phase}, e.g. {:magic_link, :sign_in}
+  defp strategy({strategy, _phase}), do: strategy
+  defp strategy(_activity), do: :unknown
 
   def sign_out(conn, _params) do
     conn

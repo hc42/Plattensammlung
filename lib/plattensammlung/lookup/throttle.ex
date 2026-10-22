@@ -15,10 +15,10 @@ defmodule Plattensammlung.Lookup.Throttle do
   def wait(_key, interval_ms) when interval_ms <= 0, do: :ok
 
   def wait(key, interval_ms) do
-    case GenServer.call(__MODULE__, {:slot, key, interval_ms}) do
-      0 -> :ok
-      delay -> Process.sleep(delay)
-    end
+    delay = GenServer.call(__MODULE__, {:slot, key, interval_ms})
+    :telemetry.execute([:plattensammlung, :lookup, :throttle], %{wait: delay}, %{service: key})
+    if delay > 0, do: Process.sleep(delay)
+    :ok
   end
 
   @impl true

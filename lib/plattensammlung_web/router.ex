@@ -38,6 +38,7 @@ defmodule PlattensammlungWeb.Router do
   # requests reach the API without actor and the Ash policies forbid them.
   pipeline :api do
     plug :accepts, ["json"]
+    plug :count_api_key_sign_in
     plug :load_from_bearer
 
     plug AshAuthentication.Strategy.ApiKey.Plug,
@@ -45,6 +46,21 @@ defmodule PlattensammlungWeb.Router do
       required?: false
 
     plug :set_actor, :user
+  end
+
+  # Metrics (ADR 0019): was the API key valid? Known only once the response goes out
+  defp count_api_key_sign_in(conn, _opts) do
+    case get_req_header(conn, "authorization") do
+      ["Bearer " <> _] ->
+        register_before_send(conn, fn conn ->
+          result = if conn.assigns[:current_user], do: :success, else: :failure
+          Plattensammlung.Metrics.sign_in(:api_key, result)
+          conn
+        end)
+
+      _ ->
+        conn
+    end
   end
 
   # Container health check (TrueNAS): app and database reachable

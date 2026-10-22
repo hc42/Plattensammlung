@@ -8,6 +8,12 @@ defmodule Plattensammlung.MixProject do
       elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
+      # OpenTelemetry: exporter first, and a tracing problem must not stop the app
+      releases: [
+        plattensammlung: [
+          applications: [opentelemetry_exporter: :permanent, opentelemetry: :temporary]
+        ]
+      ],
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
@@ -42,6 +48,15 @@ defmodule Plattensammlung.MixProject do
   defp deps do
     [
       {:hammer, "~> 7.4"},
+      {:peep, "~> 5.0"},
+      {:opentelemetry, "~> 1.7"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry_exporter, "~> 1.10"},
+      {:opentelemetry_phoenix, "~> 2.0"},
+      {:opentelemetry_bandit, "~> 0.3"},
+      {:opentelemetry_ecto, "~> 1.2"},
+      {:opentelemetry_ash, "~> 0.1"},
+      {:opentelemetry_req, "~> 1.0"},
       {:picosat_elixir, "~> 0.2"},
       {:wax_, "~> 0.7"},
       {:nimble_csv, "~> 1.2"},

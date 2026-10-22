@@ -209,3 +209,18 @@ if config_env() != :test do
       config :plattensammlung, PlattensammlungWeb.Endpoint, url: [path: "/" <> path]
   end
 end
+
+# Metrics and traces (ADR 0019), both optional and off without configuration
+if config_env() != :test do
+  if port = System.get_env("METRICS_PORT") do
+    config :plattensammlung, metrics_port: String.to_integer(port)
+  end
+
+  if endpoint = System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
+    config :opentelemetry, traces_exporter: :otlp
+
+    config :opentelemetry_exporter,
+      otlp_protocol: :http_protobuf,
+      otlp_endpoint: endpoint
+  end
+end

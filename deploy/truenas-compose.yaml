@@ -14,9 +14,12 @@ services:
       - /mnt/POOL/apps/plattensammlung/app.env
     environment:
       COVERS_DIR: /data/covers
+      # Prometheus metrics (ADR 0019), only for the LAN: don't forward it in NPM
+      METRICS_PORT: "9568"
     ports:
       # nginx-proxy-manager forwards https://<your domain> to http://<NAS-IP>:4000
       - "4000:4000"
+      - "9568:9568"
     volumes:
       - /mnt/POOL/apps/plattensammlung/covers:/data/covers
     depends_on:

@@ -166,6 +166,29 @@ Die App begrenzt Anmeldelinks selbst. Zusätzlich kann NPM jede IP-Adresse dross
 3. NPM neu starten. Der erste Seitenaufruf lädt einige Dateien auf einmal; `burst=50`
    lässt das zu, dauerhaft mehr als 10 Anfragen pro Sekunde werden mit 429 abgewiesen.
 
+## Metriken und Traces (optional)
+
+Die App liefert Metriken für Prometheus auf Port **9568** (`METRICS_PORT`, in
+`truenas-compose.yaml` schon gesetzt) und auf Wunsch Traces per OpenTelemetry an Tempo
+(ADR 0019). Grafana zeigt beides; ein fertiges Dashboard liegt bei.
+
+1. Dataset `POOL/apps/observability` anlegen und hineinkopieren:
+   `deploy/observability/prometheus.yml`, `tempo.yaml` und den Ordner `grafana/`
+   (mit `provisioning/` und `dashboards/`). In `prometheus.yml` `NAS-IP` ersetzen.
+2. Leere Ordner `prometheus-data`, `tempo-data`, `grafana-data` anlegen. Die Container laufen
+   nicht als root: Besitzer setzen (Prometheus `65534`, Tempo `10001`, Grafana `472`), z. B.
+   `chown -R 472:472 grafana-data`.
+3. **Apps → Discover Apps → ⋮ → Install via YAML** mit `deploy/observability/compose.yaml`
+   (Pfade und `GF_SECURITY_ADMIN_PASSWORD` anpassen).
+4. Für Traces in `app.env` `OTEL_EXPORTER_OTLP_ENDPOINT=http://NAS-IP:4318` eintragen und die
+   App neu starten.
+5. Grafana unter `http://NAS-IP:3000` öffnen (Benutzer `admin`): Dashboard
+   **Plattensammlung**, Traces unter **Explore → Tempo**.
+
+Port 9568 (Metriken), 4318 (Traces), 9090 (Prometheus) und 3000 (Grafana) nur im LAN nutzen,
+nicht in nginx-proxy-manager oder im Router freigeben. Prüfen:
+`curl http://NAS-IP:9568/metrics`.
+
 ## 6. Erste Anmeldung
 
 1. `https://platten.example.de` öffnen, deine Adresse aus `ALLOWED_EMAILS` eingeben.

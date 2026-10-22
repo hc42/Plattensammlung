@@ -27,6 +27,8 @@ defmodule PlattensammlungWeb.PasskeyController do
     with %Wax.Challenge{} <- challenge,
          {:ok, user} <- WebAuthn.authenticate(challenge, params),
          {:ok, user} <- with_session_token(user) do
+      Plattensammlung.Metrics.sign_in(:passkey, :success)
+
       conn
       |> AshAuthentication.Plug.Helpers.store_in_session(user)
       |> put_flash(:info, "Angemeldet.")
@@ -34,6 +36,7 @@ defmodule PlattensammlungWeb.PasskeyController do
     else
       error ->
         Logger.info("Passkey sign-in failed: #{inspect(error)}")
+        Plattensammlung.Metrics.sign_in(:passkey, :failure)
 
         conn
         |> put_status(:unauthorized)

@@ -50,6 +50,7 @@ config :plattensammlung,
   # Tests request many links and never reach MusicBrainz: no waiting
   magic_link_limits: [per_address: {1_000, :timer.minutes(15)}, per_ip: {1_000, :timer.hours(1)}],
   musicbrainz_interval_ms: 0,
+  measure_data?: false,
   cover_hosts: ["i.discogs.com", "coverartarchive.org", "archive.org", "x.test"],
   allowed_emails: ["test@example.com"],
   cleanup_covers_on_start: false,

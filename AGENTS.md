@@ -242,6 +242,18 @@ Regeln:
 - Neue Pflicht-Umgebungsvariablen in `deploy/app.env.example` und `deploy/README.md` eintragen.
 - Nichts Lokales ins Image: `.dockerignore` schließt `uploads/`, `priv/cert/` und `deploy/` aus.
 
+## Metriken und Traces (ADR 0019)
+
+- `Plattensammlung.Metrics`: alle Prometheus-Metriken (Peep), eigene Ereignisse (`sign_in/2`,
+  `magic_link_request/1`, `[:plattensammlung, :data]` jede Minute). `/metrics` liefert
+  `PlattensammlungWeb.MetricsPlug` auf eigenem Port (`METRICS_PORT`, aus = nil).
+- Tags nur mit wenigen Werten: Routen-Muster, View, Action, User-ID; nie Pfade, Album-IDs, IPs.
+- Traces: OpenTelemetry für Bandit, Phoenix/LiveView, Ecto, Ash (`config :ash, :tracer`) und Req
+  (`OpentelemetryReq.attach` in `Lookup.HTTP`). Export nur mit `OTEL_EXPORTER_OTLP_ENDPOINT`.
+- Betrieb: `deploy/observability/` (Prometheus, Tempo, Grafana mit Dashboard).
+- Tests: Datenmessung im Hintergrund aus (`measure_data?: false`), Tests rufen
+  `Metrics.measure_data/0` selbst auf.
+
 ## Phoenix-Richtlinien
 
 Bei Arbeit an Web-Code (LiveView, HEEx, Komponenten, Router) **unbedingt

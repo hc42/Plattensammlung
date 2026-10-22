@@ -153,7 +153,9 @@ den Key über „Authorize“ eintragen.
 ## Betrieb
 
 Die App läuft als Container auf einem TrueNAS-NAS hinter nginx-proxy-manager. Wahlweise unter einer eigenen Domain oder unter
-einem Pfad wie `cloud.example.com/plattensammlung` (`PHX_PATH`, [ADR 0018](docs/adr/0018-pfad-praefix.md)). Image
+einem Pfad wie `cloud.example.com/plattensammlung` (`PHX_PATH`, [ADR 0018](docs/adr/0018-pfad-praefix.md)).
+Metriken für Prometheus und Traces für Tempo, mit Grafana-Dashboard: `deploy/observability/`
+([ADR 0019](docs/adr/0019-metriken-und-traces.md)). Image
 bauen, Konfiguration, Backups und Updates: [deploy/README.md](deploy/README.md).
 
 ## Dokumentation

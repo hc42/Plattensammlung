@@ -7,20 +7,29 @@ defmodule Plattensammlung.Application do
 
   @impl true
   def start(_type, _args) do
+    # Traces (ADR 0019); they only leave the app with an OTLP endpoint configured
+    OpentelemetryBandit.setup()
+    OpentelemetryPhoenix.setup(adapter: :bandit)
+    OpentelemetryEcto.setup([:plattensammlung, :repo])
+
     children =
       [
-        PlattensammlungWeb.Telemetry,
-        Plattensammlung.Repo,
-        {Plattensammlung.RateLimit, clean_period: :timer.minutes(10)},
-        Plattensammlung.Lookup.Throttle,
-        {DNSCluster, query: Application.get_env(:plattensammlung, :dns_cluster_query) || :ignore},
-        {Phoenix.PubSub, name: Plattensammlung.PubSub},
-        # Start a worker by calling: Plattensammlung.Worker.start_link(arg)
-        # {Plattensammlung.Worker, arg},
-        # Start to serve requests, typically the last entry
-        PlattensammlungWeb.Endpoint,
-        {AshAuthentication.Supervisor, [otp_app: :plattensammlung]}
-      ] ++ cleanup()
+        PlattensammlungWeb.Telemetry
+      ] ++
+        Plattensammlung.Metrics.child_specs() ++
+        [
+          Plattensammlung.Repo,
+          {Plattensammlung.RateLimit, clean_period: :timer.minutes(10)},
+          Plattensammlung.Lookup.Throttle,
+          {DNSCluster,
+           query: Application.get_env(:plattensammlung, :dns_cluster_query) || :ignore},
+          {Phoenix.PubSub, name: Plattensammlung.PubSub},
+          # Start a worker by calling: Plattensammlung.Worker.start_link(arg)
+          # {Plattensammlung.Worker, arg},
+          # Start to serve requests, typically the last entry
+          PlattensammlungWeb.Endpoint,
+          {AshAuthentication.Supervisor, [otp_app: :plattensammlung]}
+        ] ++ PlattensammlungWeb.MetricsPlug.child_specs() ++ cleanup()
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options

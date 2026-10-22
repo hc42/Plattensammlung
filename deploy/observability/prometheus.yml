@@ -1,0 +1,9 @@
+# Scrapes the app's metrics port (METRICS_PORT, default 9568) every 15 seconds.
+# Replace NAS-IP with the address of the NAS.
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: plattensammlung
+    static_configs:
+      - targets: ["NAS-IP:9568"]

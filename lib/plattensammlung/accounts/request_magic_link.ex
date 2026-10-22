@@ -23,9 +23,11 @@ defmodule Plattensammlung.Accounts.RequestMagicLink do
 
     if allowed?("email:#{email}", :per_address) and
          allowed?(input.context[:client_ip] && "ip:#{input.context[:client_ip]}", :per_ip) do
+      Plattensammlung.Metrics.magic_link_request(:accepted)
       Request.run(input, opts, context)
     else
       Logger.warning("Magic link request over the rate limit")
+      Plattensammlung.Metrics.magic_link_request(:rate_limited)
       :ok
     end
   end

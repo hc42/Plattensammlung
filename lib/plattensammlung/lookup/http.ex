@@ -10,6 +10,8 @@ defmodule Plattensammlung.Lookup.HTTP do
     |> Keyword.merge(opts)
     |> Keyword.merge(Application.get_env(:plattensammlung, :req_options, []))
     |> Req.new()
+    # A span per request in traces (ADR 0019); no trace headers to other services
+    |> OpentelemetryReq.attach()
   end
 
   @doc """

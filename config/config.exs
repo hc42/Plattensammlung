@@ -76,6 +76,8 @@ config :plattensammlung,
   magic_link_limits: [per_address: {3, :timer.minutes(15)}, per_ip: {10, :timer.hours(1)}],
   # MusicBrainz allows about one request per second
   musicbrainz_interval_ms: 1_000,
+  # Prometheus metrics on an own port; nil = off (METRICS_PORT, ADR 0019)
+  metrics_port: nil,
   # Covers are only downloaded from these hosts (and their subdomains), see ADR 0014
   cover_hosts: ["i.discogs.com", "coverartarchive.org", "archive.org"],
   generators: [timestamp_type: :utc_datetime],
@@ -137,6 +139,12 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Traces (ADR 0019): Ash actions as spans; exported only when runtime.exs
+# configures an OTLP endpoint (OTEL_EXPORTER_OTLP_ENDPOINT)
+config :ash, :tracer, [OpentelemetryAsh]
+config :opentelemetry_ash, trace_types: [:custom, :action, :flow]
+config :opentelemetry, traces_exporter: :none, resource: [service: [name: "plattensammlung"]]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
