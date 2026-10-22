@@ -1,7 +1,8 @@
 defmodule Plattensammlung.Records.Copy do
   @moduledoc """
-  A copy of an album that is actually owned. Every field except the album is
-  optional; pressing details mirror a Discogs/MusicBrainz release (see ADR 0006).
+  A copy of a (shared) album that one user actually owns (ADR 0016). Every field
+  except album and owner is optional; pressing details mirror a
+  Discogs/MusicBrainz release (see ADR 0006).
   """
   use Ash.Resource,
     otp_app: :plattensammlung,
@@ -16,6 +17,7 @@ defmodule Plattensammlung.Records.Copy do
 
     default_fields [
       :album_id,
+      :owner_id,
       :label,
       :catalog_number,
       :barcode,
@@ -44,6 +46,8 @@ defmodule Plattensammlung.Records.Copy do
     references do
       # Deleting an album deletes its copies
       reference :album, on_delete: :delete
+      # Deleting a user deletes their copies
+      reference :owner, on_delete: :delete
     end
   end
 
@@ -51,7 +55,7 @@ defmodule Plattensammlung.Records.Copy do
   # the JSON:API leaves them out (ADR 0013)
   field_policies do
     field_policy [:purchased_on, :notes] do
-      authorize_if expr(album.owner_id == ^actor(:id))
+      authorize_if expr(owner_id == ^actor(:id))
     end
 
     field_policy :* do
@@ -81,6 +85,7 @@ defmodule Plattensammlung.Records.Copy do
       primary? true
       accept @fields ++ [:album_id]
 
+      change relate_actor(:owner)
       change Plattensammlung.Records.Changes.NormalizeBarcode
       validate match(:barcode, ~r/^\d{8,14}$/), message: "must be 8 to 14 digits (EAN/UPC)"
       change Plattensammlung.Records.Changes.RemoveFromWishlist
@@ -96,20 +101,16 @@ defmodule Plattensammlung.Records.Copy do
     end
   end
 
-  # Copies follow their album: readable for every signed-in user, changeable
-  # only by the album's owner (ADR 0013)
+  # Copies are visible to every signed-in user. Anyone may add an own copy of
+  # any album; only its owner changes or deletes it (ADR 0016)
   policies do
-    policy action_type(:read) do
+    policy action_type([:read, :create]) do
       access_type :strict
       authorize_if actor_present()
     end
 
-    policy action_type(:create) do
-      authorize_if Plattensammlung.Records.Checks.AlbumOwnedByActor
-    end
-
     policy action_type([:update, :destroy]) do
-      authorize_if expr(album.owner_id == ^actor(:id))
+      authorize_if expr(owner_id == ^actor(:id))
     end
   end
 
@@ -148,6 +149,11 @@ defmodule Plattensammlung.Records.Copy do
 
   relationships do
     belongs_to :album, Plattensammlung.Records.Album do
+      allow_nil? false
+      public? true
+    end
+
+    belongs_to :owner, Plattensammlung.Accounts.User do
       allow_nil? false
       public? true
     end

@@ -1,25 +1,28 @@
 defmodule PlattensammlungWeb.AlbumLive.Show do
   @moduledoc """
-  Album details with its copies, wishlist toggle and Discogs links.
+  Album details: the actor's copies and wishlist status, who else has the album,
+  and links. Albums are shared (ADR 0016): everyone who has it in collection or
+  wishlist may change the album data; copies only their owner.
   """
   use PlattensammlungWeb, :live_view
 
   alias Plattensammlung.{Accounts, Records}
+  alias PlattensammlungWeb.Ownership
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user}>
-      <.link navigate={back_path(@album, @owner)} class="text-sm opacity-70 hover:opacity-100">
+      <.link navigate={back_path(@album)} class="text-sm opacity-70 hover:opacity-100">
         <.icon name="hero-arrow-left-micro" class="size-4" />
-        {back_label(@album, @owner)}
+        {back_label(@album)}
       </.link>
 
       <div class="grid gap-8 md:grid-cols-[18rem_1fr]">
         <div class="w-full max-w-72 space-y-2">
           <.cover album={@album} class="w-full" />
           <%!-- Live upload: the image is sent as soon as it is chosen (auto_upload) --%>
-          <form :if={!@owner} id="cover-form" phx-change="validate_cover" phx-submit="noop">
+          <form :if={@can_edit} id="cover-form" phx-change="validate_cover" phx-submit="noop">
             <.live_file_input upload={@uploads.cover} class="hidden" />
             <div class="flex flex-wrap gap-1">
               <label for={@uploads.cover.ref} class="btn btn-ghost btn-sm" id="change-cover">
@@ -64,48 +67,40 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
             </div>
           </div>
 
-          <div :if={@owner} id="ownership" class="space-y-2 rounded-lg bg-base-200 p-4 text-sm">
-            <p id="owner-info">
-              <.icon name="hero-user-circle" class="size-5 opacity-60" />
-              {if @album.owned, do: "Aus der Sammlung", else: "Von der Wunschliste"} von
-              <.link navigate={~p"/collectors/#{@owner.id}"} class="link font-medium">
-                {Plattensammlung.Accounts.display_name(@owner)}
-              </.link>
+          <div id="ownership" class="space-y-2 rounded-lg bg-base-200 p-4 text-sm">
+            <p>
+              <%= cond do %>
+                <% @album.owned -> %>
+                  <.icon name="hero-check-circle" class="size-5 text-success" />
+                  <span id="owned-status">
+                    Hast du – {if @album.copy_count == 1,
+                      do: "1 Exemplar",
+                      else: "#{@album.copy_count} Exemplare"}
+                  </span>
+                <% @album.wanted -> %>
+                  <.icon name="hero-heart" class="size-5 text-accent" />
+                  <span id="owned-status">Steht auf deiner Wunschliste</span>
+                <% true -> %>
+                  <.icon name="hero-minus-circle" class="size-5 opacity-60" />
+                  <span id="owned-status">Nicht in deiner Sammlung</span>
+              <% end %>
             </p>
-            <%= if @mine do %>
-              <.link navigate={~p"/albums/#{@mine}"} class="link" id="my-version">
-                {if @mine.owned, do: "Hast du auch", else: "Steht auch auf deiner Wunschliste"}
-              </.link>
-            <% else %>
-              <button
-                phx-click="add_to_my_wishlist"
-                class="btn btn-sm btn-primary phx-click-loading:pointer-events-none"
-                id="add-to-my-wishlist"
-              >
-                <.loading_icon name="hero-heart" /> Auf meine Wunschliste
-              </button>
-            <% end %>
+            <p :if={@holders != []} id="other-holders">
+              <.icon name="hero-user-group" class="size-5 opacity-60" /> Auch bei
+              <span :for={{holder, index} <- Enum.with_index(@holders)}>
+                <.link
+                  navigate={holder_path(holder)}
+                  class="link font-medium"
+                  id={"holder-#{holder.id}"}
+                >
+                  {holder.name}
+                </.link>
+                <span class="opacity-70">({holder_label(holder)})</span>{comma(@holders, index)}
+              </span>
+            </p>
           </div>
 
-          <div :if={!@owner} id="ownership" class="rounded-lg bg-base-200 p-4 text-sm">
-            <%= cond do %>
-              <% @album.owned -> %>
-                <.icon name="hero-check-circle" class="size-5 text-success" />
-                <span id="owned-status">
-                  Hast du – {if @album.copy_count == 1,
-                    do: "1 Exemplar",
-                    else: "#{@album.copy_count} Exemplare"}
-                </span>
-              <% @album.wanted -> %>
-                <.icon name="hero-heart" class="size-5 text-accent" />
-                <span id="owned-status">Steht auf deiner Wunschliste</span>
-              <% true -> %>
-                <.icon name="hero-minus-circle" class="size-5 opacity-60" />
-                <span id="owned-status">Nicht in deiner Sammlung</span>
-            <% end %>
-          </div>
-
-          <div :if={!@owner} class="flex flex-wrap gap-2" id="album-actions">
+          <div class="flex flex-wrap gap-2" id="album-actions">
             <.button navigate={~p"/albums/#{@album}/copies/new"} variant="primary" id="add-copy">
               <.icon name="hero-plus" class="size-4" />
               {if @album.owned, do: "Weiteres Exemplar", else: "Habe ich jetzt"}
@@ -122,19 +117,27 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               />
               {if @album.wanted, do: "Von Wunschliste entfernen", else: "Auf Wunschliste"}
             </.button>
-            <.button navigate={~p"/albums/#{@album}/match"} id="match-album" class="btn btn-ghost">
-              <.icon name="hero-arrow-path" class="size-4" /> Abgleichen
-            </.button>
-            <.button navigate={~p"/albums/#{@album}/edit"} id="edit-album" class="btn btn-ghost">
-              <.icon name="hero-pencil-square" class="size-4" /> Bearbeiten
-            </.button>
+            <%= if @can_edit do %>
+              <.button
+                navigate={~p"/albums/#{@album}/match"}
+                id="match-album"
+                class="btn btn-ghost"
+              >
+                <.icon name="hero-arrow-path" class="size-4" /> Abgleichen
+              </.button>
+              <.button navigate={~p"/albums/#{@album}/edit"} id="edit-album" class="btn btn-ghost">
+                <.icon name="hero-pencil-square" class="size-4" /> Bearbeiten
+              </.button>
+            <% end %>
+            <%!-- An album no one has (e.g. after deleting the last copy) can go entirely --%>
             <.button
-              phx-click="delete"
-              data-confirm="Album mit allen Exemplaren löschen?"
-              id="delete-album"
+              :if={@can_edit or @holders == []}
+              phx-click="remove"
+              data-confirm={remove_confirmation(@holders)}
+              id="remove-album"
               class="btn btn-ghost text-error"
             >
-              <.icon name="hero-trash" class="size-4" /> Löschen
+              <.icon name="hero-trash" class="size-4" /> Entfernen
             </.button>
           </div>
 
@@ -160,7 +163,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               <.icon name="hero-play-circle" class="size-4" /> Tidal
             </a>
             <button
-              :if={!@owner and can_find_streaming?(@album)}
+              :if={@can_edit and can_find_streaming?(@album)}
               phx-click="find_streaming_links"
               class="btn btn-sm btn-ghost phx-click-loading:pointer-events-none"
               id="find-streaming-links"
@@ -182,7 +185,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
       </div>
 
       <section :if={@album.copies != []} class="space-y-3">
-        <h2 class="text-lg font-semibold">Exemplare</h2>
+        <h2 class="text-lg font-semibold">Deine Exemplare</h2>
         <div id="copies" class="grid gap-3 sm:grid-cols-2">
           <div
             :for={copy <- @album.copies}
@@ -193,7 +196,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               <p class="font-medium">
                 {copy_heading(copy)}
               </p>
-              <div :if={!@owner} class="flex gap-1">
+              <div class="flex gap-1">
                 <.link
                   navigate={~p"/copies/#{copy}/edit"}
                   class="btn btn-ghost btn-xs"
@@ -215,13 +218,12 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               </div>
             </div>
             <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-              <%= for {label, value} <- copy_details(copy, @owner), value not in [nil, ""] do %>
+              <%= for {label, value} <- copy_details(copy), value not in [nil, ""] do %>
                 <dt class="opacity-60">{label}</dt>
                 <dd>{value}</dd>
               <% end %>
             </dl>
-            <%!-- Notes stay private to the owner (field policy on Copy) --%>
-            <p :if={copy.notes && !@owner} class="mt-2 whitespace-pre-line opacity-80">
+            <p :if={copy.notes} class="mt-2 whitespace-pre-line opacity-80">
               {copy.notes}
             </p>
             <a
@@ -258,22 +260,6 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   @impl true
   def handle_event("validate_cover", _params, socket), do: {:noreply, socket}
   def handle_event("noop", _params, socket), do: {:noreply, socket}
-
-  # Copies the album data (not the copies) to the own wishlist
-  def handle_event("add_to_my_wishlist", _params, socket) do
-    case Records.copy_to_wishlist(socket.assigns.album.id,
-           actor: socket.assigns.current_user
-         ) do
-      {:ok, mine} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "„#{mine.title}“ steht jetzt auf deiner Wunschliste.")
-         |> push_navigate(to: ~p"/albums/#{mine}")}
-
-      {:error, _error} ->
-        {:noreply, put_flash(socket, :error, "Das hat nicht geklappt.")}
-    end
-  end
 
   def handle_event("find_streaming_links", _params, socket) do
     before = socket.assigns.album
@@ -315,14 +301,15 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     {:noreply, load_album(socket, album.id)}
   end
 
-  def handle_event("delete", _params, socket) do
+  # Own copies and wish go; the album stays for the others (ADR 0016)
+  def handle_event("remove", _params, socket) do
     album = socket.assigns.album
-    Records.destroy_album!(album, actor: socket.assigns.current_user)
+    Records.remove_album!(album.id, actor: socket.assigns.current_user)
 
     {:noreply,
      socket
-     |> put_flash(:info, "„#{album.title}“ wurde gelöscht.")
-     |> push_navigate(to: back_path(album, nil))}
+     |> put_flash(:info, "„#{album.title}“ wurde entfernt.")
+     |> push_navigate(to: back_path(album))}
   end
 
   def handle_event("delete_copy", %{"id" => id}, socket) do
@@ -370,39 +357,66 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   end
 
   defp load_album(socket, id) do
+    actor = socket.assigns.current_user
+
     album =
       Records.get_album!(id,
-        actor: socket.assigns.current_user,
+        actor: actor,
         load: [
           :artist,
           :owned,
+          :wanted,
           :copy_count,
           :discogs_url,
           :spotify_url,
           :tidal_url,
-          copies: [:discogs_url]
+          copies: Ash.Query.load(Ownership.own_copies(actor), :discogs_url)
         ]
       )
 
-    actor = socket.assigns.current_user
-
-    # Someone else's album: show whose it is and whether I have it too
-    {owner, mine} =
-      if album.owner_id == actor.id do
-        {nil, nil}
-      else
-        {Accounts.get_collector!(album.owner_id, actor: actor),
-         album.artist.name
-         |> Records.find_duplicates!(album.title, load: [:owned], actor: actor)
-         |> List.first()}
-      end
-
     socket
     |> assign(:album, album)
-    |> assign(:owner, owner)
-    |> assign(:mine, mine)
+    |> assign(:can_edit, album.owned or album.wanted)
+    |> assign(:holders, holders(album.id, actor))
     |> assign(:page_title, "#{album.artist.name} – #{album.title}")
   end
+
+  # Other users who have the album: name, number of copies, wish
+  defp holders(album_id, actor) do
+    %{copies: copies, wishes: wishes} =
+      Records.get_album!(album_id, load: [:copies, :wishes], actor: actor)
+
+    copy_counts = copies |> Enum.map(& &1.owner_id) |> Enum.frequencies()
+    wishers = MapSet.new(wishes, & &1.owner_id)
+
+    Accounts.list_collectors!(actor: actor)
+    |> Enum.reject(&(&1.id == actor.id))
+    |> Enum.filter(&(Map.has_key?(copy_counts, &1.id) or MapSet.member?(wishers, &1.id)))
+    |> Enum.map(fn user ->
+      %{
+        id: user.id,
+        name: Accounts.display_name(user),
+        copies: Map.get(copy_counts, user.id, 0),
+        wanted: MapSet.member?(wishers, user.id)
+      }
+    end)
+  end
+
+  defp holder_path(%{copies: 0} = holder), do: ~p"/collectors/#{holder.id}/wishlist"
+  defp holder_path(holder), do: ~p"/collectors/#{holder.id}"
+
+  # Between holders, directly after the previous one (no space before it)
+  defp comma(holders, index), do: if(index < length(holders) - 1, do: ",")
+
+  defp holder_label(%{copies: 0}), do: "Wunschliste"
+  defp holder_label(%{copies: 1}), do: "1 Exemplar"
+  defp holder_label(%{copies: count}), do: "#{count} Exemplare"
+
+  defp remove_confirmation([]),
+    do: "Album löschen? Außer dir hat es niemand in Sammlung oder Wunschliste."
+
+  defp remove_confirmation(_holders),
+    do: "Deine Exemplare und deinen Wunsch entfernen? Die anderen behalten das Album."
 
   # Wikidata needs a Discogs or MusicBrainz link to find the album
   defp can_find_streaming?(album) do
@@ -410,16 +424,13 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
       not is_nil(album.discogs_master_id || album.musicbrainz_release_group_id)
   end
 
-  defp back_path(%{owned: true}, nil), do: ~p"/"
-  defp back_path(%{wanted: true}, nil), do: ~p"/wishlist"
-  defp back_path(_album, nil), do: ~p"/albums"
-  defp back_path(%{owned: true}, owner), do: ~p"/collectors/#{owner.id}"
-  defp back_path(_album, owner), do: ~p"/collectors/#{owner.id}/wishlist"
+  defp back_path(%{owned: true}), do: ~p"/"
+  defp back_path(%{wanted: true}), do: ~p"/wishlist"
+  defp back_path(_album), do: ~p"/albums"
 
-  defp back_label(%{owned: true}, nil), do: "Sammlung"
-  defp back_label(%{wanted: true}, nil), do: "Wunschliste"
-  defp back_label(_album, nil), do: "Alle Alben"
-  defp back_label(_album, owner), do: Accounts.display_name(owner)
+  defp back_label(%{owned: true}), do: "Sammlung"
+  defp back_label(%{wanted: true}), do: "Wunschliste"
+  defp back_label(_album), do: "Alle Alben"
 
   defp copy_heading(copy) do
     [
@@ -434,21 +445,17 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     end
   end
 
-  # Purchase date stays private to the owner; for others the field policy on
-  # Copy returns %Ash.ForbiddenField{} anyway
-  defp purchase_date(%{purchased_on: %Date{} = date}, nil),
-    do: Calendar.strftime(date, "%d.%m.%Y")
+  defp purchase_date(%{purchased_on: %Date{} = date}), do: Calendar.strftime(date, "%d.%m.%Y")
+  defp purchase_date(_copy), do: nil
 
-  defp purchase_date(_copy, _owner), do: nil
-
-  defp copy_details(copy, owner) do
+  defp copy_details(copy) do
     [
       {"Katalognummer", copy.catalog_number},
       {"Barcode", copy.barcode},
       {"Land", copy.country},
       {"Zustand Platte", condition_label(copy.media_condition)},
       {"Zustand Hülle", condition_label(copy.sleeve_condition)},
-      {"Gekauft am", purchase_date(copy, owner)}
+      {"Gekauft am", purchase_date(copy)}
     ]
   end
 end

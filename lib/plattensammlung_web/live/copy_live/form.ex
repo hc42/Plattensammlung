@@ -95,9 +95,16 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   def mount(params, _session, socket) do
     socket = apply_action(socket, socket.assigns.live_action, params)
 
-    case PlattensammlungWeb.Ownership.require_owner(socket, socket.assigns.album) do
-      :ok -> {:ok, socket}
-      {:redirect, socket} -> {:ok, socket}
+    # Anyone may add an own copy of any album; editing is for the copy's owner
+    case socket.assigns[:copy] do
+      nil ->
+        {:ok, socket}
+
+      copy ->
+        case PlattensammlungWeb.Ownership.require_copy_owner(socket, copy) do
+          :ok -> {:ok, socket}
+          {:redirect, socket} -> {:ok, socket}
+        end
     end
   end
 
@@ -116,6 +123,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
     socket
     |> assign(:page_title, "Exemplar hinzufügen")
+    |> assign(:copy, nil)
     |> assign(:album, album)
     |> assign_fields(nil)
     |> assign(:form, to_form(form))
@@ -134,6 +142,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
     socket
     |> assign(:page_title, "Exemplar bearbeiten")
+    |> assign(:copy, copy)
     |> assign(:album, copy.album)
     |> assign_fields(copy)
     |> assign(:form, to_form(form))

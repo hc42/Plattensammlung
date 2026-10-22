@@ -65,7 +65,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
       <div :if={@live_action == :all} class="join" id="album-filter">
         <.link
-          :for={{value, label} <- [{nil, "Alle"}, {"unassigned", "Ohne Exemplar und Wunsch"}]}
+          :for={{value, label} <- [{nil, "Alle"}, {"unassigned", "Nicht bei mir"}]}
           patch={view_path(:all, Map.put(@params, "show", value))}
           class={["join-item btn btn-sm", @show == value && "btn-active"]}
           id={"filter-#{value || "all"}"}
@@ -157,7 +157,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
     albums =
       Records.search_albums!(query, status(action, show), search_params,
-        load: [:owned, :copy_count],
+        load: [:owned, :wanted, :copy_count],
         actor: socket.assigns.current_user
       )
 

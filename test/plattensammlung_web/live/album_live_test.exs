@@ -44,18 +44,18 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
   end
 
   describe "Form" do
-    test "quick capture adds an album to the collection", %{conn: conn} do
+    test "quick capture adds an album to the collection", %{conn: conn, user: user} do
       {:ok, view, _html} = live(conn, ~p"/albums/new")
 
       view
       |> form("#album-form", album: %{artist_name: "Kraftwerk", title: "Autobahn"})
       |> render_submit()
 
-      [album] = Records.search_albums!("Autobahn", :collection, authorize?: false)
+      [album] = Records.search_albums!("Autobahn", :collection, actor: user)
       assert_redirect(view, ~p"/albums/#{album}")
     end
 
-    test "switching to wishlist adds a wanted album", %{conn: conn} do
+    test "switching to wishlist adds a wanted album", %{conn: conn, user: user} do
       {:ok, view, _html} = live(conn, ~p"/albums/new")
 
       view |> form("#album-form", mode: "wishlist") |> render_change()
@@ -64,10 +64,11 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       |> form("#album-form", album: %{artist_name: "Can", title: "Ege Bamyasi"})
       |> render_submit()
 
-      assert [%{wanted: true}] = Records.search_albums!("Ege", :wishlist, authorize?: false)
+      assert [album] = Records.search_albums!("Ege", :wishlist, load: [:wanted], actor: user)
+      assert album.wanted
     end
 
-    test "shows validation errors for missing title", %{conn: conn} do
+    test "shows validation errors for missing title", %{conn: conn, user: user} do
       {:ok, view, _html} = live(conn, ~p"/albums/new")
 
       view
@@ -75,18 +76,25 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       |> render_submit()
 
       assert has_element?(view, "#album-form .text-error")
-      assert Records.search_albums!(nil, nil, authorize?: false) == []
+      assert Records.search_albums!(nil, nil, actor: user) == []
     end
 
-    test "warns about duplicates", %{conn: conn, user: user} do
+    test "warns about duplicates, also of other collectors", %{conn: conn, user: user} do
       Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
+      Records.add_to_wishlist!("Can", "Tago Mago", actor: user_fixture("other@example.com"))
       {:ok, view, _html} = live(conn, ~p"/albums/new")
 
       view
       |> form("#album-form", album: %{artist_name: "the beatles", title: "abbey road"})
       |> render_change()
 
-      assert has_element?(view, "#duplicate-warning")
+      assert has_element?(view, "#duplicate-warning", "in deiner Sammlung")
+
+      view
+      |> form("#album-form", album: %{artist_name: "can", title: "tago mago"})
+      |> render_change()
+
+      assert has_element?(view, "#duplicate-warning", "bei anderen Sammlern")
     end
 
     test "edits optional fields and genre tags", %{conn: conn, user: user} do
@@ -143,7 +151,7 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
 
       view |> element("#toggle-wanted") |> render_click()
 
-      refute Records.get_album!(album.id, authorize?: false).wanted
+      refute Records.get_album!(album.id, load: [:wanted], actor: user).wanted
     end
 
     test "adding a copy via the copy form marks the album as owned", %{conn: conn, user: user} do
@@ -162,13 +170,13 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       |> render_submit()
 
       assert_redirect(view, ~p"/albums/#{album}")
-      album = Records.get_album!(album.id, load: [:owned, :copies], authorize?: false)
+      album = Records.get_album!(album.id, load: [:owned, :wanted, :copies], actor: user)
       assert album.owned
       refute album.wanted
       assert [%{format: ["2LP", "Gatefold"], media_condition: :near_mint}] = album.copies
     end
 
-    test "deletes a copy and the album", %{conn: conn, user: user} do
+    test "deletes a copy, then the album no one has any more", %{conn: conn, user: user} do
       album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
       [copy] = Ash.load!(album, :copies, authorize?: false).copies
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
@@ -176,8 +184,8 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       view |> element("#delete-copy-#{copy.id}") |> render_click()
       refute has_element?(view, "#copy-#{copy.id}")
 
-      view |> element("#delete-album") |> render_click()
-      # Without copies the album was unassigned, so "back" leads to all albums
+      view |> element("#remove-album") |> render_click()
+      # Without copies the album was no longer in the collection: back to all albums
       assert_redirect(view, ~p"/albums")
       assert {:error, _} = Records.get_album(album.id, authorize?: false)
     end

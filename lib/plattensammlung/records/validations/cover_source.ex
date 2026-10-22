@@ -2,9 +2,9 @@ defmodule Plattensammlung.Records.Validations.CoverSource do
   @moduledoc """
   A cover URL given as input must be an https URL from a known cover host
   (`Plattensammlung.Covers.allowed_url?/1`), or empty. Local `/covers/…` paths
-  are only set by the app itself (download, upload, `copy_to_wishlist`):
-  otherwise anyone could point an album at someone else's cover file and
-  delete it along with the album (ADR 0014).
+  are only set by the app itself (download, upload): otherwise anyone could
+  point an album at another album's cover file and delete it along with the
+  album (ADR 0014).
   """
   use Ash.Resource.Validation
 

@@ -1,6 +1,7 @@
 defmodule Plattensammlung.Records do
   @moduledoc """
-  Domain for the record collection: artists, albums and owned copies.
+  Domain for the record collection: shared artists and albums, and each user's
+  copies and wishes (ADR 0016).
 
   A domain groups related resources and exposes a *code interface*: plain functions
   such as `add_to_collection/3` that run a resource action. LiveViews, the JSON API
@@ -29,8 +30,10 @@ defmodule Plattensammlung.Records do
         patch :apply_match, route: "/:id/match"
         index :search
         get :read
-        post :add_to_collection, route: "/collection"
-        post :add_to_wishlist, route: "/wishlist"
+        # Generic actions: they answer with the album as plain JSON
+        route :post, "/collection", :add_to_collection
+        route :post, "/wishlist", :add_to_wishlist
+        route :delete, "/:album_id/mine", :remove
         patch :update
         patch :mark_wanted, route: "/:id/wanted"
         patch :unmark_wanted, route: "/:id/unwanted"
@@ -42,6 +45,12 @@ defmodule Plattensammlung.Records do
         get :read
         post :create
         patch :update
+        delete :destroy
+      end
+
+      base_route "/wishes", Plattensammlung.Records.Wish do
+        index :read
+        post :create
         delete :destroy
       end
     end
@@ -60,7 +69,9 @@ defmodule Plattensammlung.Records do
     resource Plattensammlung.Records.Album do
       define :add_to_collection, args: [:artist_name, :title]
       define :add_to_wishlist, args: [:artist_name, :title]
-      define :copy_to_wishlist, args: [:album_id]
+      define :remove_album, action: :remove, args: [:album_id]
+      define :create_album, action: :create, args: [:artist_name]
+      define :complete_album, action: :complete
       define :get_album, action: :read, get_by: [:id]
       define :search_albums, action: :search, args: [{:optional, :query}, {:optional, :status}]
       define :find_duplicates, action: :duplicates, args: [:artist_name, :title]
@@ -78,6 +89,12 @@ defmodule Plattensammlung.Records do
       define :mark_wanted
       define :unmark_wanted
       define :destroy_album, action: :destroy
+    end
+
+    resource Plattensammlung.Records.Wish do
+      define :add_wish, action: :create, args: [:album_id]
+      define :list_wishes, action: :read
+      define :destroy_wish, action: :destroy
     end
 
     resource Plattensammlung.Records.Copy do

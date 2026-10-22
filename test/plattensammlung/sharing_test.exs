@@ -15,9 +15,13 @@ defmodule Plattensammlung.SharingTest do
     %{alice: alice, bob: bob, album: album}
   end
 
-  test "lists show the actor's own albums by default", %{alice: alice, bob: bob} do
-    assert length(Records.search_albums!(nil, nil, actor: alice)) == 2
-    assert Records.search_albums!(nil, nil, actor: bob) == []
+  test "collection and wishlist are the actor's own, the catalog is shared",
+       %{alice: alice, bob: bob} do
+    assert [_] = Records.list_collection!(actor: alice)
+    assert [_] = Records.list_wishlist!(actor: alice)
+    assert Records.list_collection!(actor: bob) == []
+    assert Records.search_albums!(nil, :collection, actor: bob) == []
+    assert length(Records.search_albums!(nil, nil, actor: bob)) == 2
   end
 
   test "everyone signed in can look at other collections", %{alice: alice, bob: bob, album: album} do
@@ -29,17 +33,21 @@ defmodule Plattensammlung.SharingTest do
     assert {:ok, _} = Records.get_album(album.id, actor: bob)
   end
 
-  test "only the owner changes an album and its copies", %{bob: bob, album: album} do
+  test "others may not change an album they don't have, nor someone's copies",
+       %{bob: bob, album: album} do
     [copy] = Ash.load!(album, :copies, authorize?: false).copies
 
     assert {:error, %Ash.Error.Forbidden{}} =
              Records.update_album(album, %{year: 1999}, actor: bob)
 
     assert {:error, %Ash.Error.Forbidden{}} = Records.destroy_album(album, actor: bob)
-    assert {:error, %Ash.Error.Forbidden{}} = Records.add_copy(album.id, %{}, actor: bob)
 
     assert {:error, %Ash.Error.Forbidden{}} =
              Records.update_copy(copy, %{notes: "meins"}, actor: bob)
+
+    # An own copy of the shared album is fine
+    assert {:ok, %{owner_id: owner_id}} = Records.add_copy(album.id, %{}, actor: bob)
+    assert owner_id == bob.id
   end
 
   test "purchase date and notes of a copy are readable by the owner only",
@@ -68,10 +76,11 @@ defmodule Plattensammlung.SharingTest do
     assert %{albums: 1, wishlist: 1} = Records.statistics!(%{owner_id: alice.id}, actor: bob)
   end
 
-  test "duplicates are checked in the own collection only", %{bob: bob} do
-    assert Records.find_duplicates!("The Beatles", "Abbey Road", actor: bob) == []
-    # So Bob can have his own Abbey Road
-    assert {:ok, _} = Records.add_to_collection("The Beatles", "Abbey Road", actor: bob)
+  test "duplicates are found in the whole catalog, adding reuses them",
+       %{bob: bob, album: album} do
+    assert [%{id: id}] = Records.find_duplicates!("The Beatles", "Abbey Road", actor: bob)
+    assert id == album.id
+    assert {:ok, %{id: ^id}} = Records.add_to_collection("The Beatles", "Abbey Road", actor: bob)
   end
 
   describe "collectors" do

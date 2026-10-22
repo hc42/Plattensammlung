@@ -83,11 +83,14 @@ Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
   `PasskeyController`, JS in `assets/js/hooks/passkey.js`.
 - Nur Adressen aus `ALLOWED_EMAILS` (`config :plattensammlung, :allowed_emails`) können sich
   anmelden (`Accounts.allowed_email?/1`).
-- **Besitz (ADR 0013):** Jedes Album gehört einem User (`owner`). Lesen dürfen alle
-  Angemeldeten, ändern nur der Besitzer. Listen und Statistik zeigen ohne `owner_id`
-  die Alben des Actors (Preparation `ScopeToOwner`). Bearbeiten-Seiten prüfen mit
-  `PlattensammlungWeb.Ownership.require_owner/2`. Anderen Usern nur `Accounts.list_collectors`
-  (ID + Anzeigename) zeigen, nie die E-Mail.
+- **Gemeinsame Alben (ADR 0016):** Alben und Künstler sind gemeinsam, `Copy` und `Wish`
+  gehören einem User (`owner`). Albumdaten ändert, wer das Album in Sammlung oder Wunschliste
+  hat; Exemplare nur ihr Besitzer. `owned`, `wanted`, `copy_count` sind Berechnungen aus Sicht
+  des Actors (immer mit `actor:` laden, sonst `false`). Sammlung/Wunschliste/Statistik zeigen
+  ohne `owner_id` die des Actors (Preparation `ScopeToOwner`), ohne Status den ganzen Katalog.
+  Bearbeiten-Seiten prüfen mit `Ownership.require_holder/2` bzw. `require_copy_owner/2`;
+  `album.copies` enthält Exemplare aller User, eigene mit `Ownership.own_copies(user)` laden.
+  Anderen Usern nur `Accounts.list_collectors` (ID + Anzeigename) zeigen, nie die E-Mail.
 - `Copy.purchased_on` und `Copy.notes` sind per Field Policy nur für den Besitzer lesbar.
   Andere bekommen `%Ash.ForbiddenField{}` (truthy!), in der API fehlen die Felder.
   Neue private Felder dort in `field_policies` eintragen.
@@ -111,9 +114,14 @@ Dateien: `lib/plattensammlung/records.ex` (Domain mit Code Interface),
 
 Wichtigste Funktionen des Code Interface (jeweils auch mit `!`):
 
-- `add_to_collection(artist_name, title, attrs)`: Album und eine Copy anlegen.
+- `add_to_collection(artist_name, title, attrs)`: Album wiederverwenden oder anlegen
+  (`Records.AddAlbum`: Discogs-ID, MusicBrainz-ID, Künstler + Titel) und eine eigene Copy anlegen.
   Pressungsdetails stehen unter `attrs.copy`.
-- `add_to_wishlist(artist_name, title, attrs)`: Album ohne Copy mit `wanted: true` anlegen.
+- `add_to_wishlist(artist_name, title, attrs)`: Album wiederverwenden oder anlegen, eigenen Wish anlegen.
+  Beide sind generische Actions (keine Transaktion drumherum) und füllen beim
+  Wiederverwenden nur Lücken (`Album.complete`).
+- `remove_album(album_id)`: eigene Copies und eigenen Wish löschen, das Album erst, wenn es niemand mehr hat.
+- `mark_wanted(album)` / `unmark_wanted(album)`, `add_wish(album_id)`: eigener Wunsch.
 - `add_copy(album_id, attrs)`: weiteres Exemplar anlegen, entfernt das Album von der Wunschliste.
 - `search_albums(query \\ nil, status \\ nil)`, `list_collection()`, `list_wishlist()`.
   Achtung: Bei optionalen Argumenten immer alle angeben, bevor Optionen folgen
@@ -128,10 +136,11 @@ Regeln:
   Album davon hat; löschen nur ohne Alben. Künstler ohne Alben räumt `RemoveOrphanedArtist`
   bzw. `Records.ArtistCleanup` auf (auch beim App-Start).
 - „Besitze ich“ ist das Aggregate `owned` (existiert eine Copy?). Es wird nie gespeichert.
-- Eine Copy anzulegen setzt `wanted` am Album zurück (Change `RemoveFromWishlist`).
-- Ein Album ohne Copy und ohne `wanted` ist „nicht zugeordnet“ (Such-Status `:other`).
+- Eine eigene Copy anzulegen löscht den eigenen Wish (Change `RemoveFromWishlist`, `Records.Wishlist`).
+- Such-Status `:other`: Alben ohne eigene Copy und ohne eigenen Wish („Nicht bei mir“).
 - Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr. `Copy.format` ist eine Liste.
-- Ein Album zu löschen löscht seine Copies und gegebenenfalls den nun unbenutzten Artist.
+- Ein Album wird nur gelöscht, wenn es niemand mehr hat (Destroy-Policy); dabei gehen Cover und
+  gegebenenfalls der nun unbenutzte Artist mit. Direkt `destroy_album` nur für solche Alben.
 - **Grenzen (ADR 0006, Nachtrag):** Textfelder und Listen haben `constraints max_length`, Jahre
   1900–2100, Discogs-IDs `min: 1`, Barcode 8–14 Ziffern (Change `NormalizeBarcode` + `validate match`).
   Neue Felder bekommen immer eine Grenze, das Formularfeld ein passendes `maxlength`.

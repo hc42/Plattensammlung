@@ -12,12 +12,13 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 - Schnell beantworten: „Habe ich diese Platte?“, mit Links zu Discogs
 - **Wunschliste**: Alben merken, die man noch sucht. Der Scan im Plattenladen zeigt sofort „habe ich“ oder „steht auf der Wunschliste“
 - Sammlung durchsuchen und filtern, z. B. nach Artist, Genre oder Jahr
-- **Eigene Sammlung pro Person**, für die anderen angemeldeten Sammler sichtbar (Seite „Sammler“);
-  fremde Alben lassen sich auf die eigene Wunschliste übernehmen; Kaufdatum und Notizen
-  bleiben privat, auch in der API
+- **Gemeinsamer Katalog, eigene Sammlung pro Person:** Alben gibt es nur einmal, jede Person
+  hat eigene Exemplare und eine eigene Wunschliste, für die anderen sichtbar (Seite „Sammler“,
+  „Auch bei …“ auf der Albumseite). Albumdaten pflegen alle, die das Album haben; gelöscht wird
+  es erst, wenn es niemand mehr hat. Kaufdatum und Notizen bleiben privat, auch in der API
 - Zugriff über eine Weboberfläche **und** eine JSON-API
 - Anmeldung per Passkey
-- **Alle Alben** im Blick, auch solche ohne Exemplar und ohne Wunsch („nicht zugeordnet“)
+- **Alle Alben**: der gemeinsame Katalog, filterbar auf „Nicht bei mir“
 - **Abgleichen** bestehender Alben mit Discogs/MusicBrainz, auch per nachträglichem Barcode-Scan; Pressungsdaten wandern dabei ins Exemplar
 - **Spotify und Tidal**: Links werden automatisch gefunden (Wikidata, MusicBrainz) oder eingefügt;
   Alben lassen sich auch über einen Spotify-Link oder dessen QR-Code erfassen
@@ -40,12 +41,15 @@ Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
 ## Datenmodell
 
 ```
-Artist ──< Album ──< Copy
+Artist ──< Album ──< Copy  >── User
+                 └──< Wish  >── User
 ```
 
 - **Album**: das Werk, unabhängig von der Pressung (Pflicht: Titel und Artist; optional: Jahr, Cover, Genres, Wunschliste ja/nein).
   Entspricht der *Release Group* bei MusicBrainz bzw. dem *Master* bei Discogs.
-- **Copy**: ein eigenes Exemplar. Album mit Copy = „habe ich“. Alle Pressungs- und Sammlerangaben sind optional (Label, Barcode, Zustand, Kaufdatum, Notizen).
+- **Copy**: ein Exemplar einer Person. Album mit eigener Copy = „habe ich“. Alle Pressungs- und Sammlerangaben sind optional (Label, Barcode, Zustand, Kaufdatum, Notizen).
+- **Wish**: „suche ich“, ein Eintrag auf der Wunschliste einer Person.
+- Artist und Album sind für alle gemeinsam ([ADR 0015](docs/adr/0015-gemeinsame-kuenstler.md), [ADR 0016](docs/adr/0016-gemeinsame-alben.md)).
 
 Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
 
@@ -134,8 +138,12 @@ curl -H "Authorization: Bearer $API_KEY" -H "Accept: application/vnd.api+json" "
 ```
 
 ```bash
-curl -X POST http://localhost:4000/api/json/albums/collection -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/vnd.api+json" -d '{"data":{"type":"album","attributes":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":"LP"}}}}'
+curl -X POST http://localhost:4000/api/json/albums/collection -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/vnd.api+json" -d '{"data":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":["LP"]}}}'
 ```
+
+Erfassen (`/albums/collection`, `/albums/wishlist`) und Entfernen (`DELETE /albums/:id/mine`)
+sind generische Routen: Die Angaben stehen direkt unter `data`, die Antwort ist das Album als
+einfaches JSON. Ein vorhandenes Album wird dabei wiederverwendet.
 
 Jede Anfrage braucht einen API-Key (Seite „Konto“): `-H "Authorization: Bearer <Key>"`.
 Ohne Key antwortet die API mit 403. Die Swagger-UI ist ohne Key lesbar; für „Try it out“

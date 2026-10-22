@@ -98,13 +98,13 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           >
             <.icon name="hero-exclamation-triangle" class="size-5" />
             <span>
-              Dieses Album gibt es schon:
+              Dieses Album gibt es schon
               <.link
                 :for={album <- @duplicates}
                 navigate={~p"/albums/#{album}"}
                 class="link font-medium"
               >
-                {if album.owned, do: "in deiner Sammlung", else: "auf der Wunschliste"}
+                {duplicate_label(album)}
               </.link>
             </span>
           </div>
@@ -232,7 +232,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
         {:ok, socket}
 
       album ->
-        case PlattensammlungWeb.Ownership.require_owner(socket, album) do
+        case PlattensammlungWeb.Ownership.require_holder(socket, album) do
           :ok -> {:ok, socket}
           {:redirect, socket} -> {:ok, socket}
         end
@@ -253,14 +253,15 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   end
 
   defp apply_action(socket, :edit, %{"id" => id}) do
-    album = Records.get_album!(id, load: [:artist], actor: socket.assigns.current_user)
+    album =
+      Records.get_album!(id, load: [:artist, :owned, :wanted], actor: socket.assigns.current_user)
 
     form =
       AshPhoenix.Form.for_update(album, :update,
         as: "album",
         actor: socket.assigns.current_user,
         prepare_params: &prepare_params/2,
-        params: %{"artist_name" => to_string(album.artist.name)}
+        params: %{"artist_name" => to_string(album.artist.name), "wanted" => album.wanted}
       )
 
     socket
@@ -330,8 +331,9 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   defp new_form(mode, actor) do
     action = if mode == "wishlist", do: :add_to_wishlist, else: :add_to_collection
 
+    # Generic actions (they reuse an album already in the catalog), so for_action
     Album
-    |> AshPhoenix.Form.for_create(action,
+    |> AshPhoenix.Form.for_action(action,
       as: "album",
       actor: actor,
       prepare_params: &prepare_params/2
@@ -361,11 +363,15 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
   defp find_duplicates(%{"artist_name" => artist, "title" => title}, assigns)
        when artist != "" and title != "" do
-    Records.find_duplicates!(artist, title, load: [:owned], actor: assigns.current_user)
+    Records.find_duplicates!(artist, title, load: [:owned, :wanted], actor: assigns.current_user)
     |> Enum.reject(&(assigns.album && &1.id == assigns.album.id))
   end
 
   defp find_duplicates(_params, _assigns), do: []
+
+  defp duplicate_label(%{owned: true}), do: "in deiner Sammlung."
+  defp duplicate_label(%{wanted: true}), do: "auf deiner Wunschliste."
+  defp duplicate_label(_album), do: "bei anderen Sammlern; es wird übernommen."
 
   defp saved_message(%{live_action: :edit}, _album), do: "Album gespeichert."
 

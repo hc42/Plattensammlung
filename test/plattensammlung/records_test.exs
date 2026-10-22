@@ -106,13 +106,14 @@ defmodule Plattensammlung.RecordsTest do
              "https://www.discogs.com/master/24047"
   end
 
-  test "deleting an album deletes its copies", %{user: user} do
+  test "removing an album deletes the own copies and the album no one has", %{user: user} do
     album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
     [copy] = Ash.load!(album, :copies, actor: user).copies
 
-    Records.destroy_album!(album, actor: user)
+    Records.remove_album!(album.id, actor: user)
 
     assert {:error, _} = Records.get_copy(copy.id, actor: user)
+    assert {:error, _} = Records.get_album(album.id, actor: user)
   end
 
   defp titles(albums), do: Enum.map(albums, &to_string(&1.title))

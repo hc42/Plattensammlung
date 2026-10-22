@@ -102,22 +102,6 @@ defmodule Plattensammlung.Covers do
     |> MapSet.new()
   end
 
-  @doc """
-  A copy of a locally stored cover under a new name, so two albums never share a
-  file (deleting one album must not remove the other's cover). Remote URLs and
-  nil are returned unchanged; a missing file gives nil.
-  """
-  def duplicate("/covers/" <> name) do
-    with {:ok, binary} <- File.read(Path.join(dir(), Path.basename(name))),
-         {:ok, url} <- write(binary, Path.extname(name)) do
-      url
-    else
-      _ -> nil
-    end
-  end
-
-  def duplicate(url), do: url
-
   @doc "Removes a locally stored cover; remote URLs and nil are ignored."
   def delete("/covers/" <> name) do
     _ = File.rm(Path.join(dir(), Path.basename(name)))

@@ -40,7 +40,8 @@ defmodule Plattensammlung.Records.Artist do
 
   # Artists are shared between all users (ADR 0015): everyone reads them and
   # creates new ones (via FindOrCreateArtist), but renaming or deleting is only
-  # allowed while no one else has an album of that artist
+  # allowed while no one else has an album of that artist in collection or
+  # wishlist (ADR 0016)
   policies do
     policy action_type([:read, :create]) do
       # :strict raises Forbidden instead of silently returning no rows
@@ -50,7 +51,14 @@ defmodule Plattensammlung.Records.Artist do
 
     policy action_type([:update, :destroy]) do
       forbid_unless actor_present()
-      authorize_if expr(not exists(albums, owner_id != ^actor(:id)))
+
+      authorize_if expr(
+                     not exists(
+                       albums,
+                       exists(copies, owner_id != ^actor(:id)) or
+                         exists(wishes, owner_id != ^actor(:id))
+                     )
+                   )
     end
   end
 

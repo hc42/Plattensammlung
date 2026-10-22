@@ -55,16 +55,15 @@ defmodule Plattensammlung.CoverSourceTest do
     assert {:ok, _} = Records.update_album(album, %{year: 1971}, actor: alice)
   end
 
-  test "copying to the own wishlist duplicates the cover file", %{bob: bob, album: album} do
-    mine = Records.copy_to_wishlist!(album.id, actor: bob)
+  test "the shared cover stays while someone still has the album",
+       %{alice: alice, bob: bob, album: album} do
+    path = Path.join(Covers.dir(), Path.basename(album.cover_url))
+    Records.mark_wanted!(album, actor: bob)
 
-    assert mine.wanted
-    assert to_string(mine.title) == "Tago Mago"
-    assert "/covers/" <> _ = mine.cover_url
-    refute mine.cover_url == album.cover_url
+    Records.remove_album!(album.id, actor: bob)
+    assert File.exists?(path)
 
-    # Deleting the copy leaves the original file alone
-    Records.destroy_album!(mine, actor: bob)
-    assert File.exists?(Path.join(Covers.dir(), Path.basename(album.cover_url)))
+    Records.remove_album!(album.id, actor: alice)
+    refute File.exists?(path)
   end
 end

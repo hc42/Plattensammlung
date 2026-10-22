@@ -165,7 +165,11 @@ defmodule Plattensammlung.Accounts.User do
 
     has_many :passkeys, Plattensammlung.Accounts.Passkey
 
-    has_many :albums, Plattensammlung.Records.Album do
+    has_many :copies, Plattensammlung.Records.Copy do
+      destination_attribute :owner_id
+    end
+
+    has_many :wishes, Plattensammlung.Records.Wish do
       destination_attribute :owner_id
     end
   end

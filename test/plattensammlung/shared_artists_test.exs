@@ -36,20 +36,21 @@ defmodule Plattensammlung.SharedArtistsTest do
 
   test "once Bob has the album too, Alice can't rename the artist either",
        %{alice: alice, bob: bob, album: album, artist: artist} do
-    Records.copy_to_wishlist!(album.id, actor: bob)
+    Records.mark_wanted!(album, actor: bob)
 
     assert {:error, %Ash.Error.Forbidden{}} =
              Records.update_artist(artist, %{name: "Die Käfer"}, actor: alice)
   end
 
-  test "deleting the last album removes the artist, other albums keep it",
+  test "the artist goes with the last album, not before",
        %{alice: alice, bob: bob, album: album, artist: artist} do
-    bobs = Records.copy_to_wishlist!(album.id, actor: bob)
+    Records.mark_wanted!(album, actor: bob)
 
-    Records.destroy_album!(album, actor: alice)
+    # Bob still wants the album, so album and artist stay
+    Records.remove_album!(album.id, actor: alice)
     assert {:ok, _} = Records.get_artist(artist.id, actor: bob)
 
-    Records.destroy_album!(bobs, actor: bob)
+    Records.remove_album!(album.id, actor: bob)
     assert {:error, _} = Records.get_artist(artist.id, actor: bob)
   end
 

@@ -42,45 +42,65 @@ defmodule PlattensammlungWeb.SharingLiveTest do
     refute has_element?(view, "#albums-empty a", "Platte erfassen")
   end
 
-  test "someone else's album has no edit actions and hides private notes",
+  test "an album only someone else has: who has it, no edits, no foreign copies",
        %{conn: conn, album: album} do
     {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
 
-    assert has_element?(view, "#owner-info", "Alice")
-    refute has_element?(view, "#album-actions")
+    assert has_element?(view, "#owned-status", "Nicht in deiner Sammlung")
+    assert has_element?(view, "#other-holders", "Alice")
+    assert has_element?(view, "#other-holders", "1 Exemplar")
+    refute has_element?(view, "#edit-album")
+    refute has_element?(view, "#remove-album")
     refute has_element?(view, "#cover-form")
-    refute has_element?(view, "[id^=edit-copy-]")
-    assert has_element?(view, "#copies", "Apple")
-    refute has_element?(view, "#copies", "Geheim")
-    refute has_element?(view, "#copies", "Gekauft am")
+    # Alice's copy (with its notes) is hers; the page lists only own copies
+    refute has_element?(view, "#copies")
+    refute render(view) =~ "Geheim"
   end
 
-  test "an album of someone else can be put on the own wishlist",
+  test "an album of someone else can be put on the own wishlist, then edited",
        %{conn: conn, album: album, user: user} do
     {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
 
-    view |> element("#add-to-my-wishlist") |> render_click()
+    view |> element("#toggle-wanted") |> render_click()
 
-    [mine] = Records.search_albums!(nil, :wishlist, actor: user)
-    assert_redirect(view, ~p"/albums/#{mine}")
-    assert mine.owner_id == user.id
-    # Own copy of the cover file, so deleting one album keeps the other's cover
-    assert "/covers/" <> _ = mine.cover_url
-    refute mine.cover_url == Records.get_album!(album.id, authorize?: false).cover_url
-
-    {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
-    assert has_element?(view, "#my-version", "Steht auch auf deiner Wunschliste")
+    assert [mine] = Records.search_albums!(nil, :wishlist, actor: user)
+    assert mine.id == album.id
+    assert has_element?(view, "#owned-status", "Steht auf deiner Wunschliste")
+    # "Auch bei" lists only the others
+    assert has_element?(view, "#other-holders", "Alice")
+    refute has_element?(view, "#holder-#{user.id}")
+    assert has_element?(view, "#edit-album")
+    assert {:ok, _view, _html} = live(conn, ~p"/albums/#{album}/edit")
   end
 
-  test "edit pages of someone else's album redirect back", %{conn: conn, album: album} do
+  test "an own copy of someone else's album can be added", %{conn: conn, album: album} do
+    assert {:ok, view, _html} = live(conn, ~p"/albums/#{album}/copies/new")
+
+    view |> form("#copy-form") |> render_submit()
+    assert_redirect(view, ~p"/albums/#{album}")
+  end
+
+  test "edit pages of an album you don't have redirect back", %{conn: conn, album: album} do
+    [copy] = Ash.load!(album, :copies, authorize?: false).copies
+
     for path <- [
           ~p"/albums/#{album}/edit",
           ~p"/albums/#{album}/match",
-          ~p"/albums/#{album}/copies/new"
+          ~p"/copies/#{copy}/edit"
         ] do
       assert {:error, {:redirect, %{to: to}}} = live(conn, path)
       assert to == ~p"/albums/#{album}"
     end
+  end
+
+  test "removing keeps the album for the others", %{conn: conn, album: album, user: user} do
+    Records.mark_wanted!(album, actor: user)
+    {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
+
+    view |> element("#remove-album") |> render_click()
+
+    assert_redirect(view, ~p"/wishlist")
+    assert {:ok, _} = Records.get_album(album.id, actor: user)
   end
 
   test "the display name is set on the account page", %{conn: conn, user: user} do

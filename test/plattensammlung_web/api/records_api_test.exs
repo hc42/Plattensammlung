@@ -84,46 +84,44 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     end
   end
 
+  # Generic actions: the arguments sit directly under "data", the answer is the
+  # album as plain JSON (no JSON:API envelope)
   describe "POST /api/json/albums/collection" do
     test "creates album, artist and copy", %{conn: conn} do
       payload = %{
         data: %{
-          type: "album",
-          attributes: %{
-            artist_name: "Kraftwerk",
-            title: "Autobahn",
-            year: 1974,
-            copy: %{format: ["LP"], media_condition: "very_good_plus"}
-          }
+          artist_name: "Kraftwerk",
+          title: "Autobahn",
+          year: 1974,
+          copy: %{format: ["LP"], media_condition: "very_good_plus"}
         }
       }
 
       body = conn |> post(~p"/api/json/albums/collection", payload) |> json_response(201)
 
-      assert body["data"]["attributes"]["title"] == "Autobahn"
-      assert body["data"]["attributes"]["owned"] == true
+      assert %{"title" => "Autobahn", "owned" => true, "id" => id} = body
 
-      album = Records.get_album!(body["data"]["id"], load: [:artist, :copies], authorize?: false)
+      album = Records.get_album!(id, load: [:artist, :copies], authorize?: false)
       assert to_string(album.artist.name) == "Kraftwerk"
       assert [%{format: ["LP"], media_condition: :very_good_plus}] = album.copies
     end
 
     test "reports missing required fields", %{conn: conn} do
-      payload = %{data: %{type: "album", attributes: %{title: "Autobahn"}}}
+      payload = %{data: %{title: "Autobahn"}}
 
       body = conn |> post(~p"/api/json/albums/collection", payload) |> json_response(400)
 
-      assert [%{"code" => "required", "source" => %{"pointer" => "/data/attributes/artist_name"}}] =
+      assert [%{"code" => "required", "source" => %{"pointer" => "/data/artist_name"}}] =
                body["errors"]
     end
   end
 
   describe "wishlist" do
     test "adds to and removes from the wishlist", %{conn: conn} do
-      payload = %{data: %{type: "album", attributes: %{artist_name: "Can", title: "Ege Bamyasi"}}}
+      payload = %{data: %{artist_name: "Can", title: "Ege Bamyasi"}}
       body = conn |> post(~p"/api/json/albums/wishlist", payload) |> json_response(201)
-      id = body["data"]["id"]
-      assert body["data"]["attributes"]["wanted"] == true
+      id = body["id"]
+      assert body["wanted"] == true
 
       patch_body = %{data: %{type: "album", id: id, attributes: %{}}}
       body = conn |> patch(~p"/api/json/albums/#{id}/unwanted", patch_body) |> json_response(200)
@@ -146,7 +144,7 @@ defmodule PlattensammlungWeb.RecordsApiTest do
       conn |> post(~p"/api/json/copies", payload) |> json_response(201)
 
       assert %{wanted: false, owned: true} =
-               Records.get_album!(album.id, load: [:owned], authorize?: false)
+               Records.get_album!(album.id, load: [:owned, :wanted], actor: user)
     end
 
     test "lists the copies of an album", %{conn: conn, user: user} do
@@ -207,12 +205,16 @@ defmodule PlattensammlungWeb.RecordsApiTest do
     assert body["data"]["attributes"]["notes"] == "Meins"
   end
 
-  test "DELETE removes an album", %{conn: conn, user: user} do
+  test "DELETE …/mine removes the own entry, the album goes once no one has it",
+       %{conn: conn, user: user} do
     album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: user)
+    Records.mark_wanted!(album, actor: user_fixture("other@example.com"))
 
-    conn |> delete(~p"/api/json/albums/#{album.id}") |> response(200)
+    # Someone else still wants it: a direct delete is refused
+    conn |> delete(~p"/api/json/albums/#{album.id}") |> response(403)
 
-    assert {:error, _} = Records.get_album(album.id, authorize?: false)
+    conn |> delete(~p"/api/json/albums/#{album.id}/mine") |> response(200)
+    assert %{owned: false} = Records.get_album!(album.id, load: [:owned], actor: user)
   end
 
   test "GET /api/json/albums/lookup searches external catalogs", %{conn: conn} do

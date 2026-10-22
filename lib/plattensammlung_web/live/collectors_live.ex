@@ -1,7 +1,7 @@
 defmodule PlattensammlungWeb.CollectorsLive do
   @moduledoc """
   The other users of the app with their collection and wishlist (ADR 0013).
-  Every signed-in user may look at every collection; changing stays with the owner.
+  Every signed-in user may look at every collection and wishlist (ADR 0013, 0016).
   """
   use PlattensammlungWeb, :live_view
 

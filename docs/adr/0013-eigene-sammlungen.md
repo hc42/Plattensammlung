@@ -1,6 +1,6 @@
 # 0013. Eigene Sammlungen, für andere sichtbar
 
-- **Status:** Angenommen
+- **Status:** Angenommen, Alben mit Besitzer ersetzt durch [ADR 0016](0016-gemeinsame-alben.md)
 - **Datum:** 2026-10-21
 - **Ersetzt teilweise:** die „eine gemeinsame Sammlung“ aus [ADR 0005](0005-passkey-login.md)
 

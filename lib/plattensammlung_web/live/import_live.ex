@@ -86,7 +86,7 @@ defmodule PlattensammlungWeb.ImportLive do
                 {if item.existing && item.existing.owned, do: "Exemplar", else: "Sammlung"}
               </button>
               <button
-                :if={!item.existing}
+                :if={!(item.existing && (item.existing.owned or item.existing.wanted))}
                 phx-click="import"
                 phx-value-index={item.index}
                 phx-value-target="wishlist"
@@ -212,27 +212,23 @@ defmodule PlattensammlungWeb.ImportLive do
 
   defp existing_album(result, actor) do
     result.artist_name
-    |> Records.find_duplicates!(result.title, load: [:owned], actor: actor)
+    |> Records.find_duplicates!(result.title, load: [:owned, :wanted], actor: actor)
     |> List.first()
   end
 
-  # Already known album: add another copy (collection) or just open it
-  defp add_album(%{existing: %{} = album, result: result}, "collection", actor) do
-    with {:ok, _copy} <- Records.add_copy(album.id, Lookup.copy_attrs(result), actor: actor) do
-      {:ok, album, "Exemplar von „#{album.title}“ hinzugefügt."}
-    end
-  end
-
-  defp add_album(%{existing: %{} = album}, "wishlist", _actor) do
-    {:ok, album, "„#{album.title}“ ist schon erfasst."}
-  end
-
-  defp add_album(%{result: result}, "collection", actor) do
+  # add_to_collection/add_to_wishlist reuse an album that is already in the
+  # shared catalog and only fill its gaps (ADR 0016)
+  defp add_album(%{result: result, existing: existing}, "collection", actor) do
     attrs = result |> Lookup.album_attrs() |> Map.put(:copy, Lookup.copy_attrs(result))
 
     with {:ok, album} <-
            Records.add_to_collection(result.artist_name, result.title, attrs, actor: actor) do
-      {:ok, album, "„#{album.title}“ ist jetzt in deiner Sammlung."}
+      message =
+        if existing && existing.owned,
+          do: "Exemplar von „#{album.title}“ hinzugefügt.",
+          else: "„#{album.title}“ ist jetzt in deiner Sammlung."
+
+      {:ok, album, message}
     end
   end
 
@@ -247,5 +243,5 @@ defmodule PlattensammlungWeb.ImportLive do
 
   defp existing_label(%{owned: true}), do: "Hast du schon"
   defp existing_label(%{wanted: true}), do: "Steht auf deiner Wunschliste"
-  defp existing_label(_album), do: "Schon erfasst (ohne Exemplar)"
+  defp existing_label(_album), do: "Bei anderen Sammlern"
 end

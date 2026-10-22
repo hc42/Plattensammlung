@@ -2,8 +2,8 @@
 #
 #     ALLOWED_EMAILS=du@example.de mix run priv/repo/seeds.exs
 #
-# The albums belong to the first address in ALLOWED_EMAILS (the user is created
-# if needed). Safe to run repeatedly: existing albums of that user are skipped.
+# Collection and wishlist of the first address in ALLOWED_EMAILS (the user is
+# created if needed). Safe to run repeatedly: albums that user already has are skipped.
 # Seeds run without a signed-in user, so authorization is skipped explicitly.
 alias Plattensammlung.Accounts.User
 alias Plattensammlung.Records
@@ -26,7 +26,7 @@ case Application.get_env(:plattensammlung, :allowed_emails, []) do
     opts = [actor: owner, authorize?: false]
 
     existing =
-      Records.search_albums!(nil, nil, opts)
+      (Records.list_collection!(opts) ++ Records.list_wishlist!(opts))
       |> MapSet.new(&{to_string(&1.artist.name), to_string(&1.title)})
 
     collection = [

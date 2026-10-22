@@ -17,6 +17,7 @@ Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md
 | [0010](0010-statistik-und-export.md) | Statistik und Export | Angenommen |
 | [0011](0011-betrieb-auf-truenas.md) | Betrieb auf TrueNAS hinter nginx-proxy-manager | Angenommen |
 | [0012](0012-streaming-links.md) | Spotify- und Tidal-Verknüpfungen | Angenommen |
-| [0013](0013-eigene-sammlungen.md) | Eigene Sammlungen, für andere sichtbar | Angenommen |
+| [0013](0013-eigene-sammlungen.md) | Eigene Sammlungen, für andere sichtbar | Angenommen, teilweise ersetzt durch 0016 |
 | [0014](0014-cover-quellen-und-csp.md) | Cover-Quellen und Content-Security-Policy | Angenommen |
 | [0015](0015-gemeinsame-kuenstler.md) | Gemeinsame Künstler schützen | Angenommen |
+| [0016](0016-gemeinsame-alben.md) | Gemeinsame Alben, persönliche Exemplare und Wünsche | Angenommen |

@@ -16,7 +16,8 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     :ok
   end
 
-  test "barcode lookup adds the album with its pressing to the collection", %{conn: conn} do
+  test "barcode lookup adds the album with its pressing to the collection",
+       %{conn: conn, user: user} do
     {:ok, view, _html} = live(conn, ~p"/import")
 
     view |> form("#lookup-form", query: LookupStub.abbey_road_barcode()) |> render_submit()
@@ -26,7 +27,7 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     assert has_element?(view, "#result-0")
     view |> element("#import-collection-0") |> render_click()
 
-    [album] = Records.search_albums!("Abbey Road", :collection, authorize?: false)
+    [album] = Records.search_albums!("Abbey Road", :collection, actor: user)
     assert_redirect(view, ~p"/albums/#{album}")
 
     album = Ash.load!(album, [:copies, :artist], authorize?: false)
@@ -39,14 +40,14 @@ defmodule PlattensammlungWeb.ImportLiveTest do
              album.copies
   end
 
-  test "text lookup adds an album to the wishlist", %{conn: conn} do
+  test "text lookup adds an album to the wishlist", %{conn: conn, user: user} do
     {:ok, view, _html} = live(conn, ~p"/import?q=beatles+abbey+road")
     render_async(view)
 
     view |> element("#import-wishlist-1") |> render_click()
 
     assert [%{title: title, wanted: true}] =
-             Records.search_albums!(nil, :wishlist, authorize?: false)
+             Records.search_albums!(nil, :wishlist, load: [:wanted], actor: user)
 
     assert to_string(title) == "Abbey Road Revisited"
   end
@@ -72,7 +73,25 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     view |> element("#import-collection-0") |> render_click()
 
     assert_redirect(view, ~p"/albums/#{album}")
-    assert %{copy_count: 2} = Records.get_album!(album.id, load: [:copy_count], authorize?: false)
+    assert %{copy_count: 2} = Records.get_album!(album.id, load: [:copy_count], actor: user)
+  end
+
+  test "an album another collector has is reused, not duplicated", %{conn: conn, user: user} do
+    other = user_fixture("other@example.com")
+    album = Records.add_to_collection!("The Beatles", "Abbey Road", actor: other)
+
+    {:ok, view, _html} = live(conn, ~p"/import?q=0602547288530")
+    render_async(view)
+    assert has_element?(view, "#result-0 a", "Bei anderen Sammlern")
+
+    view |> element("#import-collection-0") |> render_click()
+    assert_redirect(view, ~p"/albums/#{album}")
+
+    # The import filled the gaps of the shared album
+    assert %{copy_count: 1, year: 1969, discogs_master_id: 24047} =
+             Records.get_album!(album.id, load: [:copy_count], actor: user)
+
+    assert %{copy_count: 1} = Records.get_album!(album.id, load: [:copy_count], actor: other)
   end
 
   test "a scanned barcode starts the lookup", %{conn: conn} do

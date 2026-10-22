@@ -82,7 +82,7 @@ defmodule Plattensammlung.StreamingLinksTest do
 
       # Only the exact title counts, not "Abbey Road Revisited"
       album =
-        Records.add_to_collection!("The Beatles", "Abbey", %{discogs_master_id: 1}, actor: user)
+        Records.add_to_collection!("The Beatles", "Abbey", %{discogs_master_id: 2}, actor: user)
 
       assert album.musicbrainz_release_group_id == nil
       assert album.spotify_album_id == nil

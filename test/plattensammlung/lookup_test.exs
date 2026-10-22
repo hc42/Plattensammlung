@@ -101,7 +101,7 @@ defmodule Plattensammlung.LookupTest do
       path = Path.join(Covers.dir(), file)
       assert File.read!(path) == "fake-jpeg-bytes"
 
-      Records.destroy_album!(album, actor: user)
+      Records.remove_album!(album.id, actor: user)
       refute File.exists?(path)
     end
 

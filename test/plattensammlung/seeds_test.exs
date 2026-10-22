@@ -12,8 +12,7 @@ defmodule Plattensammlung.SeedsTest do
     [owner] = Ash.read!(Plattensammlung.Accounts.User, authorize?: false)
     assert to_string(owner.email) == "test@example.com"
 
-    albums = Records.search_albums!(nil, nil, actor: owner)
-    assert length(albums) == 6
-    assert Enum.all?(albums, &(&1.owner_id == owner.id))
+    assert length(Records.list_collection!(actor: owner)) == 4
+    assert length(Records.list_wishlist!(actor: owner)) == 2
   end
 end

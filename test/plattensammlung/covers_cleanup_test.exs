@@ -33,7 +33,7 @@ defmodule Plattensammlung.CoversCleanupTest do
     assert File.exists?(Path.join(Covers.dir(), fresh))
   end
 
-  test "deleting an album removes its cover after the commit", %{user: user} do
+  test "deleting the album no one has removes its cover after the commit", %{user: user} do
     album =
       Records.add_to_collection!("Can", "Tago Mago", %{cover_url: "https://x.test/a.jpg"},
         actor: user
@@ -41,7 +41,7 @@ defmodule Plattensammlung.CoversCleanupTest do
 
     path = Path.join(Covers.dir(), Path.basename(album.cover_url))
 
-    Records.destroy_album!(album, actor: user)
+    Records.remove_album!(album.id, actor: user)
 
     refute File.exists?(path)
   end

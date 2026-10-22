@@ -6,7 +6,8 @@ defmodule Plattensammlung.Records.Preparations.AlbumFilters do
     * `decade` – `"1970"` for 1970–1979, `"unknown"` for albums without year
     * `artist` – albums of this artist (case-insensitive)
     * `condition` – albums with a copy in this condition (`"very_good_plus"`, …),
-      `"none"` for copies without a grade
+      `"none"` for copies without a grade; only copies of the listed user
+      (`owner_id`, default: the actor)
 
   A preparation is code that adjusts a read query before it runs; it is used
   here because some filters need parsing that a plain `filter expr(...)` can't do.
@@ -19,12 +20,14 @@ defmodule Plattensammlung.Records.Preparations.AlbumFilters do
   alias Plattensammlung.Records.Condition
 
   @impl true
-  def prepare(query, _opts, _context) do
+  def prepare(query, _opts, context) do
+    owner = Ash.Query.get_argument(query, :owner_id) || (context.actor && context.actor.id)
+
     query
     |> genre(Ash.Query.get_argument(query, :genre))
     |> decade(Ash.Query.get_argument(query, :decade))
     |> artist(Ash.Query.get_argument(query, :artist))
-    |> condition(Ash.Query.get_argument(query, :condition))
+    |> condition(Ash.Query.get_argument(query, :condition), owner)
   end
 
   defp genre(query, nil), do: query
@@ -47,15 +50,18 @@ defmodule Plattensammlung.Records.Preparations.AlbumFilters do
   defp artist(query, nil), do: query
   defp artist(query, name), do: Ash.Query.filter(query, artist.name == ^name)
 
-  defp condition(query, nil), do: query
+  defp condition(query, nil, _owner), do: query
 
-  defp condition(query, "none"),
-    do: Ash.Query.filter(query, exists(copies, is_nil(media_condition)))
+  defp condition(query, "none", owner),
+    do: Ash.Query.filter(query, exists(copies, owner_id == ^owner and is_nil(media_condition)))
 
-  defp condition(query, value) do
+  defp condition(query, value, owner) do
     case Condition.match(value) do
-      {:ok, grade} -> Ash.Query.filter(query, exists(copies, media_condition == ^grade))
-      _ -> query
+      {:ok, grade} ->
+        Ash.Query.filter(query, exists(copies, owner_id == ^owner and media_condition == ^grade))
+
+      _ ->
+        query
     end
   end
 end

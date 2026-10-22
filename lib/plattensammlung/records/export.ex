@@ -8,10 +8,13 @@ defmodule Plattensammlung.Records.Export do
     with their `MusicRelease`s (pressings). Private details (price, purchase
     date, notes) are left out, so it can be shared.
 
-  Data is read through the Records domain with the given options (actor).
+  Data is read through the Records domain with the given options: the actor's
+  collection and wishlist with only their own copies (albums are shared, ADR 0016).
   """
   alias Plattensammlung.Records
-  alias Plattensammlung.Records.{Condition, Streaming}
+  alias Plattensammlung.Records.{Condition, Copy, Streaming}
+
+  require Ash.Query
 
   NimbleCSV.define(__MODULE__.CSV, separator: ",", escape: "\"")
 
@@ -58,7 +61,12 @@ defmodule Plattensammlung.Records.Export do
   end
 
   defp all_albums(opts) do
-    Records.search_albums!(nil, nil, Keyword.put(opts, :load, [:artist, :copies]))
+    actor_id = opts[:actor].id
+    own_copies = Ash.Query.filter(Copy, owner_id == ^actor_id)
+    opts = Keyword.put(opts, :load, [:artist, copies: own_copies])
+
+    (Records.list_collection!(opts) ++ Records.list_wishlist!(opts))
+    |> Enum.uniq_by(& &1.id)
     |> Enum.sort_by(
       &{String.downcase(to_string(&1.artist.name)), String.downcase(to_string(&1.title))}
     )

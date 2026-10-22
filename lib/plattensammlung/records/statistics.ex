@@ -19,22 +19,19 @@ defmodule Plattensammlung.Records.Statistics do
   def run(input, _opts, context) do
     # Same actor and authorization as the calling action
     opts = Ash.Context.to_opts(context)
-    # Someone else's collection if asked for, otherwise the actor's own (ADR 0013)
+    # Someone else's collection if asked for, otherwise the actor's own (ADR 0016)
     owner = input.arguments[:owner_id] || (context.actor && context.actor.id)
 
-    owned = Ash.Query.filter(Album, owner_id == ^owner and exists(copies, true))
-    copies = Ash.Query.filter(Copy, album.owner_id == ^owner)
+    owned = Ash.Query.filter(Album, exists(copies, owner_id == ^owner))
+    copies = Ash.Query.filter(Copy, owner_id == ^owner)
 
     with {:ok, albums} <- Ash.count(owned, opts),
          {:ok, copy_count} <- Ash.count(copies, opts),
          {:ok, wishlist} <-
-           Ash.count(Ash.Query.filter(Album, owner_id == ^owner and wanted == true), opts),
+           Ash.count(Ash.Query.filter(Album, exists(wishes, owner_id == ^owner)), opts),
          {:ok, artists} <-
            Ash.count(
-             Ash.Query.filter(
-               Artist,
-               exists(albums, owner_id == ^owner and exists(copies, true))
-             ),
+             Ash.Query.filter(Artist, exists(albums, exists(copies, owner_id == ^owner))),
              opts
            ),
          {:ok, collection} <- Ash.read(Ash.Query.load(owned, :artist), opts),

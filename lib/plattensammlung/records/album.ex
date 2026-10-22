@@ -1,8 +1,9 @@
 defmodule Plattensammlung.Records.Album do
   @moduledoc """
   An album, independent of a specific pressing (MusicBrainz release group,
-  Discogs master). Owned when it has at least one copy; may also sit on the
-  wishlist without any copy (see ADR 0006).
+  Discogs master). Albums are shared by all users (ADR 0016): each user adds
+  own copies (`Copy`) or a wish (`Wish`). `owned`, `copy_count` and `wanted`
+  describe the actor's own copies and wish (see ADR 0006).
   """
   use Ash.Resource,
     otp_app: :plattensammlung,
@@ -16,8 +17,11 @@ defmodule Plattensammlung.Records.Album do
     # ?include=artist,copies
     includes [:artist, :copies]
 
-    # Aggregates and calculations are only serialized when listed here
+    # Aggregates and calculations are only serialized when listed here. `id`
+    # is listed for the generic add actions, whose plain JSON answer has no
+    # JSON:API envelope with an id
     default_fields [
+      :id,
       :title,
       :year,
       :cover_url,
@@ -42,8 +46,6 @@ defmodule Plattensammlung.Records.Album do
     references do
       # An artist with albums cannot be deleted
       reference :artist, on_delete: :restrict
-      # Deleting a user deletes their albums
-      reference :owner, on_delete: :delete
     end
   end
 
@@ -61,7 +63,80 @@ defmodule Plattensammlung.Records.Album do
 
     defaults [:read]
 
+    create :create do
+      description "Creates a catalog entry; normally used through add_to_collection/add_to_wishlist."
+      primary? true
+      accept @fields
+
+      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
+
+      validate Plattensammlung.Records.Validations.CoverSource
+      change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
+      change Plattensammlung.Records.Changes.StoreCover
+      change Plattensammlung.Records.Changes.NormalizeStreamingIds
+      change Plattensammlung.Records.Changes.FillStreamingLinks
+    end
+
+    # Generic actions: they reuse an album that is already in the catalog
+    # (same Discogs/MusicBrainz id, or same artist and title) instead of
+    # creating a second one, then add the actor's copy or wish (ADR 0016)
+    action :add_to_collection, :struct do
+      description "Adds an album (reusing an existing one) together with an own copy."
+      constraints instance_of: __MODULE__
+      # No surrounding transaction: cover download and link lookup happen before
+      # the album's own transaction and must not hold a database connection
+
+      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
+      argument :title, :ci_string, allow_nil?: false, constraints: [max_length: 200]
+      argument :year, :integer
+      argument :cover_url, :string
+      argument :genres, {:array, :string}
+      argument :discogs_master_id, :integer
+      argument :musicbrainz_release_group_id, :uuid
+      argument :spotify_album_id, :string
+      argument :tidal_album_id, :string
+
+      argument :copy, :map do
+        description "Optional pressing details for the copy"
+        default %{}
+      end
+
+      run {Plattensammlung.Records.AddAlbum, to: :collection}
+    end
+
+    action :add_to_wishlist, :struct do
+      description "Puts an album (reusing an existing one) on the actor's wishlist."
+      constraints instance_of: __MODULE__
+      # No surrounding transaction: cover download and link lookup happen before
+      # the album's own transaction and must not hold a database connection
+
+      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
+      argument :title, :ci_string, allow_nil?: false, constraints: [max_length: 200]
+      argument :year, :integer
+      argument :cover_url, :string
+      argument :genres, {:array, :string}
+      argument :discogs_master_id, :integer
+      argument :musicbrainz_release_group_id, :uuid
+      argument :spotify_album_id, :string
+      argument :tidal_album_id, :string
+
+      run {Plattensammlung.Records.AddAlbum, to: :wishlist}
+    end
+
+    action :remove do
+      description """
+      Removes the album from the actor's collection and wishlist (own copies and
+      wish). The album itself is deleted once no one has it any more.
+      """
+
+      argument :album_id, :uuid, allow_nil?: false
+      # No surrounding transaction: the cover file is deleted only after the
+      # album's own delete is committed
+      run Plattensammlung.Records.RemoveAlbum
+    end
+
     destroy :destroy do
+      description "Deletes an album no one has in collection or wishlist."
       primary? true
       require_atomic? false
 
@@ -80,57 +155,11 @@ defmodule Plattensammlung.Records.Album do
       change Plattensammlung.Records.Changes.RemoveOrphanedArtist
     end
 
-    create :add_to_collection do
-      description "Adds an album together with one owned copy."
-      accept @fields
-
-      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
-
-      argument :copy, :map do
-        description "Optional pressing details for the copy"
-        default %{}
-      end
-
-      change set_attribute(:wanted, false)
-      change relate_actor(:owner)
-      validate Plattensammlung.Records.Validations.CoverSource
-      change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
-      change Plattensammlung.Records.Changes.StoreCover
-      change Plattensammlung.Records.Changes.NormalizeStreamingIds
-      change Plattensammlung.Records.Changes.FillStreamingLinks
-      change manage_relationship(:copy, :copies, type: :create)
-    end
-
-    create :add_to_wishlist do
-      description "Adds an album without a copy, marked as wanted."
-      accept @fields
-
-      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
-
-      change set_attribute(:wanted, true)
-      change relate_actor(:owner)
-      validate Plattensammlung.Records.Validations.CoverSource
-      change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
-      change Plattensammlung.Records.Changes.StoreCover
-      change Plattensammlung.Records.Changes.NormalizeStreamingIds
-      change Plattensammlung.Records.Changes.FillStreamingLinks
-    end
-
-    create :copy_to_wishlist do
-      description "Puts an album (usually someone else's) on the actor's wishlist, with an own copy of its cover."
-      argument :album_id, :uuid, allow_nil?: false
-      # Set by CopyAlbum from the source album, read by FindOrCreateArtist
-      argument :artist_name, :ci_string, public?: false, constraints: [max_length: 200]
-
-      change set_attribute(:wanted, true)
-      change relate_actor(:owner)
-      change Plattensammlung.Records.Changes.CopyAlbum
-      change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
-    end
-
     update :update do
-      accept @fields ++ [:wanted]
+      description "Changes the shared album data; `wanted` sets the actor's wish."
+      accept @fields
       argument :artist_name, :ci_string, constraints: [max_length: 200]
+      argument :wanted, :boolean, description: "On the actor's wishlist"
       require_atomic? false
       validate Plattensammlung.Records.Validations.CoverSource
 
@@ -140,39 +169,43 @@ defmodule Plattensammlung.Records.Album do
       change Plattensammlung.Records.Changes.NormalizeStreamingIds
       # Plain edits stay offline; a new Discogs/MusicBrainz link triggers the lookup
       change {Plattensammlung.Records.Changes.FillStreamingLinks, when: :links_changed}
+      change Plattensammlung.Records.Changes.SetWanted
     end
 
-    update :mark_wanted do
-      # Deliberately not atomic: AshJsonApi tries an atomic UPDATE first, and that
-      # fails when the response loads the owned/copy_count aggregates. A function
-      # change cannot run atomically, so Ash reads the record and updates it.
+    update :complete do
+      description "Fills only the still empty fields, e.g. when an import reuses an album."
+      accept @fields
       require_atomic? false
+      validate Plattensammlung.Records.Validations.CoverSource
 
-      change fn changeset, _context ->
-        Ash.Changeset.change_attribute(changeset, :wanted, true)
-      end
+      # First: drop values for fields that already have one
+      change Plattensammlung.Records.Changes.KeepExistingValues
+      change Plattensammlung.Records.Changes.StoreCover
+      change Plattensammlung.Records.Changes.NormalizeStreamingIds
+      change {Plattensammlung.Records.Changes.FillStreamingLinks, when: :links_changed}
+    end
+
+    # Deliberately not atomic: SetWanted works with hooks (and AshJsonApi tries
+    # an atomic UPDATE first, which fails when the response loads calculations)
+    update :mark_wanted do
+      require_atomic? false
+      change {Plattensammlung.Records.Changes.SetWanted, wanted: true}
     end
 
     update :unmark_wanted do
-      # Deliberately not atomic: AshJsonApi tries an atomic UPDATE first, and that
-      # fails when the response loads the owned/copy_count aggregates. A function
-      # change cannot run atomically, so Ash reads the record and updates it.
       require_atomic? false
-
-      change fn changeset, _context ->
-        Ash.Changeset.change_attribute(changeset, :wanted, false)
-      end
+      change {Plattensammlung.Records.Changes.SetWanted, wanted: false}
     end
 
     read :search do
       description """
-      Albums whose title or artist contains the query (case-insensitive),
-      optionally limited to the collection (owned) or the wishlist and filtered
-      by genre, decade, artist or condition (see AlbumFilters).
+      Albums whose title or artist contains the query (case-insensitive). With a
+      status only one user's collection, wishlist or the rest (`owner_id`,
+      default: the actor); without one the whole shared catalog. Filters by
+      genre, decade, artist or condition (see AlbumFilters).
       """
 
-      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
-      prepare Plattensammlung.Records.Preparations.ScopeToOwner
+      argument :owner_id, :uuid, description: "Whose collection/wishlist (default: the actor's)"
       argument :query, :ci_string, constraints: [max_length: 200]
       argument :genre, :string, constraints: [max_length: 200]
       argument :decade, :string, constraints: [max_length: 200]
@@ -180,7 +213,7 @@ defmodule Plattensammlung.Records.Album do
       argument :condition, :string, constraints: [max_length: 200]
 
       argument :status, :atom do
-        # :other = neither owned nor wanted (e.g. after deleting the last copy)
+        # :other = neither in the user's collection nor on their wishlist
         constraints one_of: [:collection, :wishlist, :other]
       end
 
@@ -189,23 +222,15 @@ defmodule Plattensammlung.Records.Album do
                  contains(artist.name, ^arg(:query))
              )
 
-      filter expr(
-               is_nil(^arg(:status)) or
-                 (^arg(:status) == :collection and exists(copies, true)) or
-                 (^arg(:status) == :wishlist and wanted == true) or
-                 (^arg(:status) == :other and not exists(copies, true) and wanted == false)
-             )
-
+      prepare Plattensammlung.Records.Preparations.ScopeToOwner
       prepare Plattensammlung.Records.Preparations.AlbumFilters
       prepare build(sort: [title: :asc], load: [:artist])
     end
 
     read :by_barcode do
-      description "Albums that have a copy with this barcode."
+      description "Albums of which the actor has a copy with this barcode."
       argument :barcode, :string, allow_nil?: false, constraints: [max_length: 20]
-      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
-      prepare Plattensammlung.Records.Preparations.ScopeToOwner
-      filter expr(exists(copies, barcode == ^arg(:barcode)))
+      filter expr(exists(copies, barcode == ^arg(:barcode) and owner_id == ^actor(:id)))
     end
 
     action :lookup, {:array, Plattensammlung.Records.LookupResult} do
@@ -267,11 +292,11 @@ defmodule Plattensammlung.Records.Album do
       end
 
       argument :copy_id, :uuid do
-        description "Copy of this album that gets the pressing details of a barcode result"
+        description "Own copy of this album that gets the pressing details of a barcode result"
       end
 
       argument :new_copy, :boolean do
-        description "Add the pressing as a new copy instead"
+        description "Add the pressing as a new own copy instead"
         default false
       end
 
@@ -298,32 +323,29 @@ defmodule Plattensammlung.Records.Album do
     end
 
     read :duplicates do
-      description "Albums with exactly this artist and title (case-insensitive)."
+      description "Albums in the catalog with exactly this artist and title (case-insensitive)."
       argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
       argument :title, :ci_string, allow_nil?: false, constraints: [max_length: 200]
-      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
-      prepare Plattensammlung.Records.Preparations.ScopeToOwner
 
       filter expr(title == ^arg(:title) and artist.name == ^arg(:artist_name))
     end
 
     read :collection do
-      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
-      prepare Plattensammlung.Records.Preparations.ScopeToOwner
-      filter expr(exists(copies, true))
+      argument :owner_id, :uuid, description: "Whose collection (default: the actor's)"
+      prepare {Plattensammlung.Records.Preparations.ScopeToOwner, status: :collection}
       prepare build(sort: [title: :asc], load: [:artist])
     end
 
     read :wishlist do
-      argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
-      prepare Plattensammlung.Records.Preparations.ScopeToOwner
-      filter expr(wanted == true)
+      argument :owner_id, :uuid, description: "Whose wishlist (default: the actor's)"
+      prepare {Plattensammlung.Records.Preparations.ScopeToOwner, status: :wishlist}
       prepare build(sort: [title: :asc], load: [:artist])
     end
   end
 
-  # Every signed-in user may see every collection; only the owner may change
-  # an album (ADR 0013). List actions show the actor's own albums by default.
+  # Albums are shared (ADR 0016): everyone signed in reads them and may add an
+  # own copy or wish. The shared data is changed by everyone who has the album
+  # in collection or wishlist; it is deleted only once no one has it any more.
   policies do
     policy action_type([:read, :create, :action]) do
       # :strict raises Forbidden instead of silently returning no rows
@@ -331,13 +353,26 @@ defmodule Plattensammlung.Records.Album do
       authorize_if actor_present()
     end
 
-    policy action_type([:update, :destroy]) do
-      authorize_if expr(owner_id == ^actor(:id))
+    policy action_type(:update) do
+      forbid_unless actor_present()
+      # Putting an album on the own wishlist needs no copy or wish yet
+      authorize_if action([:mark_wanted, :unmark_wanted])
+
+      authorize_if expr(
+                     exists(copies, owner_id == ^actor(:id)) or
+                       exists(wishes, owner_id == ^actor(:id))
+                   )
+    end
+
+    policy action_type(:destroy) do
+      forbid_unless actor_present()
+      authorize_if expr(not exists(copies, true) and not exists(wishes, true))
     end
   end
 
   attributes do
-    uuid_v7_primary_key :id
+    # Public, so the generic add actions return it in the API
+    uuid_v7_primary_key :id, public?: true
 
     attribute :title, :ci_string do
       allow_nil? false
@@ -356,13 +391,6 @@ defmodule Plattensammlung.Records.Album do
     attribute :genres, {:array, :string} do
       constraints max_length: 20, items: [max_length: 50]
       default []
-      allow_nil? false
-      public? true
-    end
-
-    attribute :wanted, :boolean do
-      description "On the wishlist"
-      default false
       allow_nil? false
       public? true
     end
@@ -386,23 +414,32 @@ defmodule Plattensammlung.Records.Album do
   end
 
   relationships do
-    belongs_to :owner, Plattensammlung.Accounts.User do
-      description "Whose collection or wishlist the album is in"
-      allow_nil? false
-      public? true
-    end
-
     belongs_to :artist, Plattensammlung.Records.Artist do
       allow_nil? false
       public? true
     end
 
     has_many :copies, Plattensammlung.Records.Copy do
+      description "Copies of all users"
+      public? true
+    end
+
+    has_many :wishes, Plattensammlung.Records.Wish do
+      description "Wishes of all users"
       public? true
     end
   end
 
   calculations do
+    # The actor's view of a shared album, computed by the database on demand
+    calculate :owned, :boolean, expr(exists(copies, owner_id == ^actor(:id))), public?: true
+    calculate :wanted, :boolean, expr(exists(wishes, owner_id == ^actor(:id))), public?: true
+
+    calculate :copy_count,
+              :integer,
+              expr(count(copies, query: [filter: expr(owner_id == ^actor(:id))])),
+              public?: true
+
     calculate :spotify_url,
               :string,
               expr(
@@ -435,11 +472,5 @@ defmodule Plattensammlung.Records.Album do
                 end
               ),
               public?: true
-  end
-
-  aggregates do
-    # Computed by the database on demand, never stored
-    count :copy_count, :copies, public?: true
-    exists :owned, :copies, public?: true
   end
 end

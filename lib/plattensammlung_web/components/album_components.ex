@@ -43,8 +43,8 @@ defmodule PlattensammlungWeb.AlbumComponents do
   defp css_url(url), do: URI.encode(url, &(&1 not in ~c"'\"()\\ "))
 
   @doc """
-  Shows whether an album is owned (with number of copies) or on the wishlist.
-  Expects the `owned` and `copy_count` aggregates to be loaded.
+  Shows whether the actor owns an album (with number of copies), wants it, or
+  neither. Expects the `owned`, `wanted` and `copy_count` calculations to be loaded.
   """
   attr :album, :map, required: true
 
@@ -57,7 +57,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
       <.icon name="hero-heart-micro" class="size-3" /> Wunschliste
     </span>
     <span :if={!@album.owned and !@album.wanted} class="badge badge-sm badge-ghost">
-      nicht zugeordnet
+      nicht bei dir
     </span>
     """
   end
