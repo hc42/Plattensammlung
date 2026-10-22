@@ -22,7 +22,9 @@ defmodule PlattensammlungWeb.AlbumComponents do
       role="img"
       aria-label={"Cover: #{@album.title}"}
     >
-      <div class="grid size-full place-items-center">
+      <%!-- With a cover the record only fades in late: it shows when the image is broken,
+           but doesn't flicker while the image loads --%>
+      <div class={["grid size-full place-items-center", @album.cover_url && "delayed-fade-in"]}>
         <div class="grid aspect-square w-3/4 place-items-center rounded-full bg-neutral shadow-inner">
           <div class="grid aspect-square w-1/3 place-items-center rounded-full bg-primary/70">
             <div class="size-1.5 rounded-full bg-base-100"></div>

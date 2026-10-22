@@ -117,6 +117,16 @@
   }
 }
 
+/* The placeholder record under a cover image: only visible if the image doesn't load */
+@keyframes delayed-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.delayed-fade-in {
+  animation: delayed-fade-in 0.4s ease-out 1.5s both;
+}
+
 /* The grooves of a record, for the disc that slides out of its sleeve */
 .vinyl-grooves {
   background-image:
