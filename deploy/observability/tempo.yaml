@@ -19,7 +19,15 @@ storage:
     wal:
       path: /var/tempo/wal
 
-compactor:
+# Tempo 3: compaction and retention moved to the backend scheduler and its
+# worker (the old "compactor" section is rejected). 14 days is also the default.
+backend_scheduler:
+  provider:
+    compaction:
+      compaction:
+        block_retention: 336h
+
+backend_worker:
   compaction:
     block_retention: 336h
 
