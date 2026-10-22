@@ -14,10 +14,11 @@ defmodule PlattensammlungWeb.ImportLive do
     <Layouts.app flash={@flash} current_user={@current_user}>
       <div class="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 class="text-2xl font-bold">Platte erfassen</h1>
+          <h1 class="text-2xl font-bold">{gettext("Add a record")}</h1>
           <p class="text-sm opacity-70">
-            Barcode scannen oder eintippen, nach Künstler und Titel suchen oder einen
-            Spotify-Album-Link einfügen.
+            {gettext(
+              "Scan or type a barcode, search for artist and title, or paste a Spotify album link."
+            )}
           </p>
         </div>
 
@@ -32,27 +33,28 @@ defmodule PlattensammlungWeb.ImportLive do
               name="query"
               id="lookup-input"
               value={@search_form[:query].value}
-              placeholder="z. B. 0602547288530 oder Beatles Abbey Road"
+              placeholder={gettext("e.g. 0602547288530 or Beatles Abbey Road")}
               autocomplete="off"
               autofocus
             />
           </label>
-          <.button variant="primary" id="lookup-submit" disabled={@loading}>Suchen</.button>
+          <.button variant="primary" id="lookup-submit" disabled={@loading}>{gettext("Search")}</.button>
         </.form>
 
         <p :if={not @discogs?} class="text-xs opacity-60" id="discogs-hint">
-          Discogs ist nicht eingerichtet (Umgebungsvariable <code>DISCOGS_TOKEN</code>),
-          es wird nur MusicBrainz durchsucht.
+          {gettext(
+            "Discogs is not set up (environment variable DISCOGS_TOKEN), only MusicBrainz is searched."
+          )}
         </p>
 
         <div :if={@loading} id="lookup-loading" class="flex items-center gap-2 py-6 opacity-70">
-          <span class="loading loading-spinner loading-sm"></span> Suche läuft …
+          <span class="loading loading-spinner loading-sm"></span> {gettext("Searching …")}
         </div>
 
         <div :if={@owned_pressing} id="owned-pressing" class="alert alert-success alert-soft">
           <.icon name="hero-check-circle" class="size-5" />
           <span>
-            Genau diese Pressung hast du schon:
+            {gettext("You already have exactly this pressing:")}
             <.link navigate={~p"/albums/#{@owned_pressing}"} class="link font-medium">
               {@owned_pressing.title}
             </.link>
@@ -60,11 +62,13 @@ defmodule PlattensammlungWeb.ImportLive do
         </div>
 
         <p :if={@error} id="lookup-error" class="alert alert-error alert-soft">
-          Die Suche hat nicht geklappt. Bitte später noch einmal versuchen.
+          {gettext("The search did not work. Please try again later.")}
         </p>
 
         <div :if={@searched? and not @loading and @results == %{} and !@error} id="no-results">
-          <p class="opacity-70">Nichts gefunden für „{@search_form[:query].value}“.</p>
+          <p class="opacity-70">
+            {gettext("Nothing found for “%{query}”.", query: @search_form[:query].value)}
+          </p>
         </div>
 
         <ul id="results" phx-update="stream" class="divide-y divide-base-300">
@@ -83,7 +87,9 @@ defmodule PlattensammlungWeb.ImportLive do
                 id={"import-collection-#{item.index}"}
               >
                 <.loading_icon name="hero-plus-micro" />
-                {if item.existing && item.existing.owned, do: "Exemplar", else: "Sammlung"}
+                {if item.existing && item.existing.owned,
+                  do: gettext("Copy"),
+                  else: gettext("Collection")}
               </button>
               <button
                 :if={!(item.existing && (item.existing.owned or item.existing.wanted))}
@@ -93,15 +99,17 @@ defmodule PlattensammlungWeb.ImportLive do
                 class="btn btn-ghost btn-sm phx-click-loading:pointer-events-none"
                 id={"import-wishlist-#{item.index}"}
               >
-                <.loading_icon name="hero-heart-micro" /> Wunsch
+                <.loading_icon name="hero-heart-micro" /> {gettext("Wish")}
               </button>
             </:actions>
           </.lookup_result>
         </ul>
 
         <p class="text-sm opacity-70">
-          Nicht dabei?
-          <.link navigate={~p"/albums/new"} class="link" id="manual-entry">Manuell erfassen</.link>
+          {gettext("Not there?")}
+          <.link navigate={~p"/albums/new"} class="link" id="manual-entry">
+            {gettext("Enter manually")}
+          </.link>
         </p>
       </div>
     </Layouts.app>
@@ -112,7 +120,7 @@ defmodule PlattensammlungWeb.ImportLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Platte erfassen")
+     |> assign(:page_title, gettext("Add a record"))
      |> assign(:discogs?, Lookup.Discogs.configured?())
      |> assign(:search_form, to_form(%{"query" => ""}))
      |> reset_results()
@@ -142,7 +150,7 @@ defmodule PlattensammlungWeb.ImportLive do
         {:noreply, push_patch(socket, to: ~p"/import?#{[q: String.trim(code)]}")}
 
       true ->
-        {:noreply, put_flash(socket, :error, "Das sieht nicht nach einem Barcode aus.")}
+        {:noreply, put_flash(socket, :error, gettext("That does not look like a barcode."))}
     end
   end
 
@@ -157,7 +165,7 @@ defmodule PlattensammlungWeb.ImportLive do
          |> push_navigate(to: ~p"/albums/#{album}")}
 
       {:error, _error} ->
-        {:noreply, put_flash(socket, :error, "Das Album konnte nicht angelegt werden.")}
+        {:noreply, put_flash(socket, :error, gettext("The album could not be created."))}
     end
   end
 
@@ -225,8 +233,8 @@ defmodule PlattensammlungWeb.ImportLive do
            Records.add_to_collection(result.artist_name, result.title, attrs, actor: actor) do
       message =
         if existing && existing.owned,
-          do: "Exemplar von „#{album.title}“ hinzugefügt.",
-          else: "„#{album.title}“ ist jetzt in deiner Sammlung."
+          do: gettext("Added a copy of “%{title}”.", title: album.title),
+          else: gettext("“%{title}” is now in your collection.", title: album.title)
 
       {:ok, album, message}
     end
@@ -237,11 +245,11 @@ defmodule PlattensammlungWeb.ImportLive do
 
     with {:ok, album} <-
            Records.add_to_wishlist(result.artist_name, result.title, attrs, actor: actor) do
-      {:ok, album, "„#{album.title}“ steht auf der Wunschliste."}
+      {:ok, album, gettext("“%{title}” is on the wishlist.", title: album.title)}
     end
   end
 
-  defp existing_label(%{owned: true}), do: "Hast du schon"
-  defp existing_label(%{wanted: true}), do: "Steht auf deiner Wunschliste"
-  defp existing_label(_album), do: "Bei anderen Sammlern"
+  defp existing_label(%{owned: true}), do: gettext("You already have it")
+  defp existing_label(%{wanted: true}), do: gettext("On your wishlist")
+  defp existing_label(_album), do: gettext("With other collectors")
 end

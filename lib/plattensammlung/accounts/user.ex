@@ -57,7 +57,7 @@ defmodule Plattensammlung.Accounts.User do
     end
 
     update :update_profile do
-      accept [:display_name]
+      accept [:display_name, :locale]
     end
 
     read :get_by_subject do
@@ -155,6 +155,12 @@ defmodule Plattensammlung.Accounts.User do
     attribute :display_name, :string do
       description "Name other users see (the e-mail stays private)"
       constraints max_length: 40
+      public? true
+    end
+
+    attribute :locale, :string do
+      description "Interface language; nil = the browser's (ADR 0021)"
+      constraints match: ~r/^(en|de)$/
       public? true
     end
   end

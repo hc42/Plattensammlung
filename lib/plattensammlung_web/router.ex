@@ -13,6 +13,8 @@ defmodule PlattensammlungWeb.Router do
     plug :put_secure_browser_headers
     plug PlattensammlungWeb.Plugs.ContentSecurityPolicy
     plug :load_from_session
+    # After load_from_session: the user's language choice wins over the browser's
+    plug PlattensammlungWeb.Locale
   end
 
   # Development tools (LiveDashboard, mailbox preview) bring inline scripts and
@@ -32,6 +34,8 @@ defmodule PlattensammlungWeb.Router do
     plug :fetch_flash
     plug :protect_from_forgery
     plug :load_from_session
+    # Error texts in the sign-in language
+    plug PlattensammlungWeb.Locale
   end
 
   # API clients authenticate with `Authorization: Bearer <api key>`. Without a key
@@ -92,7 +96,10 @@ defmodule PlattensammlungWeb.Router do
     pipe_through :browser
 
     ash_authentication_live_session :authenticated,
-      on_mount: [{PlattensammlungWeb.LiveUserAuth, :live_user_required}] do
+      on_mount: [
+        {PlattensammlungWeb.LiveUserAuth, :live_user_required},
+        {PlattensammlungWeb.Locale, :default}
+      ] do
       live "/", AlbumLive.Index, :collection
       live "/wishlist", AlbumLive.Index, :wishlist
       live "/import", ImportLive
@@ -111,7 +118,10 @@ defmodule PlattensammlungWeb.Router do
     end
 
     ash_authentication_live_session :unauthenticated,
-      on_mount: [{PlattensammlungWeb.LiveUserAuth, :live_no_user}] do
+      on_mount: [
+        {PlattensammlungWeb.LiveUserAuth, :live_no_user},
+        {PlattensammlungWeb.Locale, :default}
+      ] do
       live "/sign-in", SignInLive
     end
 
@@ -125,7 +135,10 @@ defmodule PlattensammlungWeb.Router do
     # The link in the e-mail opens this page; a click on the button signs in
     magic_sign_in_route(Plattensammlung.Accounts.User, :magic_link,
       auth_routes_prefix: "/auth",
-      overrides: [PlattensammlungWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI]
+      overrides: [PlattensammlungWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.DaisyUI],
+      on_mount: [{PlattensammlungWeb.Locale, :default}],
+      # The override texts below are msgids in priv/gettext/*/auth.po
+      gettext_backend: {PlattensammlungWeb.Gettext, "auth"}
     )
   end
 

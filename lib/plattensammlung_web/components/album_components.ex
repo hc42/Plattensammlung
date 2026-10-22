@@ -3,6 +3,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
   UI building blocks for albums and copies.
   """
   use Phoenix.Component
+  use Gettext, backend: PlattensammlungWeb.Gettext
 
   import PlattensammlungWeb.CoreComponents, only: [icon: 1]
 
@@ -58,10 +59,10 @@ defmodule PlattensammlungWeb.AlbumComponents do
       {@album.copy_count}×
     </span>
     <span :if={@album.wanted} class="badge badge-sm badge-accent gap-1">
-      <.icon name="hero-heart-micro" class="size-3" /> Wunschliste
+      <.icon name="hero-heart-micro" class="size-3" /> {gettext("Wishlist")}
     </span>
     <span :if={!@album.owned and !@album.wanted} class="badge badge-sm badge-ghost">
-      nicht bei dir
+      {gettext("not yours")}
     </span>
     """
   end
@@ -80,14 +81,21 @@ defmodule PlattensammlungWeb.AlbumComponents do
       phx-hook="BarcodeScanner"
       phx-update="ignore"
       data-active="false"
+      data-msg-needs-https={gettext("The live camera needs HTTPS. Take a photo instead.")}
+      data-msg-denied={gettext("Camera access was not allowed.")}
+      data-msg-failed={gettext("The camera could not be started.")}
+      data-msg-aim={gettext("Hold the barcode inside the frame …")}
+      data-msg-reading={gettext("Reading the photo …")}
+      data-msg-no-barcode={gettext("No barcode found. Please get closer and take a sharp photo.")}
+      data-msg-unreadable={gettext("The photo could not be read.")}
       class="group space-y-2"
     >
       <div class="flex flex-wrap gap-2 group-data-[active=true]:hidden">
         <button type="button" data-start class="btn btn-sm btn-neutral" id="scan-camera">
-          <.icon name="hero-camera" class="size-4" /> Mit Kamera scannen
+          <.icon name="hero-camera" class="size-4" /> {gettext("Scan with camera")}
         </button>
         <label class="btn btn-sm btn-ghost" id="scan-photo">
-          <.icon name="hero-photo" class="size-4" /> Foto aufnehmen
+          <.icon name="hero-photo" class="size-4" /> {gettext("Take a photo")}
           <input type="file" accept="image/*" capture="environment" class="hidden" />
         </label>
       </div>
@@ -101,7 +109,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
           type="button"
           data-stop
           class="btn btn-sm btn-circle absolute right-2 top-2"
-          aria-label="Kamera schließen"
+          aria-label={gettext("Close camera")}
         >
           <.icon name="hero-x-mark" class="size-4" />
         </button>
@@ -141,6 +149,35 @@ defmodule PlattensammlungWeb.AlbumComponents do
     </li>
     """
   end
+
+  @doc "A date (or datetime) in the format of the current language."
+  def format_date(date) do
+    case Gettext.get_locale(PlattensammlungWeb.Gettext) do
+      "de" -> Calendar.strftime(date, "%d.%m.%Y")
+      _ -> Calendar.strftime(date, "%b %-d, %Y")
+    end
+  end
+
+  @doc "How a user is shown to others: the display name, or a placeholder."
+  def user_name(%{display_name: name}) when is_binary(name) and name != "", do: name
+  def user_name(_user), do: gettext("Unnamed")
+
+  @doc "Label of an album or copy field, e.g. in match previews."
+  def field_label(:barcode), do: gettext("Barcode")
+  def field_label(:label), do: gettext("Label")
+  def field_label(:catalog_number), do: gettext("Catalogue number")
+  def field_label(:country), do: gettext("Country")
+  def field_label(:pressing_year), do: gettext("Pressing year")
+  def field_label(:format), do: gettext("Format")
+  def field_label(:discogs_release_id), do: gettext("Discogs pressing")
+  def field_label(:musicbrainz_release_id), do: gettext("MusicBrainz pressing")
+  def field_label(:year), do: gettext("Year")
+  def field_label(:genres), do: gettext("Genres")
+  def field_label(:cover_url), do: gettext("Cover")
+  def field_label(:discogs_master_id), do: gettext("Discogs link")
+  def field_label(:musicbrainz_release_group_id), do: gettext("MusicBrainz link")
+  def field_label(:spotify_album_id), do: gettext("Spotify link")
+  def field_label(field), do: to_string(field)
 
   defp source_label(:discogs), do: "Discogs"
   defp source_label(:musicbrainz), do: "MusicBrainz"

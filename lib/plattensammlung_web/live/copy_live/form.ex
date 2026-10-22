@@ -15,19 +15,22 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   # Picked from a list of earlier values to avoid spelling variants
   @tag_fields [:format, :label, :country]
 
-  @fields [
-    format: "Format",
-    label: "Label",
-    catalog_number: "Katalognummer",
-    barcode: "Barcode",
-    country: "Land",
-    pressing_year: "Jahr der Pressung",
-    media_condition: "Zustand Platte",
-    sleeve_condition: "Zustand Hülle",
-    purchased_on: "Gekauft am",
-    discogs_release_id: "Discogs-Release-ID",
-    notes: "Notizen"
-  ]
+  # Optional fields with their labels (a function: the labels depend on the language)
+  defp fields do
+    [
+      format: field_label(:format),
+      label: field_label(:label),
+      catalog_number: field_label(:catalog_number),
+      barcode: field_label(:barcode),
+      country: field_label(:country),
+      pressing_year: field_label(:pressing_year),
+      media_condition: gettext("Media condition"),
+      sleeve_condition: gettext("Sleeve condition"),
+      purchased_on: gettext("Purchased on"),
+      discogs_release_id: gettext("Discogs release ID"),
+      notes: gettext("Notes")
+    ]
+  end
 
   @impl true
   def render(assigns) do
@@ -40,13 +43,13 @@ defmodule PlattensammlungWeb.CopyLive.Form do
           </.link>
           <h1 class="mt-2 text-2xl font-bold">{@page_title}</h1>
           <p class="text-sm opacity-70">
-            {@album.artist.name} – {@album.title}. Alle Angaben sind optional.
+            {@album.artist.name} – {@album.title}. {gettext("Everything is optional.")}
           </p>
         </div>
 
         <.form for={@form} id="copy-form" phx-change="validate" phx-submit="save">
           <p :if={MapSet.size(@visible) == 0} class="pb-2 text-sm opacity-70" id="no-fields">
-            Noch keine Angaben. Füge hinzu, was du festhalten möchtest.
+            {gettext("No details yet. Add what you want to keep track of.")}
           </p>
 
           <.optional_field
@@ -77,10 +80,10 @@ defmodule PlattensammlungWeb.CopyLive.Form do
           </div>
 
           <div class="flex gap-2 pt-4">
-            <.button variant="primary" phx-disable-with="Speichern…" id="save-copy">
-              Speichern
+            <.button variant="primary" phx-disable-with={gettext("Saving …")} id="save-copy">
+              {gettext("Save")}
             </.button>
-            <.button navigate={~p"/albums/#{@album}"}>Abbrechen</.button>
+            <.button navigate={~p"/albums/#{@album}"}>{gettext("Cancel")}</.button>
           </div>
         </.form>
 
@@ -122,7 +125,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
       )
 
     socket
-    |> assign(:page_title, "Exemplar hinzufügen")
+    |> assign(:page_title, gettext("Add a copy"))
     |> assign(:copy, nil)
     |> assign(:album, album)
     |> assign_fields(nil)
@@ -141,7 +144,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
       )
 
     socket
-    |> assign(:page_title, "Exemplar bearbeiten")
+    |> assign(:page_title, gettext("Edit copy"))
     |> assign(:copy, copy)
     |> assign(:album, copy.album)
     |> assign_fields(copy)
@@ -150,9 +153,9 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
   defp assign_fields(socket, copy) do
     socket
-    |> assign(:fields, @fields)
+    |> assign(:fields, fields())
     |> assign(:tag_fields, @tag_fields)
-    |> assign(:visible, OptionalFields.initially_visible(copy, @fields))
+    |> assign(:visible, OptionalFields.initially_visible(copy, fields()))
     |> assign(:focus, nil)
     |> assign(:tag_keys, %{})
     |> assign(:tags, %{
@@ -177,9 +180,9 @@ defmodule PlattensammlungWeb.CopyLive.Form do
   defp distinct(values),
     do: values |> Enum.reject(&(&1 in [nil, ""])) |> Enum.uniq() |> Enum.sort()
 
-  defp tag_placeholder(:format), do: "z. B. LP"
-  defp tag_placeholder(:label), do: "z. B. Apple Records"
-  defp tag_placeholder(:country), do: "z. B. UK"
+  defp tag_placeholder(:format), do: gettext("e.g. %{example}", example: "LP")
+  defp tag_placeholder(:label), do: gettext("e.g. %{example}", example: "Apple Records")
+  defp tag_placeholder(:country), do: gettext("e.g. %{example}", example: "UK")
 
   defp tag_config(socket) do
     Map.new(@tag_fields, fn field ->
@@ -259,7 +262,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
   @impl true
   def handle_event("show_field", %{"field" => field}, socket) do
-    {:noreply, OptionalFields.show(socket, field, @fields)}
+    {:noreply, OptionalFields.show(socket, field, fields())}
   end
 
   def handle_event("hide_field", %{"field" => field}, socket) do
@@ -269,7 +272,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
         tag_field -> TagInput.clear(socket, tag_field)
       end
 
-    {:noreply, OptionalFields.hide(socket, field, @fields)}
+    {:noreply, OptionalFields.hide(socket, field, fields())}
   end
 
   def handle_event("add_tag", %{"field" => field, "tag" => text}, socket) do
@@ -289,7 +292,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
       {:ok, _copy} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Exemplar gespeichert.")
+         |> put_flash(:info, gettext("Copy saved."))
          |> push_navigate(to: ~p"/albums/#{socket.assigns.album}")}
 
       {:error, form} ->

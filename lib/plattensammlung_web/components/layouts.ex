@@ -47,20 +47,20 @@ defmodule PlattensammlungWeb.Layouts do
         </.link>
         <%= if @current_user do %>
           <.link navigate={~p"/"} class="btn btn-ghost btn-sm px-2 sm:px-3" id="nav-collection">
-            Sammlung
+            {gettext("Collection")}
           </.link>
           <.link navigate={~p"/wishlist"} class="btn btn-ghost btn-sm px-2 sm:px-3" id="nav-wishlist">
-            Wunschliste
+            {gettext("Wishlist")}
           </.link>
           <.link navigate={~p"/import"} class="btn btn-primary btn-sm px-2 sm:px-3" id="nav-new">
             <.icon name="hero-plus" class="size-4" />
-            <span class="hidden sm:inline">Erfassen</span>
+            <span class="hidden sm:inline">{pgettext("navigation", "Add")}</span>
           </.link>
           <.link
             navigate={~p"/collectors"}
             class="btn btn-ghost btn-sm btn-square"
             id="nav-collectors"
-            aria-label="Sammler"
+            aria-label={gettext("Collectors")}
           >
             <.icon name="hero-users" class="size-5" />
           </.link>
@@ -68,7 +68,7 @@ defmodule PlattensammlungWeb.Layouts do
             navigate={~p"/stats"}
             class="btn btn-ghost btn-sm btn-square"
             id="nav-stats"
-            aria-label="Statistik"
+            aria-label={gettext("Statistics")}
           >
             <.icon name="hero-chart-bar" class="size-5" />
           </.link>
@@ -76,7 +76,7 @@ defmodule PlattensammlungWeb.Layouts do
             navigate={~p"/account"}
             class="btn btn-ghost btn-sm btn-square"
             id="nav-account"
-            aria-label="Konto"
+            aria-label={gettext("Account")}
           >
             <.icon name="hero-user-circle" class="size-5" />
           </.link>

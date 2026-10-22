@@ -24,4 +24,5 @@ consequences. New ADRs start from the [template](template.md).
 | [0017](0017-rate-limits.md) | Rate limits | Accepted |
 | [0018](0018-path-prefix.md) | Optional path prefix | Accepted |
 | [0019](0019-metrics-and-traces.md) | Metrics (Prometheus) and traces (OpenTelemetry) | Accepted |
-| [0020](0020-documentation-in-english.md) | Documentation in English | Accepted |
+| [0020](0020-documentation-in-english.md) | Documentation in English | Accepted, UI language superseded by 0021 |
+| [0021](0021-internationalization.md) | Interface in English and German | Accepted |

@@ -88,13 +88,13 @@ defmodule PlattensammlungWeb.AlbumLiveTest do
       |> form("#album-form", album: %{artist_name: "the beatles", title: "abbey road"})
       |> render_change()
 
-      assert has_element?(view, "#duplicate-warning", "in deiner Sammlung")
+      assert has_element?(view, "#duplicate-warning", "in your collection")
 
       view
       |> form("#album-form", album: %{artist_name: "can", title: "tago mago"})
       |> render_change()
 
-      assert has_element?(view, "#duplicate-warning", "bei anderen Sammlern")
+      assert has_element?(view, "#duplicate-warning", "with other collectors")
     end
 
     test "edits optional fields and genre tags", %{conn: conn, user: user} do

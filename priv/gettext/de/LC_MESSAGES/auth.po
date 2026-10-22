@@ -1,0 +1,16 @@
+## Texts of the AshAuthentication sign-in pages (PlattensammlungWeb.AuthOverrides),
+## translated through `gettext_backend: {PlattensammlungWeb.Gettext, "auth"}`.
+## They are not extracted automatically: keep this file in sync with the overrides.
+msgid ""
+msgstr ""
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Sign in now"
+msgstr "Jetzt anmelden"
+
+msgid "Stay signed in"
+msgstr "Angemeldet bleiben"
+
+msgid "Signing in …"
+msgstr "Anmelden …"

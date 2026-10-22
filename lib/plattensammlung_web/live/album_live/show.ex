@@ -27,17 +27,17 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
             <div class="flex flex-wrap gap-1">
               <label for={@uploads.cover.ref} class="btn btn-ghost btn-sm" id="change-cover">
                 <.icon name="hero-photo" class="size-4" />
-                {if @album.cover_url, do: "Cover ändern", else: "Cover hinzufügen"}
+                {if @album.cover_url, do: gettext("Change cover"), else: gettext("Add cover")}
               </label>
               <button
                 :if={@album.cover_url}
                 type="button"
                 phx-click="remove_cover"
-                data-confirm="Cover entfernen?"
+                data-confirm={gettext("Remove cover?")}
                 class="btn btn-ghost btn-sm text-error"
                 id="remove-cover"
               >
-                <.icon name="hero-trash" class="size-4" /> Entfernen
+                <.icon name="hero-trash" class="size-4" /> {gettext("Remove")}
               </button>
             </div>
             <progress
@@ -73,20 +73,20 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 <% @album.owned -> %>
                   <.icon name="hero-check-circle" class="size-5 text-success" />
                   <span id="owned-status">
-                    Hast du – {if @album.copy_count == 1,
-                      do: "1 Exemplar",
-                      else: "#{@album.copy_count} Exemplare"}
+                    {gettext("You have it – %{copies}",
+                      copies: ngettext("1 copy", "%{count} copies", @album.copy_count)
+                    )}
                   </span>
                 <% @album.wanted -> %>
                   <.icon name="hero-heart" class="size-5 text-accent" />
-                  <span id="owned-status">Steht auf deiner Wunschliste</span>
+                  <span id="owned-status">{gettext("On your wishlist")}</span>
                 <% true -> %>
                   <.icon name="hero-minus-circle" class="size-5 opacity-60" />
-                  <span id="owned-status">Nicht in deiner Sammlung</span>
+                  <span id="owned-status">{gettext("Not in your collection")}</span>
               <% end %>
             </p>
             <p :if={@holders != []} id="other-holders">
-              <.icon name="hero-user-group" class="size-5 opacity-60" /> Auch bei
+              <.icon name="hero-user-group" class="size-5 opacity-60" /> {gettext("Also with")}
               <span :for={{holder, index} <- Enum.with_index(@holders)}>
                 <.link
                   navigate={holder_path(holder)}
@@ -103,7 +103,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
           <div class="flex flex-wrap gap-2" id="album-actions">
             <.button navigate={~p"/albums/#{@album}/copies/new"} variant="primary" id="add-copy">
               <.icon name="hero-plus" class="size-4" />
-              {if @album.owned, do: "Weiteres Exemplar", else: "Habe ich jetzt"}
+              {if @album.owned, do: gettext("Another copy"), else: gettext("I have it now")}
             </.button>
             <.button
               :if={!@album.owned}
@@ -115,7 +115,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 name={if @album.wanted, do: "hero-heart-solid", else: "hero-heart"}
                 class="size-4"
               />
-              {if @album.wanted, do: "Von Wunschliste entfernen", else: "Auf Wunschliste"}
+              {if @album.wanted, do: gettext("Remove from wishlist"), else: gettext("Add to wishlist")}
             </.button>
             <%= if @can_edit do %>
               <.button
@@ -123,10 +123,10 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 id="match-album"
                 class="btn btn-ghost"
               >
-                <.icon name="hero-arrow-path" class="size-4" /> Abgleichen
+                <.icon name="hero-arrow-path" class="size-4" /> {gettext("Match")}
               </.button>
               <.button navigate={~p"/albums/#{@album}/edit"} id="edit-album" class="btn btn-ghost">
-                <.icon name="hero-pencil-square" class="size-4" /> Bearbeiten
+                <.icon name="hero-pencil-square" class="size-4" /> {gettext("Edit")}
               </.button>
             <% end %>
             <%!-- An album no one has (e.g. after deleting the last copy) can go entirely --%>
@@ -137,7 +137,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               id="remove-album"
               class="btn btn-ghost text-error"
             >
-              <.icon name="hero-trash" class="size-4" /> Entfernen
+              <.icon name="hero-trash" class="size-4" /> {gettext("Remove")}
             </.button>
           </div>
 
@@ -168,7 +168,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               class="btn btn-sm btn-ghost phx-click-loading:pointer-events-none"
               id="find-streaming-links"
             >
-              <.loading_icon name="hero-magnifying-glass" /> Streaming-Links suchen
+              <.loading_icon name="hero-magnifying-glass" /> {gettext("Find streaming links")}
             </button>
             <a
               :if={@album.discogs_url}
@@ -178,14 +178,15 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               class="link inline-flex items-center gap-1"
               id="discogs-link"
             >
-              Auf Discogs ansehen <.icon name="hero-arrow-top-right-on-square-micro" class="size-4" />
+              {gettext("View on Discogs")}
+              <.icon name="hero-arrow-top-right-on-square-micro" class="size-4" />
             </a>
           </div>
         </div>
       </div>
 
       <section :if={@album.copies != []} class="space-y-3">
-        <h2 class="text-lg font-semibold">Deine Exemplare</h2>
+        <h2 class="text-lg font-semibold">{gettext("Your copies")}</h2>
         <div id="copies" class="grid gap-3 sm:grid-cols-2">
           <div
             :for={copy <- @album.copies}
@@ -201,17 +202,17 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                   navigate={~p"/copies/#{copy}/edit"}
                   class="btn btn-ghost btn-xs"
                   id={"edit-copy-#{copy.id}"}
-                  aria-label="Exemplar bearbeiten"
+                  aria-label={gettext("Edit copy")}
                 >
                   <.icon name="hero-pencil-square" class="size-4" />
                 </.link>
                 <button
                   phx-click="delete_copy"
                   phx-value-id={copy.id}
-                  data-confirm="Exemplar löschen?"
+                  data-confirm={gettext("Delete copy?")}
                   class="btn btn-ghost btn-xs text-error"
                   id={"delete-copy-#{copy.id}"}
-                  aria-label="Exemplar löschen"
+                  aria-label={gettext("Delete copy")}
                 >
                   <.icon name="hero-trash" class="size-4" />
                 </button>
@@ -233,7 +234,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
               rel="noopener"
               class="link mt-2 inline-flex items-center gap-1 text-xs"
             >
-              Pressung auf Discogs
+              {gettext("Pressing on Discogs")}
               <.icon name="hero-arrow-top-right-on-square-micro" class="size-3" />
             </a>
           </div>
@@ -274,8 +275,8 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
     message =
       if found == [],
-        do: "Keine Streaming-Links gefunden. Du kannst sie unter „Bearbeiten“ selbst eintragen.",
-        else: "Gefunden: #{Enum.join(found, ", ")}."
+        do: gettext("No streaming links found. You can add them yourself under “Edit”."),
+        else: gettext("Found: %{links}.", links: Enum.join(found, ", "))
 
     {:noreply, socket |> put_flash(:info, message) |> load_album(album.id)}
   end
@@ -285,7 +286,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
     {:noreply,
      socket
-     |> put_flash(:info, "Cover entfernt.")
+     |> put_flash(:info, gettext("Cover removed."))
      |> load_album(album.id)}
   end
 
@@ -308,7 +309,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
     {:noreply,
      socket
-     |> put_flash(:info, "„#{album.title}“ wurde entfernt.")
+     |> put_flash(:info, gettext("“%{title}” was removed.", title: album.title))
      |> push_navigate(to: back_path(album))}
   end
 
@@ -318,7 +319,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
     {:noreply,
      socket
-     |> put_flash(:info, "Exemplar gelöscht.")
+     |> put_flash(:info, gettext("Copy deleted."))
      |> load_album(socket.assigns.album.id)}
   end
 
@@ -335,10 +336,10 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
 
       case result do
         {:ok, _album} ->
-          {:noreply, socket |> put_flash(:info, "Cover gespeichert.") |> load_album(album.id)}
+          {:noreply, socket |> put_flash(:info, gettext("Cover saved.")) |> load_album(album.id)}
 
         {:error, _error} ->
-          {:noreply, put_flash(socket, :error, "Das Bild konnte nicht gelesen werden.")}
+          {:noreply, put_flash(socket, :error, gettext("The image could not be read."))}
       end
     else
       {:noreply, socket}
@@ -348,10 +349,10 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   defp cover_errors(upload) do
     (upload_errors(upload) ++ Enum.flat_map(upload.entries, &upload_errors(upload, &1)))
     |> Enum.map(fn
-      :too_large -> "Das Bild ist größer als 10 MB."
-      :not_accepted -> "Bitte ein Bild im Format JPEG, PNG, WebP oder GIF wählen."
-      :too_many_files -> "Bitte nur ein Bild wählen."
-      _other -> "Das Bild konnte nicht hochgeladen werden."
+      :too_large -> gettext("The image is larger than 10 MB.")
+      :not_accepted -> gettext("Please choose a JPEG, PNG, WebP or GIF image.")
+      :too_many_files -> gettext("Please choose only one image.")
+      _other -> gettext("The image could not be uploaded.")
     end)
     |> Enum.uniq()
   end
@@ -395,7 +396,7 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     |> Enum.map(fn user ->
       %{
         id: user.id,
-        name: Accounts.display_name(user),
+        name: user_name(user),
         copies: Map.get(copy_counts, user.id, 0),
         wanted: MapSet.member?(wishers, user.id)
       }
@@ -408,15 +409,14 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   # Between holders, directly after the previous one (no space before it)
   defp comma(holders, index), do: if(index < length(holders) - 1, do: ",")
 
-  defp holder_label(%{copies: 0}), do: "Wunschliste"
-  defp holder_label(%{copies: 1}), do: "1 Exemplar"
-  defp holder_label(%{copies: count}), do: "#{count} Exemplare"
+  defp holder_label(%{copies: 0}), do: gettext("Wishlist")
+  defp holder_label(%{copies: count}), do: ngettext("1 copy", "%{count} copies", count)
 
   defp remove_confirmation([]),
-    do: "Album löschen? Außer dir hat es niemand in Sammlung oder Wunschliste."
+    do: gettext("Delete the album? No one else has it in their collection or wishlist.")
 
   defp remove_confirmation(_holders),
-    do: "Deine Exemplare und deinen Wunsch entfernen? Die anderen behalten das Album."
+    do: gettext("Remove your copies and your wish? The others keep the album.")
 
   # Wikidata needs a Discogs or MusicBrainz link to find the album
   defp can_find_streaming?(album) do
@@ -428,9 +428,9 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
   defp back_path(%{wanted: true}), do: ~p"/wishlist"
   defp back_path(_album), do: ~p"/albums"
 
-  defp back_label(%{owned: true}), do: "Sammlung"
-  defp back_label(%{wanted: true}), do: "Wunschliste"
-  defp back_label(_album), do: "Alle Alben"
+  defp back_label(%{owned: true}), do: gettext("Collection")
+  defp back_label(%{wanted: true}), do: gettext("Wishlist")
+  defp back_label(_album), do: gettext("All albums")
 
   defp copy_heading(copy) do
     [
@@ -440,22 +440,22 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
     ]
     |> Enum.reject(&(&1 in [nil, ""]))
     |> case do
-      [] -> "Exemplar"
+      [] -> gettext("Copy")
       parts -> Enum.join(parts, " · ")
     end
   end
 
-  defp purchase_date(%{purchased_on: %Date{} = date}), do: Calendar.strftime(date, "%d.%m.%Y")
+  defp purchase_date(%{purchased_on: %Date{} = date}), do: format_date(date)
   defp purchase_date(_copy), do: nil
 
   defp copy_details(copy) do
     [
-      {"Katalognummer", copy.catalog_number},
-      {"Barcode", copy.barcode},
-      {"Land", copy.country},
-      {"Zustand Platte", condition_label(copy.media_condition)},
-      {"Zustand Hülle", condition_label(copy.sleeve_condition)},
-      {"Gekauft am", purchase_date(copy)}
+      {field_label(:catalog_number), copy.catalog_number},
+      {field_label(:barcode), copy.barcode},
+      {field_label(:country), copy.country},
+      {gettext("Media condition"), condition_label(copy.media_condition)},
+      {gettext("Sleeve condition"), condition_label(copy.sleeve_condition)},
+      {gettext("Purchased on"), purchase_date(copy)}
     ]
   end
 end

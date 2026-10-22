@@ -6,6 +6,7 @@ defmodule PlattensammlungWeb.Ownership do
   to the album page right away instead of showing a form that cannot be saved.
   """
   use PlattensammlungWeb, :verified_routes
+  use Gettext, backend: PlattensammlungWeb.Gettext
 
   require Ash.Query
 
@@ -27,7 +28,7 @@ defmodule PlattensammlungWeb.Ownership do
       redirect_back(
         socket,
         album.id,
-        "Nur wer das Album in Sammlung oder Wunschliste hat, kann es ändern."
+        gettext("Only those who have the album in their collection or wishlist can change it.")
       )
     end
   end
@@ -37,7 +38,7 @@ defmodule PlattensammlungWeb.Ownership do
     if copy.owner_id == socket.assigns.current_user.id do
       :ok
     else
-      redirect_back(socket, copy.album_id, "Nur der Besitzer kann dieses Exemplar ändern.")
+      redirect_back(socket, copy.album_id, gettext("Only the owner can change this copy."))
     end
   end
 

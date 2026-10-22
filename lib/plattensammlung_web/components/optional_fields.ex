@@ -16,6 +16,7 @@ defmodule PlattensammlungWeb.OptionalFields do
   also deletes its value when the form is saved.
   """
   use Phoenix.Component
+  use Gettext, backend: PlattensammlungWeb.Gettext
 
   import PlattensammlungWeb.CoreComponents, only: [icon: 1]
 
@@ -44,7 +45,7 @@ defmodule PlattensammlungWeb.OptionalFields do
           phx-click="hide_field"
           phx-value-field={@field}
           class="btn btn-ghost btn-sm btn-circle mt-7 text-error"
-          aria-label={"#{@label} entfernen"}
+          aria-label={gettext("Remove %{field}", field: @label)}
           id={"remove-#{@field}"}
         >
           <.icon name="hero-minus-circle-solid" class="size-5" />

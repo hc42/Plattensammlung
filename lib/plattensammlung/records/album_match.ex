@@ -33,23 +33,6 @@ defmodule Plattensammlung.Records.AlbumMatch do
     :musicbrainz_release_id
   ]
 
-  @labels %{
-    barcode: "Barcode",
-    label: "Label",
-    catalog_number: "Katalognummer",
-    country: "Land",
-    pressing_year: "Jahr der Pressung",
-    format: "Format",
-    discogs_release_id: "Discogs-Pressung",
-    musicbrainz_release_id: "MusicBrainz-Pressung",
-    year: "Jahr",
-    genres: "Genres",
-    cover_url: "Cover",
-    discogs_master_id: "Discogs-Verknüpfung",
-    musicbrainz_release_group_id: "MusicBrainz-Verknüpfung",
-    spotify_album_id: "Spotify-Verknüpfung"
-  }
-
   @doc "Map of field => new value."
   def changes(album, result, mode) when mode in [:fill, :overwrite] do
     for field <- @fields,
@@ -73,8 +56,8 @@ defmodule Plattensammlung.Records.AlbumMatch do
   @doc "Whether the result carries pressing details (only barcode lookups do)."
   def pressing?(result), do: present?(result.barcode)
 
-  @doc "German labels of the changed fields, for the UI."
-  def labels(changes), do: changes |> Map.keys() |> Enum.sort() |> Enum.map(&@labels[&1])
+  @doc "The changed fields, sorted; the web interface shows translated labels."
+  def fields(changes), do: changes |> Map.keys() |> Enum.sort()
 
   defp change?(:fill, field, current, _new), do: missing?(field, current)
 

@@ -33,10 +33,6 @@ defmodule Plattensammlung.Accounts do
     end
   end
 
-  @doc "How a user is shown to others."
-  def display_name(%{display_name: name}) when is_binary(name) and name != "", do: name
-  def display_name(_user), do: "Ohne Namen"
-
   @doc "Whether this e-mail address may sign in (case-insensitive)."
   def allowed_email?(nil), do: false
 

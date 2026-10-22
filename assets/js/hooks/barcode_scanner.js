@@ -73,7 +73,7 @@ export const BarcodeScanner = {
 
   async start() {
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.setStatus("Die Live-Kamera braucht HTTPS. Nimm stattdessen ein Foto auf.")
+      this.setStatus(this.msg("needsHttps"))
       return
     }
 
@@ -85,9 +85,7 @@ export const BarcodeScanner = {
       })
     } catch (error) {
       this.setStatus(
-        error.name === "NotAllowedError"
-          ? "Kamerazugriff wurde nicht erlaubt."
-          : "Die Kamera konnte nicht gestartet werden."
+        error.name === "NotAllowedError" ? this.msg("denied") : this.msg("failed")
       )
       return
     }
@@ -96,7 +94,7 @@ export const BarcodeScanner = {
     await this.video.play()
     this.el.dataset.active = "true"
     this.lastCode = null
-    this.setStatus("Barcode in den Rahmen halten …")
+    this.setStatus(this.msg("aim"))
     this.scanFrame()
   },
 
@@ -141,7 +139,7 @@ export const BarcodeScanner = {
 
   async scanPhoto(file) {
     if (!file) return
-    this.setStatus("Foto wird gelesen …")
+    this.setStatus(this.msg("reading"))
 
     try {
       const detect = await this.detector()
@@ -157,10 +155,10 @@ export const BarcodeScanner = {
       if (code && (validBarcode(code) || spotifyAlbumLink(code))) {
         this.found(code)
       } else {
-        this.setStatus("Kein Barcode erkannt. Bitte näher heran und scharf fotografieren.")
+        this.setStatus(this.msg("noBarcode"))
       }
     } catch (_error) {
-      this.setStatus("Das Foto konnte nicht gelesen werden.")
+      this.setStatus(this.msg("unreadable"))
     } finally {
       this.photoInput.value = ""
     }
@@ -170,6 +168,11 @@ export const BarcodeScanner = {
     navigator.vibrate?.(80)
     this.setStatus(`Erkannt: ${code}`)
     this.pushEvent("scanned", {code})
+  },
+
+  // Status texts come translated from the server: data-msg-* on the element
+  msg(key) {
+    return this.el.dataset["msg" + key[0].toUpperCase() + key.slice(1)] || ""
   },
 
   setStatus(text) {

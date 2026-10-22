@@ -89,10 +89,7 @@ defmodule Plattensammlung.SharingTest do
 
       collectors = Accounts.list_collectors!(actor: bob)
 
-      assert Enum.map(collectors, &Accounts.display_name/1) |> Enum.sort() == [
-               "Alice",
-               "Ohne Namen"
-             ]
+      assert MapSet.new(collectors, & &1.display_name) == MapSet.new(["Alice", nil])
 
       # The e-mail is not even read from the database
       assert Enum.all?(collectors, &match?(%Ash.NotLoaded{}, &1.email))

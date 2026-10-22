@@ -107,3 +107,56 @@ msgstr ""
 
 msgid "must be equal to %{number}"
 msgstr ""
+
+## From Ash (validations and types)
+msgid "is required"
+msgstr ""
+
+msgid "must be present"
+msgstr ""
+
+msgid "length must be less than or equal to %{max}"
+msgstr ""
+
+msgid "length must be greater than or equal to %{min}"
+msgstr ""
+
+msgid "must be less than or equal to %{max}"
+msgstr ""
+
+msgid "must be greater than or equal to %{min}"
+msgstr ""
+
+msgid "must match the pattern %{regex}"
+msgstr ""
+
+msgid "must be one of %{values}"
+msgstr ""
+
+msgid "must have %{max} or fewer items"
+msgstr ""
+
+## From Plattensammlung (custom validations)
+msgid "must be 8 to 14 digits (EAN/UPC)"
+msgstr ""
+
+msgid "must be a JPEG, PNG, WebP or GIF image up to 10 MB"
+msgstr ""
+
+msgid "belongs to another album"
+msgstr ""
+
+msgid "is not a Spotify album link"
+msgstr ""
+
+msgid "is not a Tidal album link"
+msgstr ""
+
+msgid "must be an https URL from Discogs or the Cover Art Archive (or use the upload)"
+msgstr ""
+
+msgid "still has albums; delete or move them first"
+msgstr ""
+
+msgid "is not allowed to sign in"
+msgstr ""

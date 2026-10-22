@@ -18,14 +18,6 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
   alias Plattensammlung.Records.Album
   alias PlattensammlungWeb.{OptionalFields, TagInput}
 
-  @fields [
-    year: "Erscheinungsjahr",
-    genres: "Genres",
-    spotify_album_id: "Spotify",
-    tidal_album_id: "Tidal",
-    discogs_master_id: "Discogs-Master-ID"
-  ]
-
   @impl true
   def render(assigns) do
     ~H"""
@@ -33,7 +25,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
       <div class="mx-auto max-w-xl space-y-6">
         <div>
           <.link navigate={@return_to} class="text-sm opacity-70 hover:opacity-100">
-            <.icon name="hero-arrow-left-micro" class="size-4" /> Zurück
+            <.icon name="hero-arrow-left-micro" class="size-4" /> {gettext("Back")}
           </.link>
           <div class="mt-2 flex items-center gap-4">
             <div :if={@album} class="w-20 shrink-0" id="cover-preview">
@@ -42,12 +34,13 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             <div>
               <h1 class="text-2xl font-bold">{@page_title}</h1>
               <p :if={@album} class="text-xs opacity-60">
-                Das Cover änderst du auf der <.link navigate={~p"/albums/#{@album}"} class="link">Albumseite</.link>.
+                {gettext("You change the cover on the")}
+                <.link navigate={~p"/albums/#{@album}"} class="link">{gettext("album page")}</.link>.
               </p>
             </div>
           </div>
           <p :if={@live_action == :new} class="text-sm opacity-70">
-            Nur Künstler und Titel sind nötig, alles andere kannst du später ergänzen.
+            {gettext("Only artist and title are needed, you can add everything else later.")}
           </p>
         </div>
 
@@ -56,8 +49,8 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             <input
               :for={
                 {value, label} <- [
-                  {"collection", "In meine Sammlung"},
-                  {"wishlist", "Auf die Wunschliste"}
+                  {"collection", gettext("To my collection")},
+                  {"wishlist", gettext("To the wishlist")}
                 ]
               }
               type="radio"
@@ -72,7 +65,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
           <.input
             field={@form[:artist_name]}
-            label="Künstler"
+            label={gettext("Artist")}
             list="artist-names"
             autocomplete="off"
             maxlength="200"
@@ -85,7 +78,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
           <.input
             field={@form[:title]}
-            label="Titel"
+            label={gettext("Title")}
             maxlength="200"
             phx-debounce="300"
             required
@@ -98,7 +91,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           >
             <.icon name="hero-exclamation-triangle" class="size-5" />
             <span>
-              Dieses Album gibt es schon
+              {gettext("This album already exists")}
               <.link
                 :for={album <- @duplicates}
                 navigate={~p"/albums/#{album}"}
@@ -112,28 +105,34 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           <.optional_field
             form={@form}
             field={:year}
-            label="Erscheinungsjahr"
+            label={gettext("Release year")}
             visible={@visible}
             focus={@focus}
           >
-            <.input field={@form[:year]} type="number" label="Erscheinungsjahr" min="1900" max="2100" />
+            <.input
+              field={@form[:year]}
+              type="number"
+              label={gettext("Release year")}
+              min="1900"
+              max="2100"
+            />
           </.optional_field>
 
           <.optional_field
             form={@form}
             field={:genres}
-            label="Genres"
+            label={gettext("Genres")}
             visible={@visible}
             focus={@focus}
           >
             <.tag_input
               form_name="album"
               field={:genres}
-              label="Genres"
+              label={gettext("Genres")}
               tags={@tags}
               keys={@tag_keys}
               suggestions={@genre_suggestions}
-              placeholder="z. B. Rock"
+              placeholder={gettext("e.g. Rock")}
             />
           </.optional_field>
 
@@ -146,7 +145,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           >
             <.input
               field={@form[:spotify_album_id]}
-              label="Spotify (Link oder ID)"
+              label={gettext("Spotify (link or ID)")}
               maxlength="200"
               placeholder="https://open.spotify.com/album/…"
             />
@@ -161,7 +160,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           >
             <.input
               field={@form[:tidal_album_id]}
-              label="Tidal (Link oder ID)"
+              label={gettext("Tidal (link or ID)")}
               maxlength="200"
               placeholder="https://tidal.com/album/…"
             />
@@ -170,7 +169,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           <.optional_field
             form={@form}
             field={:discogs_master_id}
-            label="Discogs-Master-ID"
+            label={gettext("Discogs master ID")}
             visible={@visible}
             focus={@focus}
           >
@@ -181,7 +180,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
               inputmode="numeric"
               autocomplete="off"
               maxlength="12"
-              label="Discogs-Master-ID"
+              label={gettext("Discogs master ID")}
             />
           </.optional_field>
 
@@ -189,7 +188,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             :if={@live_action == :edit}
             field={@form[:wanted]}
             type="checkbox"
-            label="Auf der Wunschliste"
+            label={gettext("On the wishlist")}
           />
 
           <div class="border-t border-base-300 pt-3">
@@ -197,10 +196,10 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
           </div>
 
           <div class="flex gap-2 pt-4">
-            <.button variant="primary" phx-disable-with="Speichern…" id="save-album">
-              {if @live_action == :new, do: "Hinzufügen", else: "Speichern"}
+            <.button variant="primary" phx-disable-with={gettext("Saving …")} id="save-album">
+              {if @live_action == :new, do: gettext("Add"), else: gettext("Save")}
             </.button>
-            <.button navigate={@return_to}>Abbrechen</.button>
+            <.button navigate={@return_to}>{gettext("Cancel")}</.button>
           </div>
         </.form>
 
@@ -208,6 +207,17 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
       </div>
     </Layouts.app>
     """
+  end
+
+  # Optional fields with their labels (a function: the labels depend on the language)
+  defp fields do
+    [
+      year: gettext("Release year"),
+      genres: gettext("Genres"),
+      spotify_album_id: "Spotify",
+      tidal_album_id: "Tidal",
+      discogs_master_id: gettext("Discogs master ID")
+    ]
   end
 
   @impl true
@@ -223,7 +233,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
       |> assign(:genre_suggestions, genre_suggestions(socket.assigns.current_user))
       |> assign(:tag_keys, %{})
       |> assign(:duplicates, [])
-      |> assign(:fields, @fields)
+      |> assign(:fields, fields())
       |> assign(:focus, nil)
       |> apply_action(socket.assigns.live_action, params)
 
@@ -243,7 +253,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
     mode = if params["wishlist"], do: "wishlist", else: "collection"
 
     socket
-    |> assign(:page_title, "Platte erfassen")
+    |> assign(:page_title, gettext("Add a record"))
     |> assign(:album, nil)
     |> assign(:visible, MapSet.new())
     |> assign(:tags, %{genres: []})
@@ -265,9 +275,9 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
       )
 
     socket
-    |> assign(:page_title, "Album bearbeiten")
+    |> assign(:page_title, gettext("Edit album"))
     |> assign(:album, album)
-    |> assign(:visible, OptionalFields.initially_visible(album, @fields))
+    |> assign(:visible, OptionalFields.initially_visible(album, fields()))
     |> assign(:tags, %{genres: album.genres})
     |> assign(:mode, nil)
     |> assign(:return_to, ~p"/albums/#{album}")
@@ -276,15 +286,15 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
   @impl true
   def handle_event("show_field", %{"field" => field}, socket) do
-    {:noreply, OptionalFields.show(socket, field, @fields)}
+    {:noreply, OptionalFields.show(socket, field, fields())}
   end
 
   def handle_event("hide_field", %{"field" => "genres"}, socket) do
-    {:noreply, socket |> TagInput.clear(:genres) |> OptionalFields.hide("genres", @fields)}
+    {:noreply, socket |> TagInput.clear(:genres) |> OptionalFields.hide("genres", fields())}
   end
 
   def handle_event("hide_field", %{"field" => field}, socket) do
-    {:noreply, OptionalFields.hide(socket, field, @fields)}
+    {:noreply, OptionalFields.hide(socket, field, fields())}
   end
 
   def handle_event("add_tag", %{"field" => field, "tag" => text}, socket) do
@@ -369,14 +379,15 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
 
   defp find_duplicates(_params, _assigns), do: []
 
-  defp duplicate_label(%{owned: true}), do: "in deiner Sammlung."
-  defp duplicate_label(%{wanted: true}), do: "auf deiner Wunschliste."
-  defp duplicate_label(_album), do: "bei anderen Sammlern; es wird übernommen."
+  defp duplicate_label(%{owned: true}), do: gettext("in your collection.")
+  defp duplicate_label(%{wanted: true}), do: gettext("on your wishlist.")
+  defp duplicate_label(_album), do: gettext("with other collectors; it will be reused.")
 
-  defp saved_message(%{live_action: :edit}, _album), do: "Album gespeichert."
+  defp saved_message(%{live_action: :edit}, _album), do: gettext("Album saved.")
 
   defp saved_message(%{mode: "wishlist"}, album),
-    do: "„#{album.title}“ steht auf der Wunschliste."
+    do: gettext("“%{title}” is on the wishlist.", title: album.title)
 
-  defp saved_message(_assigns, album), do: "„#{album.title}“ ist jetzt in deiner Sammlung."
+  defp saved_message(_assigns, album),
+    do: gettext("“%{title}” is now in your collection.", title: album.title)
 end

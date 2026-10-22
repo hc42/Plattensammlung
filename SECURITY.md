@@ -45,6 +45,9 @@ image (see [deploy/README.md](deploy/README.md)).
 
 - HEEx escapes all output; there is no `raw` and no `innerHTML` in JavaScript.
 - All fields have type, length and value limits; barcodes are normalized and validated.
+- The interface language only takes the supported values (`en`, `de`): `Accept-Language` is
+  matched against them and `User.locale` is constrained ([ADR 0021](docs/adr/0021-internationalization.md)).
+  Translated texts with user values (e.g. album titles) are escaped by HEEx like any other output.
 - **Covers** are only downloaded via HTTPS from known sources (Discogs, Cover Art Archive),
   also across redirects (protection against SSRF). Local cover paths are only set by the app
   itself. Uploaded images are recognized by their content (magic bytes), at most 10 MB.

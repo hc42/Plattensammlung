@@ -61,7 +61,7 @@ defmodule PlattensammlungWeb.ImportLiveTest do
     render_async(view)
 
     assert has_element?(view, "#owned-pressing")
-    assert has_element?(view, "#result-0 a", "Hast du schon")
+    assert has_element?(view, "#result-0 a", "You already have it")
     refute has_element?(view, "#import-wishlist-0")
   end
 
@@ -82,7 +82,7 @@ defmodule PlattensammlungWeb.ImportLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/import?q=0602547288530")
     render_async(view)
-    assert has_element?(view, "#result-0 a", "Bei anderen Sammlern")
+    assert has_element?(view, "#result-0 a", "With other collectors")
 
     view |> element("#import-collection-0") |> render_click()
     assert_redirect(view, ~p"/albums/#{album}")

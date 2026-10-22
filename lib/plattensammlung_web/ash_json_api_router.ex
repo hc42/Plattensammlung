@@ -23,7 +23,7 @@ defmodule PlattensammlungWeb.AshJsonApiRouter do
     bearer = %OpenApiSpex.SecurityScheme{
       type: "http",
       scheme: "bearer",
-      description: "API-Key von der Kontoseite (/account), z. B. plattensammlung_…"
+      description: "API key from the account page (/account), e.g. plattensammlung_…"
     }
 
     %{

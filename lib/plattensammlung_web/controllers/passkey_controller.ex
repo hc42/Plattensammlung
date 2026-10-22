@@ -31,7 +31,7 @@ defmodule PlattensammlungWeb.PasskeyController do
 
       conn
       |> AshAuthentication.Plug.Helpers.store_in_session(user)
-      |> put_flash(:info, "Angemeldet.")
+      |> put_flash(:info, gettext("Signed in."))
       |> json(%{redirect_to: get_session(conn, :return_to) || ~p"/"})
     else
       error ->
@@ -40,14 +40,14 @@ defmodule PlattensammlungWeb.PasskeyController do
 
         conn
         |> put_status(:unauthorized)
-        |> json(%{error: "Anmeldung mit diesem Passkey nicht möglich."})
+        |> json(%{error: gettext("Signing in with this passkey is not possible.")})
     end
   end
 
   def register_options(conn, _params) do
     case conn.assigns[:current_user] do
       nil ->
-        conn |> put_status(:unauthorized) |> json(%{error: "Bitte zuerst anmelden."})
+        conn |> put_status(:unauthorized) |> json(%{error: gettext("Please sign in first.")})
 
       user ->
         {challenge, options} = WebAuthn.registration_options(user, PublicUrl.base_url(conn))
@@ -71,7 +71,7 @@ defmodule PlattensammlungWeb.PasskeyController do
 
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{error: "Der Passkey konnte nicht gespeichert werden."})
+        |> json(%{error: gettext("The passkey could not be saved.")})
     end
   end
 

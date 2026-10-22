@@ -43,7 +43,7 @@ defmodule Plattensammlung.AlbumMatchTest do
       changes = AlbumMatch.changes(ctx.album, ctx.result, :overwrite)
 
       assert changes.year == 2019
-      assert AlbumMatch.labels(changes) == ["Cover", "Discogs-Verknüpfung", "Genres", "Jahr"]
+      assert AlbumMatch.fields(changes) == [:cover_url, :discogs_master_id, :genres, :year]
     end
   end
 

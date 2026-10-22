@@ -31,13 +31,13 @@ defmodule PlattensammlungWeb.SharingLiveTest do
     {:ok, view, _html} = live(conn, ~p"/collectors")
 
     assert has_element?(view, "#collector-#{alice.id}", "Alice")
-    assert has_element?(view, "#collector-#{alice.id} a", "Sammlung · 1")
+    assert has_element?(view, "#collector-#{alice.id} a", "Collection · 1")
   end
 
   test "someone else's collection is shown read-only", %{conn: conn, alice: alice, album: album} do
     {:ok, view, _html} = live(conn, ~p"/collectors/#{alice.id}")
 
-    assert page_title(view) =~ "Sammlung von Alice"
+    assert page_title(view) =~ "Collection of Alice"
     assert has_element?(view, "#albums-#{album.id}")
     refute has_element?(view, "#albums-empty a", "Platte erfassen")
   end
@@ -46,9 +46,9 @@ defmodule PlattensammlungWeb.SharingLiveTest do
        %{conn: conn, album: album} do
     {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
 
-    assert has_element?(view, "#owned-status", "Nicht in deiner Sammlung")
+    assert has_element?(view, "#owned-status", "Not in your collection")
     assert has_element?(view, "#other-holders", "Alice")
-    assert has_element?(view, "#other-holders", "1 Exemplar")
+    assert has_element?(view, "#other-holders", "1 copy")
     refute has_element?(view, "#edit-album")
     refute has_element?(view, "#remove-album")
     refute has_element?(view, "#cover-form")
@@ -65,7 +65,7 @@ defmodule PlattensammlungWeb.SharingLiveTest do
 
     assert [mine] = Records.search_albums!(nil, :wishlist, actor: user)
     assert mine.id == album.id
-    assert has_element?(view, "#owned-status", "Steht auf deiner Wunschliste")
+    assert has_element?(view, "#owned-status", "On your wishlist")
     # "Auch bei" lists only the others
     assert has_element?(view, "#other-holders", "Alice")
     refute has_element?(view, "#holder-#{user.id}")

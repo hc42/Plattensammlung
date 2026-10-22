@@ -14,7 +14,7 @@ defmodule PlattensammlungWeb.AuthController do
     |> delete_session(:return_to)
     |> store_in_session(user)
     |> assign(:current_user, user)
-    |> put_flash(:info, "Angemeldet.")
+    |> put_flash(:info, gettext("Signed in."))
     |> redirect(to: return_to)
   end
 
@@ -22,7 +22,7 @@ defmodule PlattensammlungWeb.AuthController do
     Plattensammlung.Metrics.sign_in(strategy(activity), :failure)
 
     conn
-    |> put_flash(:error, "Der Anmeldelink ist ungültig oder abgelaufen.")
+    |> put_flash(:error, gettext("The sign-in link is invalid or has expired."))
     |> redirect(to: ~p"/sign-in")
   end
 
@@ -33,7 +33,7 @@ defmodule PlattensammlungWeb.AuthController do
   def sign_out(conn, _params) do
     conn
     |> clear_session(:plattensammlung)
-    |> put_flash(:info, "Abgemeldet.")
+    |> put_flash(:info, gettext("Signed out."))
     |> redirect(to: ~p"/sign-in")
   end
 end

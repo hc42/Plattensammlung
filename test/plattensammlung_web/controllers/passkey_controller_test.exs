@@ -76,7 +76,7 @@ defmodule PlattensammlungWeb.PasskeyControllerTest do
       assert %{"redirect_to" => "/"} = json_response(conn, 200)
 
       # The session now opens the collection instead of redirecting to sign-in
-      assert conn |> get(~p"/") |> html_response(200) =~ "Sammlung"
+      assert conn |> get(~p"/") |> html_response(200) =~ "Collection"
     end
 
     test "records when the passkey was used", %{conn: conn, user: user, authenticator: auth} do

@@ -9,6 +9,7 @@ defmodule PlattensammlungWeb.StatsComponents do
   real <table>, which doubles as the accessible table view.
   """
   use Phoenix.Component
+  use Gettext, backend: PlattensammlungWeb.Gettext
 
   alias Phoenix.LiveView.JS
 
@@ -45,13 +46,13 @@ defmodule PlattensammlungWeb.StatsComponents do
 
   @doc """
   Horizontal bar chart for a list of `%{label: String.t(), count: integer}`.
-  `unit` names one counted thing for the hover text, e.g. {"Album", "Alben"}.
+  `unit` says what is counted, for the hover text: `:album` or `:copy`.
   With `href` (a function entry -> path or nil) each row links to its albums.
   """
   attr :id, :string, required: true
   attr :title, :string, required: true
   attr :entries, :list, required: true
-  attr :unit, :any, default: {"Album", "Alben"}
+  attr :unit, :atom, default: :album, values: [:album, :copy]
   attr :href, :any, default: nil
 
   def bar_chart(assigns) do
@@ -61,20 +62,20 @@ defmodule PlattensammlungWeb.StatsComponents do
     ~H"""
     <section id={@id} class="space-y-3">
       <h2 class="font-semibold">{@title}</h2>
-      <p :if={@entries == []} class="text-sm opacity-60">Noch keine Daten.</p>
+      <p :if={@entries == []} class="text-sm opacity-60">{gettext("No data yet.")}</p>
       <table :if={@entries != []} class="w-full text-sm">
         <thead class="sr-only">
           <tr>
-            <th scope="col">Kategorie</th>
-            <th scope="col">Anteil</th>
-            <th scope="col">Anzahl</th>
+            <th scope="col">{gettext("Category")}</th>
+            <th scope="col">{gettext("Share")}</th>
+            <th scope="col">{gettext("Count")}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             :for={entry <- @entries}
             class={["group", row_path(@href, entry) && "cursor-pointer"]}
-            title={"#{entry.label}: #{entry.count} #{unit(@unit, entry.count)}"}
+            title={"#{entry.label}: #{unit(@unit, entry.count)}"}
             phx-click={row_path(@href, entry) && JS.navigate(row_path(@href, entry))}
           >
             <th scope="row" class="w-2/5 max-w-0 truncate py-1 pr-3 text-left font-normal">
@@ -111,6 +112,6 @@ defmodule PlattensammlungWeb.StatsComponents do
   defp row_path(nil, _entry), do: nil
   defp row_path(href, entry), do: href.(entry)
 
-  defp unit({one, _many}, 1), do: one
-  defp unit({_one, many}, _count), do: many
+  defp unit(:album, count), do: ngettext("1 album", "%{count} albums", count)
+  defp unit(:copy, count), do: ngettext("1 copy", "%{count} copies", count)
 end

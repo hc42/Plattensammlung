@@ -19,6 +19,10 @@ import {appPath} from "../app_path"
 
 const csrfToken = () => document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
+// Texts come translated from the server: data-msg-cancelled, data-msg-unsupported
+// and data-msg-unknown on the hook element
+const msg = (el, key) => el.dataset["msg" + key[0].toUpperCase() + key.slice(1)] || key
+
 async function request(method, path, body) {
   const response = await fetch(appPath(path), {
     method,
@@ -26,7 +30,7 @@ async function request(method, path, body) {
     body: body && JSON.stringify(body),
   })
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error || "Unbekannter Fehler")
+  if (!response.ok) throw new Error(data.error || "unknown")
   return data
 }
 
@@ -34,17 +38,19 @@ export const passkeysSupported = () =>
   window.isSecureContext && typeof window.PublicKeyCredential === "function"
 
 // Errors the user caused (cancelled dialog, timeout) are not worth a red message
-const message = error =>
+const message = (el, error) =>
   error.name === "NotAllowedError" || error.name === "AbortError"
-    ? "Abgebrochen."
-    : error.message
+    ? msg(el, "cancelled")
+    : error.message === "unknown"
+      ? msg(el, "unknown")
+      : error.message
 
 // <button phx-hook="PasskeySignIn" data-status="#id-of-status-element">
 export const PasskeySignIn = {
   mounted() {
     if (!passkeysSupported()) {
       this.el.disabled = true
-      this.el.title = "Passkeys brauchen HTTPS oder localhost"
+      this.el.title = msg(this.el, "unsupported")
       return
     }
 
@@ -66,7 +72,7 @@ export const PasskeySignIn = {
         })
         window.location.assign(redirect_to)
       } catch (error) {
-        status.textContent = message(error)
+        status.textContent = message(this.el, error)
         this.el.disabled = false
       }
     })
@@ -79,7 +85,7 @@ export const PasskeyRegister = {
   mounted() {
     if (!passkeysSupported()) {
       this.el.querySelectorAll("input, button").forEach(el => (el.disabled = true))
-      this.pushEvent("passkey_failed", {error: "Passkeys brauchen HTTPS oder localhost."})
+      this.pushEvent("passkey_failed", {error: msg(this.el, "unsupported")})
       return
     }
 
@@ -106,7 +112,7 @@ export const PasskeyRegister = {
         this.el.reset()
         this.pushEvent("passkey_registered", {})
       } catch (error) {
-        this.pushEvent("passkey_failed", {error: message(error)})
+        this.pushEvent("passkey_failed", {error: message(this.el, error)})
       }
     })
   },

@@ -1,6 +1,6 @@
 # 0020. Documentation in English
 
-- **Status:** Accepted
+- **Status:** Accepted; the UI language rule superseded by [ADR 0021](0021-internationalization.md)
 - **Date:** 2026-10-22
 - **Supersedes:** the language rule of [ADR 0001](0001-use-adrs.md)
 

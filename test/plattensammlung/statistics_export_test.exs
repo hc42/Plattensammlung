@@ -62,8 +62,8 @@ defmodule Plattensammlung.StatisticsExportTest do
              ]
 
       assert stats.decades == [
-               %{label: "1950er", count: 1, filter: %{"decade" => "1950"}},
-               %{label: "1960er", count: 2, filter: %{"decade" => "1960"}}
+               %{label: "1950s", count: 1, filter: %{"decade" => "1950"}},
+               %{label: "1960s", count: 2, filter: %{"decade" => "1960"}}
              ]
 
       assert [%{label: "The Beatles", count: 2, filter: %{"artist" => "The Beatles"}}, _] =
@@ -73,7 +73,7 @@ defmodule Plattensammlung.StatisticsExportTest do
       assert Enum.map(stats.conditions, &{&1.label, &1.filter}) == [
                {"Very Good Plus (VG+)", %{"condition" => "very_good_plus"}},
                {"Good (G)", %{"condition" => "good"}},
-               {"Ohne Angabe", %{"condition" => "none"}}
+               {"Not graded", %{"condition" => "none"}}
              ]
     end
 

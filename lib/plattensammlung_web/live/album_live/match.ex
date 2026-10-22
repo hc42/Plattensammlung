@@ -2,7 +2,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
   @moduledoc """
   Updates an existing album from Discogs/MusicBrainz (`Album.find_matches`,
   `Album.apply_match`). Each candidate shows which fields it would fill;
-  "Ergänzen" fills empty fields, "Überschreiben" replaces all it has.
+  "Fill" fills empty fields, "Overwrite" replaces all it has.
 
   A scanned or typed barcode finds the exact pressing; its details (label,
   catalog number, …) can go into one of the album's copies or a new copy.
@@ -22,9 +22,11 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
           <.link navigate={~p"/albums/#{@album}"} class="text-sm opacity-70 hover:opacity-100">
             <.icon name="hero-arrow-left-micro" class="size-4" /> {@album.title}
           </.link>
-          <h1 class="mt-2 text-2xl font-bold">Daten abgleichen</h1>
+          <h1 class="mt-2 text-2xl font-bold">{gettext("Match data")}</h1>
           <p class="text-sm opacity-70">
-            {@album.artist.name} – {@album.title}. Künstler und Titel bleiben, wie du sie erfasst hast.
+            {@album.artist.name} – {@album.title}. {gettext(
+              "Artist and title stay as you entered them."
+            )}
           </p>
         </div>
 
@@ -42,20 +44,21 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
               autocomplete="off"
             />
           </label>
-          <.button variant="primary" id="match-search" disabled={@loading}>Suchen</.button>
+          <.button variant="primary" id="match-search" disabled={@loading}>{gettext("Search")}</.button>
         </.form>
 
         <p :if={@linked?} class="text-xs opacity-60" id="linked-hint">
-          Direkt über die gespeicherte Discogs- bzw. MusicBrainz-Verknüpfung geladen.
-          Andere Treffer findest du über die Suche.
+          {gettext(
+            "Loaded directly via the saved Discogs or MusicBrainz link. Search to find other matches."
+          )}
         </p>
 
         <div :if={@loading} id="match-loading" class="flex items-center gap-2 py-6 opacity-70">
-          <span class="loading loading-spinner loading-sm"></span> Suche läuft …
+          <span class="loading loading-spinner loading-sm"></span> {gettext("Searching …")}
         </div>
 
         <p :if={@error} id="match-error" class="alert alert-error alert-soft">
-          Die Suche hat nicht geklappt. Bitte später noch einmal versuchen.
+          {gettext("The search did not work. Please try again later.")}
         </p>
 
         <p
@@ -63,7 +66,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
           id="no-matches"
           class="opacity-70"
         >
-          Nichts gefunden. Versuch es mit einem anderen Suchbegriff.
+          {gettext("Nothing found. Try another search term.")}
         </p>
 
         <.form
@@ -73,7 +76,9 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
           phx-change="copy_target"
           class="rounded-lg border border-base-300 p-3 text-sm"
         >
-          <label for="copy-target" class="font-medium">Pressungsdaten (Barcode, Label, …) übernehmen in</label>
+          <label for="copy-target" class="font-medium">
+            {gettext("Apply pressing details (barcode, label, …) to")}
+          </label>
           <select id="copy-target" name="target" class="select select-sm mt-2 w-full">
             <option
               :for={{value, label} <- copy_target_options(@album)}
@@ -93,9 +98,9 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
           >
             <p class="text-xs" id={"changes-#{item.index}"}>
               <%= if item.fill == [] do %>
-                <span class="opacity-60">Album: alle Felder sind schon gefüllt.</span>
+                <span class="opacity-60">{gettext("Album: all fields are already filled.")}</span>
               <% else %>
-                <span class="font-medium">Album ergänzt:</span> {Enum.join(item.fill, ", ")}
+                <span class="font-medium">{gettext("Album gets:")}</span> {Enum.join(item.fill, ", ")}
               <% end %>
             </p>
             <p
@@ -103,7 +108,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
               class="text-xs"
               id={"copy-changes-#{item.index}"}
             >
-              <span class="font-medium">Exemplar:</span> {copy_preview(
+              <span class="font-medium">{gettext("Copy:")}</span> {copy_preview(
                 item.result,
                 @copy_target,
                 @album
@@ -119,7 +124,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
                 class="btn btn-primary btn-sm"
                 id={"fill-#{item.index}"}
               >
-                Ergänzen
+                {gettext("Fill")}
               </button>
               <button
                 phx-click="apply"
@@ -127,11 +132,13 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
                 phx-value-mode="overwrite"
                 phx-disable-with="…"
                 disabled={item.overwrite == [] and !copy_preview(item.result, @copy_target, @album)}
-                data-confirm={"Überschreibt: #{Enum.join(item.overwrite, ", ")}"}
+                data-confirm={
+                  gettext("Overwrites: %{fields}", fields: Enum.join(item.overwrite, ", "))
+                }
                 class="btn btn-ghost btn-sm"
                 id={"overwrite-#{item.index}"}
               >
-                Überschreiben
+                {gettext("Overwrite")}
               </button>
             </:actions>
           </.lookup_result>
@@ -162,7 +169,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
 
     {:ok,
      socket
-     |> assign(:page_title, "Daten abgleichen")
+     |> assign(:page_title, gettext("Match data"))
      |> assign(:album, album)
      |> assign(:linked?, linked?)
      |> assign(:pressing?, false)
@@ -184,7 +191,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
   def handle_event("scanned", %{"code" => code}, socket) do
     case Plattensammlung.Lookup.barcode(code) do
       nil ->
-        {:noreply, put_flash(socket, :error, "Das sieht nicht nach einem Barcode aus.")}
+        {:noreply, put_flash(socket, :error, gettext("That does not look like a barcode."))}
 
       barcode ->
         handle_event("search", %{"query" => barcode}, socket)
@@ -212,11 +219,11 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
       {:ok, album} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Daten übernommen.")
+         |> put_flash(:info, gettext("Data applied."))
          |> push_navigate(to: ~p"/albums/#{album}")}
 
       {:error, _error} ->
-        {:noreply, put_flash(socket, :error, "Die Daten konnten nicht übernommen werden.")}
+        {:noreply, put_flash(socket, :error, gettext("The data could not be applied."))}
     end
   end
 
@@ -231,8 +238,8 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
         %{
           index: index,
           result: result,
-          fill: album |> AlbumMatch.changes(result, :fill) |> AlbumMatch.labels(),
-          overwrite: album |> AlbumMatch.changes(result, :overwrite) |> AlbumMatch.labels()
+          fill: album |> AlbumMatch.changes(result, :fill) |> labels(),
+          overwrite: album |> AlbumMatch.changes(result, :overwrite) |> labels()
         }
       end)
 
@@ -266,9 +273,11 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
     copies =
       album.copies
       |> Enum.with_index(1)
-      |> Enum.map(fn {copy, number} -> {copy.id, "Exemplar #{number}#{copy_summary(copy)}"} end)
+      |> Enum.map(fn {copy, number} ->
+        {copy.id, gettext("Copy %{number}", number: number) <> copy_summary(copy)}
+      end)
 
-    copies ++ [{"new", "Neues Exemplar anlegen"}, {"none", "Nicht übernehmen"}]
+    copies ++ [{"new", gettext("Create a new copy")}, {"none", gettext("Do not apply")}]
   end
 
   defp copy_summary(copy) do
@@ -283,7 +292,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
     cond do
       not AlbumMatch.pressing?(result) -> nil
       target == "none" -> nil
-      target == "new" -> "wird als neues Exemplar angelegt"
+      target == "new" -> gettext("is created as a new copy")
       true -> copy_fill_preview(result, Enum.find(album.copies, &(&1.id == target)))
     end
   end
@@ -291,11 +300,13 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
   defp copy_fill_preview(_result, nil), do: nil
 
   defp copy_fill_preview(result, copy) do
-    case copy |> AlbumMatch.copy_changes(result, :fill) |> AlbumMatch.labels() do
+    case copy |> AlbumMatch.copy_changes(result, :fill) |> labels() do
       [] -> nil
-      labels -> "ergänzt " <> Enum.join(labels, ", ")
+      labels -> gettext("gets %{fields}", fields: Enum.join(labels, ", "))
     end
   end
+
+  defp labels(changes), do: changes |> AlbumMatch.fields() |> Enum.map(&field_label/1)
 
   defp start_search(socket, query) do
     album_id = socket.assigns.album.id

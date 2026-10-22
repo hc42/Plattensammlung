@@ -1,0 +1,156 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "can't be blank"
+msgstr "darf nicht leer sein"
+
+msgid "has already been taken"
+msgstr "ist schon vergeben"
+
+msgid "is invalid"
+msgstr "ist ungültig"
+
+msgid "must be accepted"
+msgstr "muss akzeptiert werden"
+
+msgid "has invalid format"
+msgstr "hat ein ungültiges Format"
+
+msgid "has an invalid entry"
+msgstr "enthält einen ungültigen Eintrag"
+
+msgid "is reserved"
+msgstr "ist reserviert"
+
+msgid "does not match confirmation"
+msgstr "stimmt nicht mit der Bestätigung überein"
+
+msgid "is still associated with this entry"
+msgstr "ist noch mit diesem Eintrag verknüpft"
+
+msgid "are still associated with this entry"
+msgstr "sind noch mit diesem Eintrag verknüpft"
+
+msgid "should have %{count} item(s)"
+msgid_plural "should have %{count} item(s)"
+msgstr[0] "sollte %{count} Eintrag haben"
+msgstr[1] "sollte %{count} Einträge haben"
+
+msgid "should be %{count} character(s)"
+msgid_plural "should be %{count} character(s)"
+msgstr[0] "sollte %{count} Zeichen lang sein"
+msgstr[1] "sollte %{count} Zeichen lang sein"
+
+msgid "should be %{count} byte(s)"
+msgid_plural "should be %{count} byte(s)"
+msgstr[0] "sollte %{count} Byte groß sein"
+msgstr[1] "sollte %{count} Bytes groß sein"
+
+msgid "should have at least %{count} item(s)"
+msgid_plural "should have at least %{count} item(s)"
+msgstr[0] "sollte mindestens %{count} Eintrag haben"
+msgstr[1] "sollte mindestens %{count} Einträge haben"
+
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "sollte mindestens %{count} Zeichen lang sein"
+msgstr[1] "sollte mindestens %{count} Zeichen lang sein"
+
+msgid "should be at least %{count} byte(s)"
+msgid_plural "should be at least %{count} byte(s)"
+msgstr[0] "sollte mindestens %{count} Byte groß sein"
+msgstr[1] "sollte mindestens %{count} Bytes groß sein"
+
+msgid "should have at most %{count} item(s)"
+msgid_plural "should have at most %{count} item(s)"
+msgstr[0] "sollte höchstens %{count} Eintrag haben"
+msgstr[1] "sollte höchstens %{count} Einträge haben"
+
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "sollte höchstens %{count} Zeichen lang sein"
+msgstr[1] "sollte höchstens %{count} Zeichen lang sein"
+
+msgid "should be at most %{count} byte(s)"
+msgid_plural "should be at most %{count} byte(s)"
+msgstr[0] "sollte höchstens %{count} Byte groß sein"
+msgstr[1] "sollte höchstens %{count} Bytes groß sein"
+
+msgid "must be less than %{number}"
+msgstr "muss kleiner als %{number} sein"
+
+msgid "must be greater than %{number}"
+msgstr "muss größer als %{number} sein"
+
+msgid "must be less than or equal to %{number}"
+msgstr "muss kleiner oder gleich %{number} sein"
+
+msgid "must be greater than or equal to %{number}"
+msgstr "muss größer oder gleich %{number} sein"
+
+msgid "must be equal to %{number}"
+msgstr "muss gleich %{number} sein"
+
+## From Ash (validations and types)
+msgid "is required"
+msgstr "ist erforderlich"
+
+msgid "must be present"
+msgstr "muss angegeben werden"
+
+msgid "length must be less than or equal to %{max}"
+msgstr "darf höchstens %{max} Zeichen lang sein"
+
+msgid "length must be greater than or equal to %{min}"
+msgstr "muss mindestens %{min} Zeichen lang sein"
+
+msgid "must be less than or equal to %{max}"
+msgstr "muss kleiner oder gleich %{max} sein"
+
+msgid "must be greater than or equal to %{min}"
+msgstr "muss größer oder gleich %{min} sein"
+
+msgid "must match the pattern %{regex}"
+msgstr "hat ein ungültiges Format"
+
+msgid "must be one of %{values}"
+msgstr "muss einer dieser Werte sein: %{values}"
+
+msgid "must have %{max} or fewer items"
+msgstr "darf höchstens %{max} Einträge haben"
+
+## From Plattensammlung (custom validations)
+msgid "must be 8 to 14 digits (EAN/UPC)"
+msgstr "muss aus 8 bis 14 Ziffern bestehen (EAN/UPC)"
+
+msgid "must be a JPEG, PNG, WebP or GIF image up to 10 MB"
+msgstr "muss ein Bild im Format JPEG, PNG, WebP oder GIF bis 10 MB sein"
+
+msgid "belongs to another album"
+msgstr "gehört zu einem anderen Album"
+
+msgid "is not a Spotify album link"
+msgstr "ist kein Spotify-Album-Link"
+
+msgid "is not a Tidal album link"
+msgstr "ist kein Tidal-Album-Link"
+
+msgid "must be an https URL from Discogs or the Cover Art Archive (or use the upload)"
+msgstr "muss eine https-Adresse von Discogs oder dem Cover Art Archive sein (oder lade ein Bild hoch)"
+
+msgid "still has albums; delete or move them first"
+msgstr "hat noch Alben; lösche oder verschiebe sie zuerst"
+
+msgid "is not allowed to sign in"
+
+msgstr "darf sich nicht anmelden"

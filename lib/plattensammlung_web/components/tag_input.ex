@@ -12,6 +12,7 @@ defmodule PlattensammlungWeb.TagInput do
   and handles `"add_tag"` / `"remove_tag"` with `add/4` and `remove/4`.
   """
   use Phoenix.Component
+  use Gettext, backend: PlattensammlungWeb.Gettext
 
   import PlattensammlungWeb.CoreComponents, only: [icon: 1]
 
@@ -61,7 +62,7 @@ defmodule PlattensammlungWeb.TagInput do
             phx-value-field={@field}
             phx-value-tag={value}
             class="opacity-60 hover:opacity-100"
-            aria-label={"#{value} entfernen"}
+            aria-label={gettext("Remove %{field}", field: value)}
           >
             <.icon name="hero-x-mark-micro" class="size-4" />
           </button>
@@ -85,7 +86,7 @@ defmodule PlattensammlungWeb.TagInput do
             class="btn btn-ghost btn-sm"
             id={"add-#{@field}-tag"}
           >
-            Hinzufügen
+            {gettext("Add")}
           </button>
         <% end %>
       </div>

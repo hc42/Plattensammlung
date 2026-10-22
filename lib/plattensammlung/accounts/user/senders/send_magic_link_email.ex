@@ -5,9 +5,12 @@ defmodule Plattensammlung.Accounts.User.Senders.SendMagicLinkEmail do
 
   The link points to the host the user signed in from (passed as `base_url` in
   the action context), so it also works from a phone via https://….local:4001.
+  The e-mail is in the language of the sign-in page (`locale` in the context,
+  ADR 0021), English without one.
   """
   use AshAuthentication.Sender
   use PlattensammlungWeb, :verified_routes
+  use Gettext, backend: PlattensammlungWeb.Gettext
 
   import Swoosh.Email
 
@@ -26,29 +29,40 @@ defmodule Plattensammlung.Accounts.User.Senders.SendMagicLinkEmail do
     if Accounts.allowed_email?(email) do
       link = base_url(opts) <> ~p"/magic_link/#{token}"
 
-      new()
-      |> from(
-        Application.get_env(
-          :plattensammlung,
-          :mail_from,
-          {"Plattensammlung", "noreply@plattensammlung.local"}
-        )
-      )
-      |> to(email)
-      |> subject("Dein Anmeldelink für die Plattensammlung")
-      |> html_body("""
-      <p>Hallo!</p>
-      <p>Mit diesem Link meldest du dich bei deiner Plattensammlung an:</p>
-      <p><a href="#{link}">#{link}</a></p>
-      <p>Der Link ist 10 Minuten gültig. Wenn du ihn nicht angefordert hast, ignoriere diese E-Mail.</p>
-      """)
-      |> text_body("Mit diesem Link meldest du dich an (10 Minuten gültig): #{link}")
+      Gettext.with_locale(PlattensammlungWeb.Gettext, locale(opts), fn -> email(email, link) end)
       |> deliver()
     else
       Logger.warning("Magic link requested for an address not in ALLOWED_EMAILS")
     end
 
     :ok
+  end
+
+  defp email(email, link) do
+    new()
+    |> from(
+      Application.get_env(
+        :plattensammlung,
+        :mail_from,
+        {"Plattensammlung", "noreply@plattensammlung.local"}
+      )
+    )
+    |> to(email)
+    |> subject(gettext("Your sign-in link for Plattensammlung"))
+    |> html_body("""
+    <p>#{gettext("Hello!")}</p>
+    <p>#{gettext("Use this link to sign in to your record collection:")}</p>
+    <p><a href="#{link}">#{link}</a></p>
+    <p>#{gettext("The link is valid for 10 minutes. If you didn't request it, ignore this e-mail.")}</p>
+    """)
+    |> text_body(gettext("Use this link to sign in (valid for 10 minutes): %{link}", link: link))
+  end
+
+  defp locale(opts) do
+    case opts[:source_context] do
+      %{locale: locale} when is_binary(locale) -> locale
+      _ -> "en"
+    end
   end
 
   # A failing mail server must not break the sign-in page; the reason is logged

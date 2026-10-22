@@ -1,7 +1,7 @@
 # Plattensammlung
 
 Web application for cataloguing and managing a private vinyl record collection
-("Plattensammlung" is German for record collection; the user interface is in German).
+("Plattensammlung" is German for record collection). The interface is in English and German.
 
 > **Status:** The roadmap is done: collection, wishlist, import, barcode scan, JSON API, sign-in with a passkey or magic link, statistics and export.
 
@@ -14,16 +14,18 @@ Web application for cataloguing and managing a private vinyl record collection
 - **Wishlist**: remember albums you are still looking for. Scanning in a record shop immediately shows "have it" or "on the wishlist"
 - Search and filter the collection, e.g. by artist, genre or year
 - **Shared catalogue, own collection per person:** every album exists once, each person has
-  their own copies and their own wishlist, visible to the others (page "Sammler", "Auch bei …" on
+  their own copies and their own wishlist, visible to the others (page "Collectors", "Also with …" on
   the album page). Everyone who has an album maintains its data; it is deleted only once no one
   has it any more. Purchase date and notes stay private, also in the API
 - Access through a web interface **and** a JSON API
 - Sign-in with passkeys
-- **All albums**: the shared catalogue, filterable to "Nicht bei mir" (not mine)
+- **All albums**: the shared catalogue, filterable to "Not mine"
 - **Matching** existing albums with Discogs/MusicBrainz, also by scanning a barcode later; pressing details go into the copy
 - **Spotify and Tidal**: links are found automatically (Wikidata, MusicBrainz) or pasted;
   albums can also be added from a Spotify link or its QR code
 - **Covers**: upload (also with the phone camera), replace or remove; orphaned image files are cleaned up
+- **English and German**: follows the browser language, can be fixed on the account page
+  ([ADR 0021](docs/adr/0021-internationalization.md))
 - Statistics (size, genres, decades, condition) and export as CSV or JSON-LD (schema.org)
 - **Security:** covers only from Discogs and the Cover Art Archive (or uploaded),
   Content Security Policy on all pages ([ADR 0014](docs/adr/0014-cover-sources-and-csp.md)),
@@ -42,6 +44,7 @@ Web application for cataloguing and managing a private vinyl record collection
 | Import | Barcode scan in the browser, Discogs API, MusicBrainz and Cover Art Archive | [ADR 0007](docs/adr/0007-barcode-scan-and-import.md) |
 | Operations | Container on TrueNAS behind nginx-proxy-manager | [ADR 0011](docs/adr/0011-running-on-truenas.md) |
 | Observability | Prometheus metrics, OpenTelemetry traces to Tempo, Grafana | [ADR 0019](docs/adr/0019-metrics-and-traces.md) |
+| Languages | Gettext, English default, German translation | [ADR 0021](docs/adr/0021-internationalization.md) |
 
 ## Data model
 
@@ -96,7 +99,7 @@ export ALLOWED_EMAILS=you@example.com DISCOGS_TOKEN=your-token
 
 ### Signing in
 
-1. Open http://localhost:4000, enter your e-mail address and choose "Anmeldelink senden" (send sign-in link).
+1. Open http://localhost:4000, enter your e-mail address and choose "Send sign-in link".
 2. In development the e-mail lands in the mailbox at http://localhost:4000/dev/mailbox.
    Open the link there and click "Jetzt anmelden" (sign in now).
 3. Add a passkey under "Konto" (account, person icon). From then on you sign in with

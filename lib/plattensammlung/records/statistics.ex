@@ -52,7 +52,8 @@ defmodule Plattensammlung.Records.Statistics do
 
   # Each breakdown is a list of %{label, count, filter}, ready for bars and for
   # JSON. `filter` holds the Album.search arguments that list exactly these albums
-  # (nil for the folded "Andere" entry).
+  # (nil for the folded "Other" entry). Labels are English (also in the API);
+  # the web interface translates them by their filter.
 
   defp genres(albums) do
     albums
@@ -71,8 +72,8 @@ defmodule Plattensammlung.Records.Statistics do
     # Chronological, unknown last (atoms sort after integers)
     |> Enum.sort()
     |> Enum.map(fn
-      {:unknown, count} -> entry("Unbekannt", count, %{"decade" => "unknown"})
-      {decade, count} -> entry("#{decade}er", count, %{"decade" => to_string(decade)})
+      {:unknown, count} -> entry("Unknown", count, %{"decade" => "unknown"})
+      {decade, count} -> entry("#{decade}s", count, %{"decade" => to_string(decade)})
     end)
   end
 
@@ -94,7 +95,7 @@ defmodule Plattensammlung.Records.Statistics do
     |> Enum.map(fn {name, count} -> entry(name, count, %{"artist" => name}) end)
   end
 
-  # Largest first; everything after the top entries is folded into "Andere"
+  # Largest first; everything after the top entries is folded into "Other"
   defp top_with_rest(frequencies, filter) do
     {top, rest} =
       frequencies
@@ -104,7 +105,7 @@ defmodule Plattensammlung.Records.Statistics do
     rest_count = rest |> Enum.map(&elem(&1, 1)) |> Enum.sum()
 
     Enum.map(top, fn {label, count} -> entry(label, count, filter.(label)) end) ++
-      if(rest_count > 0, do: [entry("Andere", rest_count, nil)], else: [])
+      if(rest_count > 0, do: [entry("Other", rest_count, nil)], else: [])
   end
 
   defp entry(label, count, filter), do: %{label: label, count: count, filter: filter}
@@ -112,6 +113,6 @@ defmodule Plattensammlung.Records.Statistics do
   defp condition_key(nil), do: "none"
   defp condition_key(condition), do: Atom.to_string(condition)
 
-  defp condition_label(nil), do: "Ohne Angabe"
+  defp condition_label(nil), do: "Not graded"
   defp condition_label(condition), do: Condition.description(condition)
 end

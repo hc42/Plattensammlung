@@ -34,7 +34,7 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
       view |> element("#filter-unassigned") |> render_click()
       assert_patch(view, ~p"/albums?show=unassigned")
 
-      assert has_element?(view, "#albums-#{ctx.loose.id}", "nicht bei dir")
+      assert has_element?(view, "#albums-#{ctx.loose.id}", "not yours")
       refute has_element?(view, "#albums-#{ctx.owned.id}")
       refute has_element?(view, "#albums-#{ctx.wanted.id}")
     end
@@ -56,7 +56,7 @@ defmodule PlattensammlungWeb.AlbumExtrasLiveTest do
       {:ok, view, _html} = live(conn, ~p"/albums/#{album}/match")
       render_async(view)
 
-      assert view |> element("#changes-0") |> render() =~ "Jahr"
+      assert view |> element("#changes-0") |> render() =~ "Year"
 
       view |> element("#fill-0") |> render_click()
       assert_redirect(view, ~p"/albums/#{album}")

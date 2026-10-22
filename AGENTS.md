@@ -13,8 +13,7 @@ decisions in [docs/adr/](docs/adr/).
 - The owner is learning Ash and Phoenix with this project. Briefly explain steps and Ash
   concepts when they are new, e.g. resources, actions, relationships, calculations,
   aggregates and policies.
-- The user interface is in German; texts currently live directly in the templates (no
-  Gettext yet).
+- The user interface is in English (default) and German, see "Languages" below.
 - Talk to the owner in **German**. Code, identifiers, commit messages and **all documentation**
   (README, AGENTS.md, SECURITY.md, ADRs, deploy guide, comments) are in **English**.
 - Plan and discuss first, then build. Agree on larger design decisions beforehand.
@@ -61,6 +60,8 @@ Update these documents **without being asked** as soon as something changes:
 - `mix sobelow --config`: security scan; mark reviewed false positives with
   `# sobelow_skip ["Check"]` and a reason directly above the function, don't ignore globally
 - `mix ash.codegen <name>`: generate migrations from Ash resources, then `mix ash.migrate`
+- `mix gettext.extract --merge`: collect new interface texts into `priv/gettext/`, then add the
+  German translations in `priv/gettext/de/LC_MESSAGES/default.po`
 - `mix ash.reset`: rebuild the development database, then `mix run priv/repo/seeds.exs`
 
 ## Project structure
@@ -71,13 +72,16 @@ Update these documents **without being asked** as soon as something changes:
     search via `?q=`), `Show` (`/albums/:id`), `Form` (quick capture `/albums/new`, edit
     `/albums/:id/edit`), `Match` (`/albums/:id/match`)
   - `live/copy_live/form.ex`: add a copy (`/albums/:id/copies/new`) and edit it (`/copies/:id/edit`)
-  - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: display name, passkeys, API keys)
+  - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: display name, language, passkeys, API keys)
   - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: sign-in
   - `live/stats_live.ex` (`/stats`), `controllers/export_controller.ex`: statistics and export
   - `live/import_live.ex`: import page `/import` (barcode or text, take over a result with a click)
   - `live/collectors_live.ex`: other users' collections and wishlists (`/collectors`)
   - `ash_json_api_router.ex`: JSON:API at `/api/json`, Swagger UI at `/api/json/swaggerui`
-  - `components/album_components.ex`: `cover`, `status_badge`, condition helpers (imported in all views)
+  - `components/album_components.ex`: `cover`, `status_badge`, condition helpers, `format_date`,
+    `user_name`, `field_label` (imported in all views)
+  - `locale.ex`: language of a request and of LiveViews (plug and `on_mount`, ADR 0021)
+- `priv/gettext/`: `*.pot` templates, German translations in `de/LC_MESSAGES/`
 - `priv/repo/migrations/`: generated migrations, `priv/resource_snapshots/`: their Ash snapshots
 - `docs/adr/`: architecture decision records
 - `.github/`: Dependabot (`dependabot.yml`), CodeQL (`workflows/codeql.yml`) and CI with Sobelow
@@ -146,7 +150,7 @@ Rules:
   remove artists without albums (also at app start).
 - "Do I own it" is the calculation `owned` (does an own copy exist?). It is never stored.
 - Adding an own copy deletes the own wish (change `RemoveFromWishlist`, `Records.Wishlist`).
-- Search status `:other`: albums without own copy and without own wish ("Nicht bei mir").
+- Search status `:other`: albums without own copy and without own wish ("Not mine").
 - A copy deliberately has no storage location and no purchase price. `Copy.format` is a list.
 - An album is deleted only once no one has it (destroy policy); its cover and, if now unused,
   its artist go with it. Use `destroy_album` directly only for such albums.
@@ -274,6 +278,31 @@ Rules:
   `Metrics.measure_data/0` themselves.
 - Dependabot also updates the observability images; major updates (e.g. Tempo 3) can change the
   configuration. Start the local stack before merging such a PR.
+
+## Languages (ADR 0021)
+
+- Every interface text goes through Gettext with an **English msgid**: `gettext("Collection")`,
+  `ngettext("1 album", "%{count} albums", n)`, values as bindings
+  (`gettext("Collection of %{name}", name: …)`), never by concatenating sentence parts.
+  Context for short ambiguous words: `pgettext("navigation", "Add")`.
+- After adding texts: `mix gettext.extract --merge`, then fill in the German `msgstr` in
+  `priv/gettext/de/LC_MESSAGES/default.po` (and `errors.po` for new validation messages).
+  `test/plattensammlung_web/locale_test.exs` fails while a German translation is missing or
+  fuzzy; remove `#, fuzzy` flags after checking the text.
+- Language order: `User.locale` (account page) → `Accept-Language` → English
+  (`PlattensammlungWeb.Locale`). LiveViews get it through the `on_mount` hook in both live
+  sessions; new live sessions need `{PlattensammlungWeb.Locale, :default}` too.
+- Ash actions, the API and exports stay English and language-neutral; translate in the web
+  layer (e.g. `StatsLive.translate/1`, `field_label/1`). Validation messages are English and
+  get their German text in `errors.po`.
+- Labels that depend on the language must not be module attributes (compile time); build them
+  in a function (see `fields/0` in the forms).
+- JavaScript texts come from `data-msg-*` attributes rendered with `gettext`.
+- E-mails: wrap the building of the mail in `Gettext.with_locale/3` with the language of the
+  request (magic link: `locale` in the action context).
+- Dates with `format_date/1`, user names for others with `user_name/1`.
+- `de/LC_MESSAGES/auth.po` (texts of `AuthOverrides`) is not extracted; keep it in sync by hand.
+- Tests assert English texts; German is tested with `Accept-Language: de`.
 
 ## Phoenix guidelines
 

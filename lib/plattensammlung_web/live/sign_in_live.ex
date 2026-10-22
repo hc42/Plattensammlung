@@ -12,8 +12,8 @@ defmodule PlattensammlungWeb.SignInLive do
     <Layouts.app flash={@flash}>
       <div class="mx-auto max-w-sm space-y-8 pt-8">
         <div class="space-y-1 text-center">
-          <h1 class="text-2xl font-bold">Anmelden</h1>
-          <p class="text-sm opacity-70">Deine Plattensammlung wartet.</p>
+          <h1 class="text-2xl font-bold">{gettext("Sign in")}</h1>
+          <p class="text-sm opacity-70">{gettext("Your record collection is waiting.")}</p>
         </div>
 
         <div class="space-y-2">
@@ -21,23 +21,28 @@ defmodule PlattensammlungWeb.SignInLive do
             id="passkey-sign-in"
             phx-hook="PasskeySignIn"
             data-status="#passkey-status"
+            data-msg-cancelled={gettext("Cancelled.")}
+            data-msg-unsupported={gettext("Passkeys need HTTPS or localhost.")}
+            data-msg-unknown={gettext("Unknown error")}
             class="btn btn-primary btn-block"
           >
-            <.icon name="hero-finger-print" class="size-5" /> Mit Passkey anmelden
+            <.icon name="hero-finger-print" class="size-5" /> {gettext("Sign in with a passkey")}
           </button>
           <p id="passkey-status" class="min-h-5 text-center text-sm text-error" aria-live="polite">
           </p>
         </div>
 
-        <div class="divider text-xs opacity-60">oder per E-Mail</div>
+        <div class="divider text-xs opacity-60">{gettext("or by e-mail")}</div>
 
         <%= if @requested_for do %>
           <div id="magic-link-sent" class="alert alert-info alert-soft text-sm">
             <.icon name="hero-envelope" class="size-5" />
             <span>
-              Wenn {@requested_for} freigeschaltet ist, kommt gleich ein Anmeldelink.
+              {gettext("If %{email} is allowed, a sign-in link is on its way.",
+                email: @requested_for
+              )}
               <.link :if={@dev_mailbox?} href="/dev/mailbox" target="_blank" class="link">
-                Postfach (Entwicklung) öffnen
+                {gettext("Open the mailbox (development)")}
               </.link>
             </span>
           </div>
@@ -46,12 +51,12 @@ defmodule PlattensammlungWeb.SignInLive do
             <.input
               field={@form[:email]}
               type="email"
-              label="E-Mail-Adresse"
+              label={gettext("E-mail address")}
               autocomplete="username"
               required
             />
-            <.button class="btn btn-block mt-2" phx-disable-with="Wird gesendet …">
-              Anmeldelink senden
+            <.button class="btn btn-block mt-2" phx-disable-with={gettext("Sending …")}>
+              {gettext("Send sign-in link")}
             </.button>
           </.form>
         <% end %>
@@ -64,7 +69,7 @@ defmodule PlattensammlungWeb.SignInLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Anmelden")
+     |> assign(:page_title, gettext("Sign in"))
      |> assign(:form, to_form(%{"email" => ""}))
      |> assign(:requested_for, nil)
      # Only available while mounting; used for the rate limit of magic links
@@ -78,7 +83,12 @@ defmodule PlattensammlungWeb.SignInLive do
     base_url = PlattensammlungWeb.PublicUrl.base_url(socket.host_uri)
 
     Accounts.request_magic_link(email,
-      context: %{base_url: base_url, client_ip: socket.assigns.client_ip}
+      # The e-mail goes out in the language of the page
+      context: %{
+        base_url: base_url,
+        client_ip: socket.assigns.client_ip,
+        locale: socket.assigns.locale
+      }
     )
 
     {:noreply, assign(socket, :requested_for, String.trim(email))}

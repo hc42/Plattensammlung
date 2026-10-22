@@ -27,7 +27,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
               class="link ml-2"
               id="all-albums-link"
             >
-              Alle Alben
+              {gettext("All albums")}
             </.link>
           </p>
           <div :if={@collector} class="join mt-2" id="collector-tabs">
@@ -35,13 +35,13 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
               navigate={~p"/collectors/#{@collector.id}"}
               class={["join-item btn btn-sm", @live_action == :user_collection && "btn-active"]}
             >
-              Sammlung
+              {gettext("Collection")}
             </.link>
             <.link
               navigate={~p"/collectors/#{@collector.id}/wishlist"}
               class={["join-item btn btn-sm", @live_action == :user_wishlist && "btn-active"]}
             >
-              Wunschliste
+              {gettext("Wishlist")}
             </.link>
           </div>
         </div>
@@ -55,7 +55,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
               name="q"
               id="search-input"
               value={@search_form[:q].value}
-              placeholder="Künstler oder Album suchen"
+              placeholder={gettext("Search artist or album")}
               phx-debounce="250"
               autocomplete="off"
             />
@@ -65,7 +65,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
       <div :if={@live_action == :all} class="join" id="album-filter">
         <.link
-          :for={{value, label} <- [{nil, "Alle"}, {"unassigned", "Nicht bei mir"}]}
+          :for={{value, label} <- [{nil, gettext("All")}, {"unassigned", gettext("Not mine")}]}
           patch={view_path(:all, Map.put(@params, "show", value))}
           class={["join-item btn btn-sm", @show == value && "btn-active"]}
           id={"filter-#{value || "all"}"}
@@ -79,13 +79,13 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
         class="flex flex-wrap items-center gap-2"
         id="active-filters"
       >
-        <span class="text-sm opacity-70">Gefiltert:</span>
+        <span class="text-sm opacity-70">{gettext("Filtered:")}</span>
         <.link
           :for={{key, value} <- active_filters(@params)}
           patch={view_path(@live_action, Map.delete(@params, key))}
           class="badge badge-lg badge-primary gap-1"
           id={"active-filter-#{key}"}
-          aria-label={"Filter #{filter_label(key, value)} entfernen"}
+          aria-label={gettext("Remove filter %{filter}", filter: filter_label(key, value))}
         >
           {filter_label(key, value)} <.icon name="hero-x-mark-micro" class="size-4" />
         </.link>
@@ -106,7 +106,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
             navigate={~p"/import"}
             class="btn btn-primary btn-sm mt-4"
           >
-            Platte erfassen
+            {gettext("Add a record")}
           </.link>
         </div>
 
@@ -206,14 +206,14 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
   end
 
   defp filter_label("genre", genre), do: genre
-  defp filter_label("decade", "unknown"), do: "Ohne Jahr"
-  defp filter_label("decade", decade), do: "#{decade}er"
+  defp filter_label("decade", "unknown"), do: gettext("Without year")
+  defp filter_label("decade", decade), do: gettext("%{decade}s", decade: decade)
   defp filter_label("artist", artist), do: artist
-  defp filter_label("condition", "none"), do: "Ohne Zustand"
+  defp filter_label("condition", "none"), do: gettext("Without condition")
 
   defp filter_label("condition", value) do
     case Condition.match(value) do
-      {:ok, grade} -> "Zustand: " <> Condition.description(grade)
+      {:ok, grade} -> gettext("Condition: %{grade}", grade: Condition.description(grade))
       _ -> value
     end
   end
@@ -240,30 +240,28 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
   defp blank_to_nil(_value), do: nil
 
-  defp page_title(:collection, _collector), do: "Sammlung"
-  defp page_title(:wishlist, _collector), do: "Wunschliste"
-  defp page_title(:all, _collector), do: "Alle Alben"
+  defp page_title(:collection, _collector), do: gettext("Collection")
+  defp page_title(:wishlist, _collector), do: gettext("Wishlist")
+  defp page_title(:all, _collector), do: gettext("All albums")
 
   defp page_title(:user_collection, collector),
-    do: "Sammlung von #{Accounts.display_name(collector)}"
+    do: gettext("Collection of %{name}", name: user_name(collector))
 
   defp page_title(:user_wishlist, collector),
-    do: "Wunschliste von #{Accounts.display_name(collector)}"
+    do: gettext("Wishlist of %{name}", name: user_name(collector))
 
-  defp count_text(:collection, 1), do: "1 Album"
-  defp count_text(:collection, n), do: "#{n} Alben"
-  defp count_text(:wishlist, 1), do: "1 Wunsch"
-  defp count_text(:wishlist, n), do: "#{n} Wünsche"
-  defp count_text(:all, 1), do: "1 Album"
-  defp count_text(:all, n), do: "#{n} Alben"
-  defp count_text(:user_collection, n), do: count_text(:collection, n)
-  defp count_text(:user_wishlist, n), do: count_text(:wishlist, n)
+  defp count_text(action, n) when action in [:wishlist, :user_wishlist],
+    do: ngettext("1 wish", "%{count} wishes", n)
 
-  defp empty_text(_action, query) when is_binary(query), do: "Nichts gefunden für „#{query}“."
-  defp empty_text(_action, :filtered), do: "Keine Alben mit diesen Filtern."
-  defp empty_text(:collection, nil), do: "Noch keine Platten in der Sammlung."
-  defp empty_text(:wishlist, nil), do: "Die Wunschliste ist leer."
-  defp empty_text(:all, nil), do: "Keine Alben in dieser Ansicht."
-  defp empty_text(:user_collection, nil), do: "Noch keine Platten in dieser Sammlung."
-  defp empty_text(:user_wishlist, nil), do: "Diese Wunschliste ist leer."
+  defp count_text(_action, n), do: ngettext("1 album", "%{count} albums", n)
+
+  defp empty_text(_action, query) when is_binary(query),
+    do: gettext("Nothing found for “%{query}”.", query: query)
+
+  defp empty_text(_action, :filtered), do: gettext("No albums with these filters.")
+  defp empty_text(:collection, nil), do: gettext("No records in the collection yet.")
+  defp empty_text(:wishlist, nil), do: gettext("The wishlist is empty.")
+  defp empty_text(:all, nil), do: gettext("No albums in this view.")
+  defp empty_text(:user_collection, nil), do: gettext("No records in this collection yet.")
+  defp empty_text(:user_wishlist, nil), do: gettext("This wishlist is empty.")
 end
