@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   tempo:
-    image: docker.io/grafana/tempo:2.8.1
+    image: docker.io/grafana/tempo:3.1.0
     profiles: [observability]
     command: ["-config.file=/etc/tempo.yaml"]
     # The named volume belongs to root; Tempo would otherwise run as user 10001
