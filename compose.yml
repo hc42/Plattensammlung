@@ -31,6 +31,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=500MB
       # Tempo writes span metrics and the service graph into Prometheus
       - --web.enable-remote-write-receiver
     ports:

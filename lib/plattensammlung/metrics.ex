@@ -81,6 +81,11 @@ defmodule Plattensammlung.Metrics do
   # Periodic measurement (telemetry_poller). A system task without a user, so
   # it counts with `authorize?: false`.
   def measure_data do
+    # Every minute, without users: its Ash and database spans would only be noise
+    # in Tempo (about 14,000 spans a day). A non-sampled parent span makes all
+    # spans below it non-recording.
+    untraced()
+
     {cover_files, cover_bytes} = cover_stats()
 
     :telemetry.execute(
@@ -334,6 +339,13 @@ defmodule Plattensammlung.Metrics do
   end
 
   defp finch_tags(_metadata), do: %{host: "unknown", status: "unknown"}
+
+  defp untraced do
+    trace_id = :rand.uniform(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF)
+    span_id = :rand.uniform(0xFFFFFFFFFFFFFFFF)
+    # Trace flags 0: not sampled
+    OpenTelemetry.Tracer.set_current_span(:otel_tracer.non_recording_span(trace_id, span_id, 0))
+  end
 
   defp count(resource), do: Ash.count!(resource, authorize?: false)
 

@@ -77,3 +77,12 @@ Entwicklung mit. Ereignisse (einzelne Vorgänge mit Kontext) und Logs folgen sp�
   Traces“ mit Service-Grafik, Kennzahlen pro Span und TraceQL-Listen (langsame Anfragen,
   Fehler, langsame externe Abfragen, Ash-Actions, Datenbankabfragen). Tempo 2.8 kennt
   `span:parent` noch nicht; Wurzel-Spans werden über `nestedSetParent < 0` gefunden.
+
+## Nachtrag (2026-10-22): Speicherbedarf
+
+- Traces bleiben 14 Tage in Tempo (`block_retention`), geschätzt rund 100 MB.
+- Prometheus auf dem NAS: 90 Tage **oder** 2 GB, was zuerst erreicht ist
+  (`--storage.tsdb.retention.size`), Abfrage alle 30 statt 15 Sekunden. Lokal 7 Tage oder 500 MB.
+- Die Minutenmessung des Datenbestands erzeugt keine Traces mehr (nicht gesampelter
+  Eltern-Span in `Metrics.measure_data/0`); sie war ohne jede Nutzung die größte Quelle von
+  Spans. Ihre Metriken bleiben.

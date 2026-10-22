@@ -196,6 +196,9 @@ Die App liefert Metriken für Prometheus auf Port **9568** (`METRICS_PORT`, in
    Listen langsamer bzw. fehlerhafter Traces. Die Kennzahlen berechnet Tempo selbst und
    schreibt sie in Prometheus (`--web.enable-remote-write-receiver`, schon in `compose.yaml`).
 
+**Speicher:** Traces bleiben 14 Tage (etwa 100 MB), Metriken 90 Tage, höchstens 2 GB.
+Verbrauch prüfen: `du -sh /mnt/POOL/apps/observability/*`.
+
 Port 9568 (Metriken), 4318 (Traces), 9090 (Prometheus) und 3000 (Grafana) nur im LAN nutzen,
 nicht in nginx-proxy-manager oder im Router freigeben. Prüfen:
 `curl http://NAS-IP:9568/metrics`.
