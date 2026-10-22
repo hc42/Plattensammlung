@@ -8,9 +8,9 @@ defmodule PlattensammlungWeb.AlbumListTest do
   setup :register_and_sign_in_user
 
   setup %{user: user} do
-    Records.add_to_collection!("Miles Davis", "Kind of Blue", %{year: 1959}, actor: user)
-    Records.add_to_collection!("Can", "Tago Mago", %{year: 1971}, actor: user)
-    Records.add_to_collection!("Can", "Ege Bamyasi", %{year: 1972}, actor: user)
+    Records.add_to_collection!("Moebius", "Kind of Blue", %{year: 1959}, actor: user)
+    Records.add_to_collection!("Cluster", "Tago Mago", %{year: 1971}, actor: user)
+    Records.add_to_collection!("Cluster", "Ege Bamyasi", %{year: 1972}, actor: user)
     :ok
   end
 
@@ -57,10 +57,10 @@ defmodule PlattensammlungWeb.AlbumListTest do
   end
 
   test "the list view is a link away and keeps search and order", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/?q=a&sort=year")
+    {:ok, view, _html} = live(conn, ~p"/?q=u&sort=year")
 
     view |> element("#view-list") |> render_click()
-    assert_patch(view, ~p"/?q=a&sort=year&view=list")
+    assert_patch(view, ~p"/?q=u&sort=year&view=list")
     assert has_element?(view, "#view-list[aria-pressed=true]")
     assert titles(view) == ["Kind of Blue", "Tago Mago", "Ege Bamyasi"]
   end

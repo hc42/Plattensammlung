@@ -9,11 +9,11 @@ defmodule Plattensammlung.MergeAlbumsTest do
     carol = user_fixture("carol@example.com")
 
     # Two catalogue entries for the same record, e.g. from two imports
-    target = Records.create_album!("Can", %{title: "Tago Mago"}, actor: alice)
+    target = Records.create_album!("Faust", %{title: "Tago Mago"}, actor: alice)
 
     source =
       Records.create_album!(
-        "CAN",
+        "FAUST",
         %{title: "Tago Mago (Remaster)", year: 1971, genres: ["Krautrock"]},
         actor: bob
       )

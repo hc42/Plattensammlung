@@ -1,5 +1,11 @@
 defmodule PlattensammlungWeb.Router do
   use PlattensammlungWeb, :router
+
+  # Browser tests (ADR 0025): LiveViews join the test's Ecto sandbox before
+  # AshAuthentication loads the user. Empty outside the test env
+  @sandbox_hooks if Application.compile_env(:plattensammlung, :sql_sandbox, false),
+                   do: [PlattensammlungWeb.LiveSandbox],
+                   else: []
   use AshAuthentication.Phoenix.Router
 
   import AshAuthentication.Plug.Helpers
@@ -98,6 +104,7 @@ defmodule PlattensammlungWeb.Router do
     pipe_through :browser
 
     ash_authentication_live_session :authenticated,
+      on_mount_prepend: @sandbox_hooks,
       on_mount: [
         {PlattensammlungWeb.LiveUserAuth, :live_user_required},
         {PlattensammlungWeb.Locale, :default},
@@ -122,6 +129,7 @@ defmodule PlattensammlungWeb.Router do
     end
 
     ash_authentication_live_session :unauthenticated,
+      on_mount_prepend: @sandbox_hooks,
       on_mount: [
         {PlattensammlungWeb.LiveUserAuth, :live_no_user},
         {PlattensammlungWeb.Locale, :default}

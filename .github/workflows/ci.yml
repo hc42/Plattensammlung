@@ -51,7 +51,22 @@ jobs:
           key: mix-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
           restore-keys: mix-${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
 
+      # Browser tests (ADR 0025): Node for the assets and Playwright, Chromium
+      # with its system libraries
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('assets/package-lock.json') }}
+
       - run: mix deps.get
+      # Tailwind, esbuild, npm packages and Chromium (see npm_install in mix.exs)
+      - run: mix assets.setup
+      - run: npx playwright install-deps chromium
+        working-directory: assets
       # Like `mix precommit`, but checking instead of changing files
       - run: mix compile --warnings-as-errors
       - run: mix deps.unlock --check-unused

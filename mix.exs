@@ -78,6 +78,8 @@ defmodule Plattensammlung.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.2.0"},
       {:lazy_html, ">= 0.1.0", only: :test},
+      # Browser tests (ADR 0025); the Playwright version is pinned in assets/package.json
+      {:phoenix_test_playwright, "~> 0.18.0", only: :test, runtime: false},
       {:phoenix_live_dashboard, "~> 0.9.1"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.5", runtime: Mix.env() == :dev},
@@ -117,7 +119,8 @@ defmodule Plattensammlung.MixProject do
       setup: ["deps.get", "ash.setup", "assets.setup", "assets.build", "run priv/repo/seeds.exs"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ash.setup --quiet", "test"],
+      # assets.build: the browser tests (ADR 0025) load the real JavaScript and CSS
+      test: ["ash.setup --quiet", "assets.build", "test"],
       "assets.setup": [
         "tailwind.install --if-missing",
         "esbuild.install --if-missing",
@@ -139,7 +142,9 @@ defmodule Plattensammlung.MixProject do
     ]
   end
 
-  # Installs the JavaScript packages in assets/ (ZXing for the barcode scanner)
+  # Installs the JavaScript packages in assets/ (ZXing for the barcode scanner).
+  # Outside prod also Playwright with Chromium for the browser tests (ADR 0025);
+  # the release image gets neither.
   defp npm_install(_args) do
     if System.find_executable("npm") == nil do
       Mix.raise("""
@@ -147,9 +152,18 @@ defmodule Plattensammlung.MixProject do
       """)
     end
 
-    case Mix.shell().cmd("npm install", cd: "assets") do
+    if Mix.env() == :prod do
+      npm!("npm install --omit=dev")
+    else
+      npm!("npm install")
+      npm!("npx playwright install chromium")
+    end
+  end
+
+  defp npm!(command) do
+    case Mix.shell().cmd(command, cd: "assets") do
       0 -> :ok
-      status -> Mix.raise("npm install failed (exit code #{status})")
+      status -> Mix.raise("#{command} failed (exit code #{status})")
     end
   end
 end

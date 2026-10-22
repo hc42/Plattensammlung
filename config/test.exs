@@ -15,12 +15,30 @@ config :plattensammlung, Plattensammlung.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
+# The browser tests (ADR 0025) talk to a real server. Port 4012, so a manual
+# instance on 4002 (PORT=4002 mix phx.server) doesn't get in the way
 config :plattensammlung, PlattensammlungWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 4002],
+  http: [ip: {127, 0, 0, 1}, port: 4012],
   secret_key_base: "bX6kqZWryCEQeNa/DMw7rR380QbsWuU9SW01j5wENuhxuO9wY3lNIlUB6C0XO+fS",
-  server: false
+  server: true
+
+# Browser requests carry the test's Ecto sandbox in their user agent
+# (Phoenix.Ecto.SQL.Sandbox plug in the endpoint, LiveSandbox hook for LiveViews)
+config :plattensammlung, sql_sandbox: true
+
+config :phoenix_test,
+  otp_app: :plattensammlung,
+  # For signed session cookies (sign_in in BrowserHelpers)
+  endpoint: PlattensammlungWeb.Endpoint,
+  playwright: [
+    # Error messages of the page end up in the test output
+    js_logger: PhoenixTest.Playwright.JsLogger,
+    # Generous: LiveView connects and the CSS transitions take a moment
+    timeout: 5_000,
+    browser_launch_timeout: 20_000,
+    screenshot_dir: "tmp/screenshots",
+    trace_dir: "tmp/traces"
+  ]
 
 # In test we don't send emails
 config :plattensammlung, Plattensammlung.Mailer, adapter: Swoosh.Adapters.Test

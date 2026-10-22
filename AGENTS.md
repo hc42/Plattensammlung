@@ -55,7 +55,8 @@ Update these documents **without being asked** as soon as something changes:
   (http://localhost:3000); traces with `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 mix phx.server`
 - `mix setup`: dependencies, database, assets, seeds
 - `mix phx.server`: development server at http://localhost:4000
-- `mix test`: tests
+- `mix test`: tests, including the browser tests in a real Chromium (builds the assets first;
+  `mix setup` installs Chromium, ADR 0025). Screenshots and traces go to `tmp/`
 - `mix precommit`: **run before every commit** and fix all problems (includes Sobelow)
 - `mix sobelow --config`: security scan; mark reviewed false positives with
   `# sobelow_skip ["Check"]` and a reason directly above the function, don't ignore globally
@@ -197,6 +198,16 @@ Rules:
   (`Plattensammlung.Covers`, served at `/covers`). If that fails, the remote URL stays.
 - Camera scan: JS hook `BarcodeScanner` in `assets/js/hooks/barcode_scanner.js` (registered in
   `app.js`). It sends the LiveView event `"scanned"` to `ImportLive`.
+- **Browser tests (ADR 0025):** `test/plattensammlung_web/browser/`,
+  `use PhoenixTest.Playwright.Case, async: true`, helpers in `test/support/browser_helpers.ex`
+  (`sign_in/2`, `hover/2`, setup `stub_lookups`). `conn` is a Playwright session. Wait for
+  `body .phx-connected` before interacting; LiveView sets a select's choice as a property
+  (`assert_has(sel, value: …)`, not `option[selected]`). Confirmation dialogs are accepted.
+  The test server runs on port 4012 with the Ecto sandbox via user agent (`LiveSandbox`).
+- **Parallel tests and unique names:** every async test holds its sandbox transaction for its
+  whole run. Two tests creating the same artists in different orders can deadlock on the
+  unique index (`FindOrCreateArtist`). New tests use their own artist names instead of the
+  common "The Beatles"/"Can"/"Kraftwerk".
 - **Tests never go to the network**: `config/test.exs` routes Req to the stub
   `Plattensammlung.LookupStub` (`test/support/lookup_stub.ex`).
 

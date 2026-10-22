@@ -12,10 +12,21 @@ defmodule PlattensammlungWeb.Endpoint do
     secure: Application.compile_env(:plattensammlung, :secure_session_cookie, false)
   ]
 
+  # Browser tests (ADR 0025): requests join the test's Ecto sandbox
+  if Application.compile_env(:plattensammlung, :sql_sandbox, false) do
+    plug Phoenix.Ecto.SQL.Sandbox
+  end
+
   socket "/live", Phoenix.LiveView.Socket,
-    # peer_data and x_headers: the client IP for rate limits (ClientIp)
-    websocket: [connect_info: [:peer_data, :x_headers, session: @session_options]],
-    longpoll: [connect_info: [:peer_data, :x_headers, session: @session_options]]
+    # peer_data and x_headers: the client IP for rate limits (ClientIp);
+    # user_agent: the Ecto sandbox of browser tests (LiveSandbox)
+    websocket: [
+      connect_info: [:peer_data, :x_headers, :user_agent, session: @session_options]
+    ],
+    longpoll: [connect_info: [:peer_data, :x_headers, :user_agent, session: @session_options]]
+
+  @doc "Session cookie options (browser tests sign in by setting the cookie)."
+  def session_options, do: @session_options
 
   # Serve at "/" the static files from "priv/static" directory.
   #

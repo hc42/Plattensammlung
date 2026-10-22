@@ -9,11 +9,11 @@ defmodule PlattensammlungWeb.MergeLiveTest do
 
   setup %{user: user} do
     bob = user_fixture("bob@example.com")
-    mine = Records.create_album!("Can", %{title: "Tago Mago"}, actor: user)
+    mine = Records.create_album!("Faust", %{title: "Tago Mago"}, actor: user)
     Records.add_copy!(mine.id, %{}, actor: user)
 
     duplicate =
-      Records.create_album!("Can", %{title: "Tago Mago (Remaster)", year: 1971}, actor: bob)
+      Records.create_album!("Faust", %{title: "Tago Mago (Remaster)", year: 1971}, actor: bob)
 
     Records.add_copy!(duplicate.id, %{}, actor: bob)
 

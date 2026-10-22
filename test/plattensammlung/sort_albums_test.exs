@@ -8,11 +8,11 @@ defmodule Plattensammlung.SortAlbumsTest do
     bob = user_fixture("bob@example.com")
 
     # Bob brought Trans Europa Express into the catalog first, Alice adds it last
-    Records.add_to_collection!("Kraftwerk", "Trans Europa Express", %{year: 1977}, actor: bob)
-    Records.add_to_collection!("Miles Davis", "Kind of Blue", %{year: 1959}, actor: alice)
-    Records.add_to_collection!("Can", "Tago Mago", %{year: 1971}, actor: alice)
-    Records.add_to_collection!("Can", "Ege Bamyasi", actor: alice)
-    Records.add_to_collection!("Kraftwerk", "Trans Europa Express", actor: alice)
+    Records.add_to_collection!("Harmonia", "Trans Europa Express", %{year: 1977}, actor: bob)
+    Records.add_to_collection!("Moebius", "Kind of Blue", %{year: 1959}, actor: alice)
+    Records.add_to_collection!("Cluster", "Tago Mago", %{year: 1971}, actor: alice)
+    Records.add_to_collection!("Cluster", "Ege Bamyasi", actor: alice)
+    Records.add_to_collection!("Harmonia", "Trans Europa Express", actor: alice)
 
     %{alice: alice}
   end

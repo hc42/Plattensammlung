@@ -9,10 +9,10 @@ defmodule Plattensammlung.DeleteAccountTest do
     alice = user_fixture("alice@example.com")
     bob = user_fixture("bob@example.com")
 
-    only_alice = Records.add_to_collection!("Can", "Tago Mago", actor: alice)
-    shared = Records.add_to_collection!("The Beatles", "Abbey Road", actor: alice)
-    Records.add_to_collection!("The Beatles", "Abbey Road", actor: bob)
-    wish = Records.add_to_wishlist!("Kraftwerk", "Autobahn", actor: alice)
+    only_alice = Records.add_to_collection!("Neu!", "Tago Mago", actor: alice)
+    shared = Records.add_to_collection!("La Düsseldorf", "Abbey Road", actor: alice)
+    Records.add_to_collection!("La Düsseldorf", "Abbey Road", actor: bob)
+    wish = Records.add_to_wishlist!("Rother", "Autobahn", actor: alice)
     api_key_fixture(alice)
 
     %{alice: alice, bob: bob, only_alice: only_alice, shared: shared, wish: wish}

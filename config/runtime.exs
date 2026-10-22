@@ -20,8 +20,11 @@ if System.get_env("PHX_SERVER") do
   config :plattensammlung, PlattensammlungWeb.Endpoint, server: true
 end
 
-config :plattensammlung, PlattensammlungWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+# Not in test: the browser tests use the port from config/test.exs (ADR 0025)
+if config_env() != :test do
+  config :plattensammlung, PlattensammlungWeb.Endpoint,
+    http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+end
 
 # Album lookup (see docs/adr/0007-barcode-scan-and-import.md).
 # DISCOGS_TOKEN: personal access token from discogs.com/settings/developers (optional).

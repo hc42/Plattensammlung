@@ -55,6 +55,7 @@ Web application for cataloguing and managing a private vinyl record collection
 | Operations | Container on TrueNAS behind nginx-proxy-manager | [ADR 0011](docs/adr/0011-running-on-truenas.md) |
 | Observability | Prometheus metrics, OpenTelemetry traces to Tempo, Grafana | [ADR 0019](docs/adr/0019-metrics-and-traces.md) |
 | Languages | Gettext, English default, German translation | [ADR 0021](docs/adr/0021-internationalization.md) |
+| Tests | ExUnit, LiveViewTest, browser tests with PhoenixTest.Playwright (Chromium) | [ADR 0025](docs/adr/0025-browser-tests.md) |
 
 ## Data model
 
@@ -153,7 +154,7 @@ variable the app sends no traces. Stop: `podman compose --profile observability 
 More commands:
 
 ```bash
-mix test               # tests (creates the test database automatically)
+mix test               # tests incl. browser tests in Chromium (test database and assets automatically)
 mix precommit          # compile with warnings as errors, format, Sobelow, tests
 podman compose down    # stop Postgres (data stays in the volume)
 ```
