@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- A record: black vinyl with grooves, orange label, spindle hole -->
+  <circle cx="32" cy="32" r="31" fill="#111" stroke="#444" stroke-width="1.5"/>
+  <g fill="none" stroke="#3a3a3a" stroke-width="1">
+    <circle cx="32" cy="32" r="26"/>
+    <circle cx="32" cy="32" r="22"/>
+    <circle cx="32" cy="32" r="18"/>
+  </g>
+  <path d="M14 20a22 22 0 0 1 12-8" fill="none" stroke="#777" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="11" fill="#f76b15"/>
+  <circle cx="32" cy="32" r="2.5" fill="#fff"/>
+</svg>
