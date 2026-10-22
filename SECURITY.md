@@ -6,8 +6,8 @@ und welche Grenzen bekannt sind. Die Begründungen stehen in den ADRs unter [doc
 
 ## Sicherheitslücken melden
 
-- Bitte **nicht** öffentlich melden (kein Issue, kein Chat), sondern vertraulich direkt an den
-  Betreiber der Instanz.
+- Bitte **nicht** öffentlich melden (kein Issue, kein Chat), sondern vertraulich per E-Mail an
+  **plattensammlung-hc@halfbrodt.org**.
 - Hilfreich sind: betroffene Seite oder API-Route, Schritte zum Nachstellen, erwartetes und
   tatsächliches Verhalten, Einschätzung der Auswirkung.
 - Keine Tests gegen fremde Instanzen und keine Daten anderer Benutzer abrufen oder verändern,
