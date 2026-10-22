@@ -18,7 +18,7 @@ defmodule Plattensammlung.Application do
         # Start to serve requests, typically the last entry
         PlattensammlungWeb.Endpoint,
         {AshAuthentication.Supervisor, [otp_app: :plattensammlung]}
-      ] ++ cover_cleanup()
+      ] ++ cleanup()
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
@@ -34,12 +34,16 @@ defmodule Plattensammlung.Application do
     :ok
   end
 
-  # Removes unreferenced cover files once after start (off in tests)
-  defp cover_cleanup do
+  # Removes unreferenced cover files and artists once after start (off in tests)
+  defp cleanup do
     if Application.get_env(:plattensammlung, :cleanup_covers_on_start, true) do
       [
         Supervisor.child_spec({Task, &Plattensammlung.Covers.cleanup_orphans/0},
           id: :cover_cleanup
+        ),
+        Supervisor.child_spec(
+          {Task, &Plattensammlung.Records.ArtistCleanup.cleanup_orphans/0},
+          id: :artist_cleanup
         )
       ]
     else

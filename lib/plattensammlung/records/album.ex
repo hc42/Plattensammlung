@@ -76,6 +76,8 @@ defmodule Plattensammlung.Records.Album do
             error
         end)
       end
+
+      change Plattensammlung.Records.Changes.RemoveOrphanedArtist
     end
 
     create :add_to_collection do
@@ -133,6 +135,7 @@ defmodule Plattensammlung.Records.Album do
       validate Plattensammlung.Records.Validations.CoverSource
 
       change {Plattensammlung.Records.Changes.FindOrCreateArtist, []}
+      change Plattensammlung.Records.Changes.RemoveOrphanedArtist
       change Plattensammlung.Records.Changes.StoreCover
       change Plattensammlung.Records.Changes.NormalizeStreamingIds
       # Plain edits stay offline; a new Discogs/MusicBrainz link triggers the lookup

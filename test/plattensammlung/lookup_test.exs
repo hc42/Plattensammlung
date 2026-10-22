@@ -138,7 +138,9 @@ defmodule Plattensammlung.LookupTest do
       Records.add_to_collection!(
         "The Beatles",
         "Abbey Road",
-        %{copy: %{barcode: "5 099902-987620"}}, actor: user)
+        %{copy: %{barcode: "5 099902-987620"}},
+        actor: user
+      )
 
     assert [%{id: id}] = Records.find_by_barcode!("5099902987620", actor: user)
     assert id == album.id

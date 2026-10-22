@@ -23,15 +23,34 @@ defmodule Plattensammlung.Records.Artist do
   actions do
     @fields [:name, :sort_name, :discogs_id, :musicbrainz_id]
 
-    defaults [:read, :destroy, create: @fields, update: @fields]
+    defaults [:read, create: @fields, update: @fields]
+
+    destroy :destroy do
+      primary? true
+      require_atomic? false
+      # Albums must go first (the database refuses otherwise); say so clearly
+      validate Plattensammlung.Records.Validations.ArtistWithoutAlbums
+    end
+
+    read :orphans do
+      description "Artists no album refers to any more"
+      filter expr(not exists(albums, true))
+    end
   end
 
+  # Artists are shared between all users (ADR 0015): everyone reads them and
+  # creates new ones (via FindOrCreateArtist), but renaming or deleting is only
+  # allowed while no one else has an album of that artist
   policies do
-    # One shared collection: every signed-in user (or API key) may do everything
-    policy always() do
+    policy action_type([:read, :create]) do
       # :strict raises Forbidden instead of silently returning no rows
       access_type :strict
       authorize_if actor_present()
+    end
+
+    policy action_type([:update, :destroy]) do
+      forbid_unless actor_present()
+      authorize_if expr(not exists(albums, owner_id != ^actor(:id)))
     end
   end
 

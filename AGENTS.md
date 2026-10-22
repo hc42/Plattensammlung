@@ -124,11 +124,14 @@ Regeln:
 
 - Artists werden über den Namen gefunden oder angelegt (Change `FindOrCreateArtist`),
   ohne Beachtung der Groß- und Kleinschreibung (`:ci_string` = citext).
+- **Künstler sind gemeinsam (ADR 0015):** umbenennen/löschen nur, wenn kein anderer User ein
+  Album davon hat; löschen nur ohne Alben. Künstler ohne Alben räumt `RemoveOrphanedArtist`
+  bzw. `Records.ArtistCleanup` auf (auch beim App-Start).
 - „Besitze ich“ ist das Aggregate `owned` (existiert eine Copy?). Es wird nie gespeichert.
 - Eine Copy anzulegen setzt `wanted` am Album zurück (Change `RemoveFromWishlist`).
 - Ein Album ohne Copy und ohne `wanted` ist „nicht zugeordnet“ (Such-Status `:other`).
 - Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr. `Copy.format` ist eine Liste.
-- Ein Album zu löschen löscht seine Copies. Ein Artist mit Alben kann nicht gelöscht werden.
+- Ein Album zu löschen löscht seine Copies und gegebenenfalls den nun unbenutzten Artist.
 - **Grenzen (ADR 0006, Nachtrag):** Textfelder und Listen haben `constraints max_length`, Jahre
   1900–2100, Discogs-IDs `min: 1`, Barcode 8–14 Ziffern (Change `NormalizeBarcode` + `validate match`).
   Neue Felder bekommen immer eine Grenze, das Formularfeld ein passendes `maxlength`.
