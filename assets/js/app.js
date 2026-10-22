@@ -25,7 +25,7 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/plattensammlung"
 import topbar from "../vendor/topbar"
 import {BarcodeScanner} from "./hooks/barcode_scanner"
-import {CoverTint, RowTint} from "./hooks/cover_tint"
+import {CoverTint, ListTint} from "./hooks/cover_tint"
 import {BackLink, RememberList, listPreferences} from "./hooks/list_memory"
 import {PasskeySignIn, PasskeyRegister} from "./hooks/passkey"
 import {appPath} from "./app_path"
@@ -42,8 +42,8 @@ const liveSocket = new LiveSocket(appPath("/live"), Socket, {
     CoverTint,
     PasskeySignIn,
     PasskeyRegister,
+    ListTint,
     RememberList,
-    RowTint,
   },
 })
 

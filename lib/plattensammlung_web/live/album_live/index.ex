@@ -130,6 +130,14 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
         </.link>
       </div>
 
+      <%!-- Behind the top of the page: the colour of the album under the mouse (hook ListTint).
+           Static, so LiveView patches leave the colour the hook set alone --%>
+      <div
+        id="list-tint"
+        class="cover-tint soft pointer-events-none absolute inset-x-0 top-0 -z-10 h-[40rem]"
+      >
+      </div>
+
       <%!-- Remembers this list (view, order, search) for the back link of the album page --%>
       <div
         id="list-memory"
@@ -145,7 +153,8 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
       <div
         id="albums"
         phx-update="stream"
-        phx-hook="RowTint"
+        phx-hook="ListTint"
+        data-tint-target="list-tint"
         class={
           [
             if(@view == "list",
@@ -184,9 +193,9 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
             :if={!is_map_key(item, :letter) and @view == "list"}
             id={id}
             navigate={~p"/albums/#{item}"}
-            class="group row-tint -mx-3 flex scroll-mt-24 items-center gap-4 rounded-lg px-3 py-3"
+            class="group list-row -mx-3 flex scroll-mt-24 items-center gap-4 rounded-lg px-3 py-3"
             data-cover={local_cover_path(item)}
-            style={!item.cover_url && "--row-tint: #{label_color(item)}"}
+            data-color={label_color(item)}
           >
             <.cover album={item} morph class="size-14 shrink-0" />
             <div class="min-w-0 flex-1">
@@ -203,6 +212,8 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
             id={id}
             navigate={~p"/albums/#{item}"}
             class="group block scroll-mt-24"
+            data-cover={local_cover_path(item)}
+            data-color={label_color(item)}
           >
             <.sleeve album={item} />
             <div class="mt-2 space-y-0.5">

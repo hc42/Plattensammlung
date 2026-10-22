@@ -1,4 +1,4 @@
-// Tints the top of the album page in the average colour of its cover.
+// Tints the top of the album page in the colour of its cover (or its label).
 //
 // Only covers stored by the app (same origin) can be read: a remote image would
 // "taint" the canvas, and getImageData throws. Then the page just stays untinted.
@@ -49,17 +49,51 @@ function vividAverage(pixels) {
   return `rgb(${Math.round(r / total)} ${Math.round(g / total)} ${Math.round(b / total)})`
 }
 
-// List view: on hover a row takes on its cover's colour (CSS .row-tint fades it in).
-// Sits on the list container; the colour of a row is computed on its first hover.
-export const RowTint = {
-  mounted() {
-    this.el.addEventListener("pointerover", async event => {
-      const row = event.target.closest("[data-cover]")
-      if (!row || row.style.getPropertyValue("--row-tint")) return
+// The colour of an album element: its cover's (local covers only), otherwise the
+// label colour the server put into data-color
+async function tintOf(el) {
+  const color = el.dataset.cover ? await averageColor(el.dataset.cover) : null
+  return color || el.dataset.color || null
+}
 
-      const color = await averageColor(row.dataset.cover)
-      if (color) row.style.setProperty("--row-tint", color)
+const HOVER_DELAY_MS = 150
+const LEAVE_DELAY_MS = 400
+
+// Album list: the page background (#list-tint) takes on the colour of the album
+// under the mouse. Only after a short pause on an album, so moving across the
+// grid doesn't flicker; leaving the albums fades it out. No effect on touch.
+export const ListTint = {
+  mounted() {
+    this.el.addEventListener("pointerover", event => {
+      if (event.pointerType !== "mouse") return
+      const album = event.target.closest("[data-color]")
+      if (!album) return
+
+      clearTimeout(this.timer)
+      this.timer = setTimeout(() => this.tint(album), HOVER_DELAY_MS)
     })
+
+    this.el.addEventListener("pointerleave", () => {
+      clearTimeout(this.timer)
+      this.timer = setTimeout(() => this.target()?.removeAttribute("data-tinted"), LEAVE_DELAY_MS)
+    })
+  },
+
+  destroyed() {
+    clearTimeout(this.timer)
+  },
+
+  target() {
+    return document.getElementById(this.el.dataset.tintTarget)
+  },
+
+  async tint(album) {
+    const color = await tintOf(album)
+    const target = this.target()
+    if (!color || !target) return
+
+    target.style.setProperty("--cover-tint", color)
+    target.dataset.tinted = "true"
   },
 }
 
@@ -74,10 +108,10 @@ export const CoverTint = {
   },
 
   async apply() {
-    const src = this.el.dataset.src
-    const color = src ? await averageColor(src) : null
+    const src = this.el.dataset.cover
+    const color = await tintOf(this.el)
 
-    if (color && this.el.dataset.src === src) {
+    if (color && this.el.dataset.cover === src) {
       this.el.style.setProperty("--cover-tint", color)
       this.el.dataset.tinted = "true"
     } else {

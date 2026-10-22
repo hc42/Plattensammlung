@@ -91,6 +91,16 @@ defmodule PlattensammlungWeb.AlbumListTest do
     assert has_element?(view, "#match-album")
   end
 
+  test "list and grid carry each album's colour for the background tint", %{conn: conn} do
+    for path <- [~p"/?view=grid", ~p"/?view=list"] do
+      {:ok, view, _html} = live(conn, path)
+
+      assert has_element?(view, "#list-tint.cover-tint")
+      assert has_element?(view, "#albums[phx-hook=ListTint][data-tint-target=list-tint]")
+      assert has_element?(view, ~s(#albums a[data-color^="oklch("]))
+    end
+  end
+
   test "unknown sort and view values are ignored", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/?sort=evil&view=table")
     assert titles(view) == ["Ege Bamyasi", "Kind of Blue", "Tago Mago"]

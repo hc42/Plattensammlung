@@ -28,8 +28,9 @@ Web application for cataloguing and managing a private vinyl record collection
 - **Covers**: upload (also with the phone camera), replace or remove; orphaned image files are cleaned up
 - **On the phone**: tab bar at the bottom with a large scan button that opens the camera directly
 - **Look and feel**: records slide out of their sleeves, albums without a cover get a label in
-  their own colour, the cover morphs into the album page, which is tinted in the cover's colour
-  and shows the record with its label
+  their own colour, the page background takes on the colour of the album under the mouse, the
+  cover morphs into the album page, which is tinted in the cover's colour and shows the record
+  with its label
 - **English and German**: follows the browser language, can be fixed on the account page
   ([ADR 0021](docs/adr/0021-internationalization.md))
 - Statistics (size, genres, decades, condition) and export as CSV or JSON-LD (schema.org)

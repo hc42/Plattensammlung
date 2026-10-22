@@ -127,34 +127,44 @@
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* The album page, tinted in the colour of its cover (hook CoverTint) */
+/* The page tinted in a cover's colour: on the album page its own (hook CoverTint),
+   on the album list the one under the pointer (hook ListTint, softer). Registered
+   as a colour, so a change from one album to the next blends instead of jumping. */
+@property --cover-tint {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+
 .cover-tint {
+  --tint-strength: 32%;
   background: linear-gradient(
     to bottom,
-    color-mix(in oklab, var(--cover-tint, transparent) 32%, transparent),
+    color-mix(in oklab, var(--cover-tint) var(--tint-strength), transparent),
     transparent
   );
   opacity: 0;
-  transition: opacity 0.6s ease-out;
+  transition:
+    opacity 0.6s ease-out,
+    --cover-tint 0.6s ease-out;
+}
+
+.cover-tint.soft {
+  --tint-strength: 18%;
 }
 
 .cover-tint[data-tinted] {
   opacity: 1;
 }
 
-/* List view: the row under the pointer, tinted in its cover's colour (hook RowTint);
-   without a known colour a neutral tone. The transition fades between rows. */
-.row-tint {
-  transition: background-color 0.35s ease-out;
+/* List rows: a neutral hover, the colour is on the page background */
+.list-row {
+  transition: background-color 0.2s ease-out;
 }
 
-.row-tint:hover,
-.row-tint:focus-visible {
-  background-color: color-mix(
-    in oklab,
-    var(--row-tint, var(--color-base-content)) 12%,
-    transparent
-  );
+.list-row:hover,
+.list-row:focus-visible {
+  background-color: color-mix(in oklab, var(--color-base-content) 5%, transparent);
 }
 
 /* The placeholder record under a cover image: only visible if the image doesn't load */

@@ -17,7 +17,8 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
       <div
         id="cover-tint"
         phx-hook="CoverTint"
-        data-src={local_cover_path(@album)}
+        data-cover={local_cover_path(@album)}
+        data-color={label_color(@album)}
         class="cover-tint pointer-events-none absolute inset-x-0 top-0 -z-10 h-[36rem]"
       >
       </div>
