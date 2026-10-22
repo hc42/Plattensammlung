@@ -22,7 +22,9 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
       >
       </div>
 
-      <.back_link navigate={back_path(@album)}>{back_label(@album)}</.back_link>
+      <.back_link navigate={back_path(@album)} id="back-link" phx-hook="BackLink">
+        {back_label(@album)}
+      </.back_link>
 
       <div class="grid gap-8 md:grid-cols-[26rem_1fr]">
         <div class="mx-auto w-fit space-y-2 md:mx-0">
@@ -71,7 +73,49 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
         </div>
 
         <div class="space-y-4">
-          <div>
+          <div class="relative pr-10">
+            <%!-- Rarely needed, so out of the way: edit, match, remove --%>
+            <div
+              :if={@can_edit or @holders == []}
+              class="dropdown dropdown-end absolute top-0 right-0"
+            >
+              <div
+                tabindex="0"
+                role="button"
+                class="btn btn-ghost btn-sm btn-circle"
+                aria-label={gettext("More actions")}
+                id="more-actions"
+              >
+                <.icon name="hero-ellipsis-horizontal" class="size-5" />
+              </div>
+              <ul
+                tabindex="-1"
+                class="dropdown-content menu z-10 mt-1 w-52 rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
+              >
+                <li :if={@can_edit}>
+                  <.link navigate={~p"/albums/#{@album}/edit"} id="edit-album">
+                    <.icon name="hero-pencil-square" class="size-4" /> {gettext("Edit")}
+                  </.link>
+                </li>
+                <li :if={@can_edit}>
+                  <.link navigate={~p"/albums/#{@album}/match"} id="match-album">
+                    <.icon name="hero-arrow-path" class="size-4" /> {gettext("Match")}
+                  </.link>
+                </li>
+                <%!-- An album no one has (e.g. after deleting the last copy) can go entirely --%>
+                <li>
+                  <button
+                    type="button"
+                    phx-click="remove"
+                    data-confirm={remove_confirmation(@holders)}
+                    id="remove-album"
+                    class="text-error"
+                  >
+                    <.icon name="hero-trash" class="size-4" /> {gettext("Remove")}
+                  </button>
+                </li>
+              </ul>
+            </div>
             <p class="text-lg opacity-80">{@album.artist.name}</p>
             <h1 class="text-3xl font-bold leading-tight">{@album.title}</h1>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
@@ -114,13 +158,11 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
             </p>
           </div>
 
-          <div class="flex flex-wrap gap-2" id="album-actions">
+          <div :if={!@album.owned} class="flex flex-wrap gap-2" id="album-actions">
             <.button navigate={~p"/albums/#{@album}/copies/new"} variant="primary" id="add-copy">
-              <.icon name="hero-plus" class="size-4" />
-              {if @album.owned, do: gettext("Another copy"), else: gettext("I have it now")}
+              <.icon name="hero-plus" class="size-4" /> {gettext("I have it now")}
             </.button>
             <.button
-              :if={!@album.owned}
               phx-click="toggle_wanted"
               id="toggle-wanted"
               class="btn btn-ghost"
@@ -130,28 +172,6 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
                 class="size-4"
               />
               {if @album.wanted, do: gettext("Remove from wishlist"), else: gettext("Add to wishlist")}
-            </.button>
-            <%= if @can_edit do %>
-              <.button
-                navigate={~p"/albums/#{@album}/match"}
-                id="match-album"
-                class="btn btn-ghost"
-              >
-                <.icon name="hero-arrow-path" class="size-4" /> {gettext("Match")}
-              </.button>
-              <.button navigate={~p"/albums/#{@album}/edit"} id="edit-album" class="btn btn-ghost">
-                <.icon name="hero-pencil-square" class="size-4" /> {gettext("Edit")}
-              </.button>
-            <% end %>
-            <%!-- An album no one has (e.g. after deleting the last copy) can go entirely --%>
-            <.button
-              :if={@can_edit or @holders == []}
-              phx-click="remove"
-              data-confirm={remove_confirmation(@holders)}
-              id="remove-album"
-              class="btn btn-ghost text-error"
-            >
-              <.icon name="hero-trash" class="size-4" /> {gettext("Remove")}
             </.button>
           </div>
 
@@ -200,7 +220,16 @@ defmodule PlattensammlungWeb.AlbumLive.Show do
       </div>
 
       <section :if={@album.copies != []} class="space-y-3">
-        <h2 class="text-lg font-semibold">{gettext("Your copies")}</h2>
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="text-lg font-semibold">{gettext("Your copies")}</h2>
+          <.link
+            navigate={~p"/albums/#{@album}/copies/new"}
+            class="btn btn-ghost btn-sm"
+            id="add-copy"
+          >
+            <.icon name="hero-plus" class="size-4" /> {gettext("Another copy")}
+          </.link>
+        </div>
         <div id="copies" class="grid gap-3 sm:grid-cols-2">
           <div
             :for={copy <- @album.copies}

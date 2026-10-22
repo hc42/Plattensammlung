@@ -84,7 +84,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
               <option
                 :for={{value, label} <- sort_options()}
                 value={value}
-                selected={value == (@sort || "title")}
+                selected={value == @sort}
               >
                 {label}
               </option>
@@ -92,7 +92,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
           </form>
           <div class="join" id="view-switch">
             <.link
-              patch={view_path(@live_action, Map.put(@params, "view", nil))}
+              patch={view_path(@live_action, Map.put(@params, "view", "grid"))}
               class={["join-item btn btn-sm btn-square", @view != "list" && "btn-active"]}
               aria-label={gettext("Show as grid")}
               aria-pressed={to_string(@view != "list")}
@@ -130,9 +130,22 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
         </.link>
       </div>
 
+      <%!-- Remembers this list (view, order, search) for the back link of the album page --%>
+      <div
+        id="list-memory"
+        phx-hook="RememberList"
+        data-url={view_path(@live_action, @params)}
+        data-label={@page_title}
+        data-view={@view}
+        data-sort={@sort}
+        hidden
+      >
+      </div>
+
       <div
         id="albums"
         phx-update="stream"
+        phx-hook="RowTint"
         class={
           [
             if(@view == "list",
@@ -171,7 +184,9 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
             :if={!is_map_key(item, :letter) and @view == "list"}
             id={id}
             navigate={~p"/albums/#{item}"}
-            class="group flex scroll-mt-24 items-center gap-4 py-3"
+            class="group row-tint -mx-3 flex scroll-mt-24 items-center gap-4 rounded-lg px-3 py-3"
+            data-cover={local_cover_path(item)}
+            style={!item.cover_url && "--row-tint: #{label_color(item)}"}
           >
             <.cover album={item} morph class="size-14 shrink-0" />
             <div class="min-w-0 flex-1">
@@ -223,15 +238,22 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    # The view and order chosen last in this browser tab (hook RememberList, sent
+    # by app.js as connect params); used when the URL doesn't name them
+    prefs = (connected?(socket) && get_connect_params(socket)["list_prefs"]) || %{}
+
+    {:ok,
+     socket
+     |> assign(:preferred_sort, valid_sort(prefs["sort"]))
+     |> assign(:preferred_view, valid_view(prefs["view"]))}
   end
 
   @impl true
   def handle_params(params, _url, socket) do
     query = blank_to_nil(params["q"])
     show = if params["show"] == "unassigned", do: "unassigned", else: nil
-    sort = if params["sort"] in Map.keys(@sorts), do: params["sort"]
-    view = if params["view"] == "list", do: "list"
+    sort = valid_sort(params["sort"]) || socket.assigns.preferred_sort || "title"
+    view = valid_view(params["view"]) || socket.assigns.preferred_view || "grid"
     action = socket.assigns.live_action
 
     filters =
@@ -262,8 +284,9 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
        Map.merge(filters, %{
          "q" => query,
          "show" => show,
-         "sort" => sort,
-         "view" => view,
+         # Only what the URL names; the rest comes from the preferences again
+         "sort" => valid_sort(params["sort"]),
+         "view" => valid_view(params["view"]),
          "user_id" => params["user_id"]
        })
      )
@@ -312,6 +335,13 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
     if first =~ ~r/^\p{L}$/u, do: first, else: "#"
   end
 
+  # URL parameters and connect params are user input: only known values
+  defp valid_sort(sort) when is_map_key(@sorts, sort), do: sort
+  defp valid_sort(_sort), do: nil
+
+  defp valid_view(view) when view in ["grid", "list"], do: view
+  defp valid_view(_view), do: nil
+
   defp sort_options do
     [
       {"title", gettext("Title")},
@@ -323,8 +353,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
 
   @impl true
   def handle_event("sort", %{"sort" => sort}, socket) do
-    sort = if sort in Map.keys(@sorts) and sort != "title", do: sort
-    params = Map.put(socket.assigns.params, "sort", sort)
+    params = Map.put(socket.assigns.params, "sort", valid_sort(sort))
 
     {:noreply, push_patch(socket, to: view_path(socket.assigns.live_action, params))}
   end

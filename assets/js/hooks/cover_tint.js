@@ -7,7 +7,7 @@
 
 const tints = new Map()
 
-function averageColor(src) {
+export function averageColor(src) {
   if (tints.has(src)) return Promise.resolve(tints.get(src))
 
   return new Promise(resolve => {
@@ -47,6 +47,20 @@ function vividAverage(pixels) {
   }
 
   return `rgb(${Math.round(r / total)} ${Math.round(g / total)} ${Math.round(b / total)})`
+}
+
+// List view: on hover a row takes on its cover's colour (CSS .row-tint fades it in).
+// Sits on the list container; the colour of a row is computed on its first hover.
+export const RowTint = {
+  mounted() {
+    this.el.addEventListener("pointerover", async event => {
+      const row = event.target.closest("[data-cover]")
+      if (!row || row.style.getPropertyValue("--row-tint")) return
+
+      const color = await averageColor(row.dataset.cover)
+      if (color) row.style.setProperty("--row-tint", color)
+    })
+  },
 }
 
 export const CoverTint = {

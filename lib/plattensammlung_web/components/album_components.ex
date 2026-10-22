@@ -65,11 +65,15 @@ defmodule PlattensammlungWeb.AlbumComponents do
   its own hue, always the same one. Lightness and chroma are fixed, so the
   labels work in both themes.
   """
-  def label_style(%{title: title}) do
-    # to_string: album titles are case-insensitive strings (Ash.CiString)
-    hue = :erlang.phash2(to_string(title), 360)
-    "background-color: oklch(72% 0.12 #{hue}); color: oklch(26% 0.05 #{hue})"
+  def label_style(album) do
+    "background-color: #{label_color(album)}; color: oklch(26% 0.05 #{label_hue(album)})"
   end
+
+  @doc "The label colour of an album (see `label_style/1`)."
+  def label_color(album), do: "oklch(72% 0.12 #{label_hue(album)})"
+
+  # to_string: album titles are case-insensitive strings (Ash.CiString)
+  defp label_hue(%{title: title}), do: :erlang.phash2(to_string(title), 360)
 
   # "Trans Europa Express" → "TE", "Tago Mago" → "TM", "Kind of Blue" → "KB": short
   # lower-case words ("of", "a") are skipped unless nothing else is left
@@ -132,6 +136,7 @@ defmodule PlattensammlungWeb.AlbumComponents do
   spacing of the surrounding `space-y-*` applies (inline links ignore it).
   """
   attr :navigate, :string, required: true
+  attr :rest, :global, doc: "e.g. id and phx-hook=\"BackLink\" (back to the last list)"
   slot :inner_block, required: true
 
   def back_link(assigns) do
@@ -139,8 +144,10 @@ defmodule PlattensammlungWeb.AlbumComponents do
     <.link
       navigate={@navigate}
       class="flex w-fit items-center gap-1 text-sm opacity-70 transition-opacity hover:opacity-100"
+      {@rest}
     >
-      <.icon name="hero-arrow-left-micro" class="size-4" /> {render_slot(@inner_block)}
+      <.icon name="hero-arrow-left-micro" class="size-4" />
+      <span data-label>{render_slot(@inner_block)}</span>
     </.link>
     """
   end

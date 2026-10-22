@@ -331,6 +331,14 @@ Deviating from it: data access goes through Ash instead of Ecto contexts.
   `<.cover morph>`). Names must be unique per page.
 - **Cover colour** (hook `CoverTint`, `assets/js/hooks/cover_tint.js`): computed in the browser,
   not stored. Only local covers (`local_cover_path/1`), remote images can't be read (canvas taint).
+  `RowTint` tints list rows on hover the same way (albums without cover: `label_color/1`).
+- **List memory** (`assets/js/hooks/list_memory.js`): `RememberList` on the album list keeps its
+  URL, title, view and order in `sessionStorage`; `BackLink` on the album page points back there.
+  View and order reach the server as connect params (`list_prefs`, `params` is a function in
+  `app.js` so every live navigation sends them) and apply when the URL has no `?view=`/`?sort=`.
+  The URL keeps only explicit choices. Connect params are user input: only known values.
+- Album page: rarely used actions (edit, match, remove) sit in the "⋯" menu next to the title;
+  "Another copy" is in the heading of the own copies.
 - Percentages in `padding` refer to the containing block, not the element: inside small round
   elements (labels) size text with container units (`@container`, `cqw`) and limit its width.
 - **Icons:** Tailwind only generates `hero-*` classes it finds literally in the source; never

@@ -142,6 +142,21 @@
   opacity: 1;
 }
 
+/* List view: the row under the pointer, tinted in its cover's colour (hook RowTint);
+   without a known colour a neutral tone. The transition fades between rows. */
+.row-tint {
+  transition: background-color 0.35s ease-out;
+}
+
+.row-tint:hover,
+.row-tint:focus-visible {
+  background-color: color-mix(
+    in oklab,
+    var(--row-tint, var(--color-base-content)) 12%,
+    transparent
+  );
+}
+
 /* The placeholder record under a cover image: only visible if the image doesn't load */
 @keyframes delayed-fade-in {
   from { opacity: 0; }

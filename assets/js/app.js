@@ -25,15 +25,26 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/plattensammlung"
 import topbar from "../vendor/topbar"
 import {BarcodeScanner} from "./hooks/barcode_scanner"
-import {CoverTint} from "./hooks/cover_tint"
+import {CoverTint, RowTint} from "./hooks/cover_tint"
+import {BackLink, RememberList, listPreferences} from "./hooks/list_memory"
 import {PasskeySignIn, PasskeyRegister} from "./hooks/passkey"
 import {appPath} from "./app_path"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket(appPath("/live"), Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, BarcodeScanner, CoverTint, PasskeySignIn, PasskeyRegister},
+  // A function: evaluated on every join, so live navigation sends the current preferences
+  params: () => ({_csrf_token: csrfToken, list_prefs: listPreferences()}),
+  hooks: {
+    ...colocatedHooks,
+    BackLink,
+    BarcodeScanner,
+    CoverTint,
+    PasskeySignIn,
+    PasskeyRegister,
+    RememberList,
+    RowTint,
+  },
 })
 
 // Show progress bar on live navigation and form submits

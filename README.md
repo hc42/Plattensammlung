@@ -13,7 +13,8 @@ Web application for cataloguing and managing a private vinyl record collection
 - Answer quickly: "Do I have this record?", with links to Discogs
 - **Wishlist**: remember albums you are still looking for. Scanning in a record shop immediately shows "have it" or "on the wishlist"
 - Search and filter the collection, e.g. by artist, genre or year; sort by title, artist, year or
-  recently added, as a cover grid or a compact list (with an A–Z bar on phones)
+  recently added, as a cover grid or a compact list (with an A–Z bar on phones); view and order
+  are remembered per browser tab, and "back" returns to the list as you left it
 - **Shared catalogue, own collection per person:** every album exists once, each person has
   their own copies and their own wishlist, visible to the others (page "Collectors", "Also with …" on
   the album page). Everyone who has an album maintains its data; it is deleted only once no one

@@ -65,6 +65,32 @@ defmodule PlattensammlungWeb.AlbumListTest do
     assert titles(view) == ["Kind of Blue", "Tago Mago", "Ege Bamyasi"]
   end
 
+  test "the list remembers its URL for the back link of the album page",
+       %{conn: conn, user: user} do
+    {:ok, view, _html} = live(conn, ~p"/?sort=year&view=list")
+
+    assert has_element?(
+             view,
+             ~s(#list-memory[phx-hook=RememberList][data-url="/?sort=year&view=list"])
+           )
+
+    [album | _] = Records.search_albums!(nil, nil, actor: user)
+    {:ok, show, _html} = live(conn, ~p"/albums/#{album}")
+    assert has_element?(show, "#back-link[phx-hook=BackLink] [data-label]")
+  end
+
+  test "owned albums offer another copy at the copies, the rest sits in a menu",
+       %{conn: conn, user: user} do
+    [album] = Records.search_albums!("Tago", nil, actor: user)
+    {:ok, view, _html} = live(conn, ~p"/albums/#{album}")
+
+    refute has_element?(view, "#album-actions")
+    assert has_element?(view, "#add-copy", "Another copy")
+    assert has_element?(view, "#more-actions")
+    assert has_element?(view, "#edit-album")
+    assert has_element?(view, "#match-album")
+  end
+
   test "unknown sort and view values are ignored", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/?sort=evil&view=table")
     assert titles(view) == ["Ege Bamyasi", "Kind of Blue", "Tago Mago"]
