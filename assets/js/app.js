@@ -66,6 +66,11 @@ window.addEventListener("phx:page-loading-start", ({detail}) => {
   }))
 })
 
+// Installable app (ADR 0022): the service worker only provides the offline page
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register(appPath("/sw.js"), {scope: appPath("/")}).catch(() => {})
+}
+
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 

@@ -17,7 +17,9 @@ defmodule PlattensammlungWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico favicon.svg robots.txt)
+  # sw.js and offline.html: service worker of the installable app (ADR 0022)
+  def static_paths,
+    do: ~w(assets fonts images favicon.ico favicon.svg robots.txt sw.js offline.html)
 
   def router do
     quote do

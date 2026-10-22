@@ -26,7 +26,9 @@ Web application for cataloguing and managing a private vinyl record collection
 - **Spotify and Tidal**: links are found automatically (Wikidata, MusicBrainz) or pasted;
   albums can also be added from a Spotify link or its QR code
 - **Covers**: upload (also with the phone camera), replace or remove; orphaned image files are cleaned up
-- **On the phone**: tab bar at the bottom with a large scan button that opens the camera directly
+- **On the phone**: tab bar at the bottom with a large scan button that opens the camera directly;
+  installable on the home screen as an app with a "Scan" shortcut
+  ([ADR 0022](docs/adr/0022-installable-app.md))
 - **Look and feel**: records slide out of their sleeves, albums without a cover get a label in
   their own colour, the page background takes on the colour of the album under the mouse, the
   cover morphs into the album page, which is tinted in the cover's colour and shows the record

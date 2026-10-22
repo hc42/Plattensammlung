@@ -2,7 +2,8 @@
 <html lang={assigns[:locale] || "en"}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <%!-- viewport-fit=cover: the bottom tab bar keeps clear of the home indicator (safe area) --%>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <%!-- Optional path prefix (PHX_PATH) for paths built in JavaScript --%>
     <meta name="base-path" content={PlattensammlungWeb.Endpoint.path("")} />
@@ -14,6 +15,11 @@
     <link rel="icon" href={~p"/favicon.svg"} type="image/svg+xml" />
     <link rel="icon" href={~p"/favicon.ico"} sizes="64x64" />
     <link rel="apple-touch-icon" href={~p"/images/apple-touch-icon.png"} />
+    <%!-- Installable app (ADR 0022); the browser bar takes the colour of the page --%>
+    <link rel="manifest" href={~p"/manifest.webmanifest"} />
+    <meta name="theme-color" content="#fbf9f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1f1c1a" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-title" content="Plattensammlung" />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="module" src={~p"/assets/js/app.js"}>
     </script>

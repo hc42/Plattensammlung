@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- App icon (PWA, home screen): a record on anthracite. The record stays inside
+       the central safe zone (radius 40 %), so the icon also works as "maskable". -->
+  <rect width="512" height="512" fill="#24201d"/>
+  <circle cx="256" cy="256" r="176" fill="#0f0d0c"/>
+  <g fill="none" stroke="#2c2826" stroke-width="3">
+    <circle cx="256" cy="256" r="152"/>
+    <circle cx="256" cy="256" r="132"/>
+    <circle cx="256" cy="256" r="112"/>
+    <circle cx="256" cy="256" r="92"/>
+  </g>
+  <path d="M138 182a142 142 0 0 1 72-58" fill="none" stroke="#5c5550" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="62" fill="#cf5a2c"/>
+  <circle cx="256" cy="256" r="11" fill="#f6f1ea"/>
+</svg>

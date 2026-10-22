@@ -70,6 +70,8 @@ defmodule PlattensammlungWeb.Router do
   # Container health check (TrueNAS): app and database reachable
   scope "/", PlattensammlungWeb do
     get "/health", HealthController, :show
+    # Web app manifest (ADR 0022), public like the icons it names
+    get "/manifest.webmanifest", ManifestController, :show
   end
 
   scope "/api/json" do

@@ -84,6 +84,9 @@ Update these documents **without being asked** as soon as something changes:
     `local_cover_path/1`, `status_badge`, condition helpers, `format_date`,
     `user_name`, `field_label` (imported in all views)
   - `locale.ex`: language of a request and of LiveViews (plug and `on_mount`, ADR 0021)
+  - `controllers/manifest_controller.ex`: web app manifest (`/manifest.webmanifest`, ADR 0022);
+    service worker `priv/static/sw.js` (offline page only) and `priv/static/offline.html`;
+    app icons from `priv/static/images/icon.svg` (PNGs rendered with `rsvg-convert`)
   - `nav.ex`: `on_mount` hook for `@current_path`; `components/layouts.ex`: top navigation
     (desktop) and bottom tab bar with the scan button (phones, `/import?scan=1` starts the camera)
 - `priv/gettext/`: `*.pot` templates, German translations in `de/LC_MESSAGES/`
