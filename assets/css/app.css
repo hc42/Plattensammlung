@@ -136,6 +136,12 @@
   initial-value: transparent;
 }
 
+@property --tint-strength {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 32%;
+}
+
 .cover-tint {
   --tint-strength: 32%;
   background: linear-gradient(
@@ -146,7 +152,13 @@
   opacity: 0;
   transition:
     opacity 0.6s ease-out,
-    --cover-tint 0.6s ease-out;
+    --cover-tint 0.6s ease-out,
+    --tint-strength 0.6s ease-out;
+}
+
+/* The starting state taken over from the previous page (see startFrom in cover_tint.js) */
+.cover-tint.tint-instant {
+  transition: none;
 }
 
 .cover-tint.soft {

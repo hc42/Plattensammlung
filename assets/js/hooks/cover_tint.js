@@ -56,6 +56,36 @@ async function tintOf(el) {
   return color || el.dataset.color || null
 }
 
+// The tint on screen right now. The next page starts from it (see startFrom), so
+// a page change blends from colour to colour instead of starting from nothing.
+let current = null
+
+// Shows the current tint on a page's tint element at once (no transition); the
+// element's own colour or neutral then blends in from there
+function startFrom(el) {
+  if (!current) return
+
+  el.classList.add("tint-instant")
+  el.style.setProperty("--cover-tint", current.color)
+  el.style.setProperty("--tint-strength", current.strength)
+  el.dataset.tinted = "true"
+  // Apply this state now, so the following changes transition from it
+  el.getBoundingClientRect()
+  el.classList.remove("tint-instant")
+  el.style.removeProperty("--tint-strength")
+}
+
+function show(el, color) {
+  el.style.setProperty("--cover-tint", color)
+  el.dataset.tinted = "true"
+  current = {color, strength: el.classList.contains("soft") ? "18%" : "32%"}
+}
+
+function hide(el) {
+  delete el.dataset.tinted
+  current = null
+}
+
 const HOVER_DELAY_MS = 150
 const LEAVE_DELAY_MS = 400
 
@@ -64,6 +94,13 @@ const LEAVE_DELAY_MS = 400
 // grid doesn't flicker; leaving the albums fades it out. No effect on touch.
 export const ListTint = {
   mounted() {
+    // Coming from a tinted page: start in its colour and fade to neutral
+    const target = this.target()
+    if (target && current) {
+      startFrom(target)
+      hide(target)
+    }
+
     this.el.addEventListener("pointerover", event => {
       if (event.pointerType !== "mouse") return
       const album = event.target.closest("[data-color]")
@@ -73,9 +110,21 @@ export const ListTint = {
       this.timer = setTimeout(() => this.tint(album), HOVER_DELAY_MS)
     })
 
+    // A click shouldn't wait for the hover pause: the album page starts from this colour
+    this.el.addEventListener("pointerdown", event => {
+      const album = event.target.closest("[data-color]")
+      if (!album) return
+
+      clearTimeout(this.timer)
+      this.tint(album)
+    })
+
     this.el.addEventListener("pointerleave", () => {
       clearTimeout(this.timer)
-      this.timer = setTimeout(() => this.target()?.removeAttribute("data-tinted"), LEAVE_DELAY_MS)
+      this.timer = setTimeout(() => {
+        const target = this.target()
+        if (target) hide(target)
+      }, LEAVE_DELAY_MS)
     })
   },
 
@@ -90,15 +139,14 @@ export const ListTint = {
   async tint(album) {
     const color = await tintOf(album)
     const target = this.target()
-    if (!color || !target) return
-
-    target.style.setProperty("--cover-tint", color)
-    target.dataset.tinted = "true"
+    if (color && target) show(target, color)
   },
 }
 
 export const CoverTint = {
   mounted() {
+    // Coming from a tinted page (e.g. the hovered album in the list): start there
+    startFrom(this.el)
     this.apply()
   },
 
@@ -111,11 +159,11 @@ export const CoverTint = {
     const src = this.el.dataset.cover
     const color = await tintOf(this.el)
 
-    if (color && this.el.dataset.cover === src) {
-      this.el.style.setProperty("--cover-tint", color)
-      this.el.dataset.tinted = "true"
+    if (this.el.dataset.cover !== src) return
+    if (color) {
+      show(this.el, color)
     } else {
-      delete this.el.dataset.tinted
+      hide(this.el)
     }
   },
 }

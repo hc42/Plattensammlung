@@ -333,8 +333,10 @@ Deviating from it: data access goes through Ash instead of Ecto contexts.
   not stored. Only local covers (`local_cover_path/1`), remote images can't be read (canvas taint).
   On the album list `ListTint` tints the page background (`#list-tint`, softer) in the colour of
   the album under the mouse, after a short pause and only for mouse pointers. Elements carry
-  `data-cover` (local cover) and `data-color` (label colour, the fallback). `--cover-tint` is
-  registered with `@property`, so colour changes blend.
+  `data-cover` (local cover) and `data-color` (label colour, the fallback). `--cover-tint` and
+  `--tint-strength` are registered with `@property`, so changes blend. The tint on screen is
+  carried over to the next page (`startFrom` in `cover_tint.js`): the new page starts in that
+  colour without transition and blends to its own, so page changes don't flash back to neutral.
 - **List memory** (`assets/js/hooks/list_memory.js`): `RememberList` on the album list keeps its
   URL, title, view and order in `sessionStorage`; `BackLink` on the album page points back there.
   View and order reach the server as connect params (`list_prefs`, `params` is a function in
