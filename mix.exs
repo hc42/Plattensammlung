@@ -143,16 +143,16 @@ defmodule Plattensammlung.MixProject do
   defp npm_install(_args) do
     if System.find_executable("npm") == nil do
       Mix.raise("""
-      npm wurde nicht gefunden. Die Assets brauchen Node.js (assets/package.json).
+      npm was not found. The assets need Node.js (assets/package.json).
 
-      Mit nvm im Projektordner:  nvm use     (Version aus .nvmrc)
-      Oder Node.js installieren, z. B. mit Homebrew:  brew install node
+      With nvm in the project folder:  nvm use     (version from .nvmrc)
+      Or install Node.js, e.g. with Homebrew:  brew install node
       """)
     end
 
     case Mix.shell().cmd("npm install", cd: "assets") do
       0 -> :ok
-      status -> Mix.raise("npm install ist fehlgeschlagen (Exit-Code #{status})")
+      status -> Mix.raise("npm install failed (exit code #{status})")
     end
   end
 end

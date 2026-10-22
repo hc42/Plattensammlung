@@ -12,9 +12,7 @@ require Ash.Query
 
 case Application.get_env(:plattensammlung, :allowed_emails, []) do
   [] ->
-    IO.puts(
-      "Seeds übersprungen: ALLOWED_EMAILS ist leer, es gibt niemanden, dem die Alben gehören."
-    )
+    IO.puts("Seeds skipped: ALLOWED_EMAILS is empty, there is no one to own the albums.")
 
   [email | _] ->
     owner =

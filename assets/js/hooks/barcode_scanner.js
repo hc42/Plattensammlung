@@ -1,4 +1,4 @@
-// Barcode scanner for the import page (see docs/adr/0007-barcode-scan-und-import.md).
+// Barcode scanner for the import page (see docs/adr/0007-barcode-scan-and-import.md).
 //
 // Reads EAN/UPC codes, and QR codes with a Spotify album link, from the live
 // camera or from a photo. Uses the browser's

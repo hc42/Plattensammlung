@@ -1,70 +1,62 @@
-# 0005. Login per Passkey
+# 0005. Sign-in with passkeys
 
-- **Status:** Angenommen (umgesetzt am 2026-10-21)
-- **Datum:** 2026-10-21
+- **Status:** Accepted (implemented on 2026-10-21)
+- **Date:** 2026-10-21
 
-## Kontext
+## Context
 
-Die Anmeldung soll per **Passkey** (WebAuthn/FIDO2) erfolgen. AshAuthentication
-(Version 4.15) bringt Strategien für Passwort, Magic Link, API-Keys, OAuth2 und weitere
-mit, aber **keine Passkey-Strategie**. Die JSON-API ([ADR 0009](0009-gestaltung-der-json-api.md))
-braucht ebenfalls eine Authentifizierung. Die App verwaltet eine private Sammlung; nur
-wenige, bekannte Personen sollen Zugang haben.
+Signing in is to happen with a **passkey** (WebAuthn/FIDO2). AshAuthentication (version 4.15)
+comes with strategies for password, magic link, API keys, OAuth2 and more, but **no passkey
+strategy**. The JSON API ([ADR 0009](0009-json-api-design.md)) also needs authentication. The
+app manages a private collection; only a few, known people are to have access.
 
-## Entscheidung
+## Decision
 
-- **AshAuthentication** (Domain `Plattensammlung.Accounts`) verwaltet `User`, Sessions
-  und Tokens. Strategien: **Magic Link** und **API-Key**. Es gibt keine Passwörter.
-- **Passkeys** werden selbst gebaut, mit der Bibliothek **`wax_`**:
-  - Resource `Passkey` (Credential-ID, Public Key als COSE-Key, Sign-Count, Name,
-    zuletzt benutzt), gehört zu einem `User`.
-  - `Accounts.WebAuthn` kapselt das Protokoll (Challenge erzeugen, Antwort prüfen).
-  - `PasskeyController` stellt vier JSON-Endpunkte unter `/auth/passkey/` bereit. Die
-    Challenge liegt zwischen den beiden Anfragen in der Session und gilt nur einmal.
-  - JS-Hooks `PasskeySignIn` und `PasskeyRegister` rufen `navigator.credentials.get/create`
-    auf.
-  - *Discoverable credentials*: Beim Anmelden muss man keine E-Mail-Adresse eingeben,
-    das Gerät bietet die passenden Passkeys an.
-  - Origin und RP-ID werden aus der aktuellen Anfrage abgeleitet, damit `localhost` und
-    `<name>.local` funktionieren.
-- **Magic Link** (E-Mail) als Rückfallebene und für die erste Anmeldung. Der Link zeigt
-  auf die Adresse, von der aus er angefordert wurde. Lokal landen die E-Mails im
-  Swoosh-Postfach `/dev/mailbox` (nur von `localhost` aus erreichbar).
-- **Freigabeliste:** Nur Adressen aus `ALLOWED_EMAILS` erhalten einen Link und dürfen sich
-  anmelden (Validation am Magic-Link-Sign-in, Prüfung beim Passkey-Login). Die
-  Anmeldeseite verrät nicht, ob eine Adresse freigeschaltet ist.
-- **API:** `Authorization: Bearer <API-Key>`. Keys werden auf der Kontoseite erzeugt
-  (30 Tage oder 1 Jahr gültig), nur als Hash gespeichert und einmalig angezeigt.
-- **Autorisierung mit Ash-Policies:** Alle Records-Resources verlangen einen Actor
-  (`actor_present()`, `access_type :strict`). Es gibt *eine* gemeinsame Sammlung für
-  alle angemeldeten Benutzer. Passkeys und API-Keys sieht nur ihr Besitzer.
+- **AshAuthentication** (domain `Plattensammlung.Accounts`) manages `User`, sessions and
+  tokens. Strategies: **magic link** and **API key**. There are no passwords.
+- **Passkeys** are built in the project, with the library **`wax_`**:
+  - Resource `Passkey` (credential ID, public key as COSE key, sign count, name, last used),
+    belongs to a `User`.
+  - `Accounts.WebAuthn` wraps the protocol (create the challenge, verify the response).
+  - `PasskeyController` provides four JSON endpoints under `/auth/passkey/`. Between the two
+    requests the challenge is kept in the session and is valid only once.
+  - JS hooks `PasskeySignIn` and `PasskeyRegister` call `navigator.credentials.get/create`.
+  - *Discoverable credentials*: signing in needs no e-mail address, the device offers the
+    matching passkeys.
+  - Origin and RP ID are derived from the current request, so `localhost` and `<name>.local`
+    work.
+- **Magic link** (e-mail) as fallback and for the first sign-in. The link points to the
+  address it was requested from. Locally the e-mails land in the Swoosh mailbox
+  `/dev/mailbox` (reachable only from `localhost`).
+- **Allow list:** only addresses from `ALLOWED_EMAILS` get a link and may sign in (validation
+  on the magic link sign-in, check on the passkey sign-in). The sign-in page doesn't reveal
+  whether an address is allowed.
+- **API:** `Authorization: Bearer <API key>`. Keys are created on the account page (valid for
+  30 days or 1 year), stored only as a hash and shown once.
+- **Authorization with Ash policies:** all Records resources require an actor
+  (`actor_present()`, `access_type :strict`). There is *one* shared collection for all
+  signed-in users. Passkeys and API keys are visible only to their owner.
 
-## Betrachtete Alternativen
+## Alternatives considered
 
-- **`webauthn_components`**: fertige LiveView-Komponenten, aber an Ecto gebunden statt
-  an Ash.
-- **Passkey-Login über eine LiveView** statt über einen Controller: Eine LiveView kann
-  keine Session-Cookies setzen. Dafür bräuchte es einen Umweg über einen kurzlebigen
-  Token und eine Weiterleitung. Der Controller ist direkter.
-- **Nur Magic Link oder Passwort**: einfacher, entspricht aber nicht dem Wunsch nach
-  Passkeys.
-- **Offene Registrierung**: Ohne Freigabeliste könnte sich jeder im Netz ein Konto anlegen.
+- **`webauthn_components`**: ready-made LiveView components, but tied to Ecto instead of Ash.
+- **Passkey sign-in through a LiveView** instead of a controller: a LiveView can't set session
+  cookies. That would need a detour via a short-lived token and a redirect. The controller is
+  more direct.
+- **Only magic link or password**: simpler, but not what was asked for (passkeys).
+- **Open registration**: without an allow list anyone on the network could create an account.
 
-## Konsequenzen
+## Consequences
 
-- WebAuthn verlangt einen sicheren Kontext: `localhost` funktioniert immer. Mit dem
-  selbstsignierten Zertifikat aus [ADR 0008](0008-https-im-lan.md) verweigern manche
-  Browser Passkeys, Chrome z. B. bei Zertifikatsfehlern. Auf dem Handy bleibt dann der
-  Magic Link.
-- Ein Passkey gilt nur für den Hostnamen, unter dem er angelegt wurde (`localhost` oder
-  `<name>.local`).
-- `ALLOWED_EMAILS` muss gesetzt sein, sonst kann sich niemand anmelden.
-- Alle Aufrufe der Domain `Records` brauchen `actor:` (oder in Seeds bewusst
-  `authorize?: false`).
-- Für den Betrieb fehlen noch ein echter Mailversand (z. B. SMTP) und ein echtes
-  Zertifikat.
+- WebAuthn requires a secure context: `localhost` always works. With the self-signed
+  certificate from [ADR 0008](0008-https-in-the-lan.md) some browsers refuse passkeys, Chrome
+  for example on certificate errors. On the phone the magic link remains.
+- A passkey only works for the host name it was created on (`localhost` or `<name>.local`).
+- `ALLOWED_EMAILS` must be set, otherwise no one can sign in.
+- All calls to the `Records` domain need `actor:` (or deliberately `authorize?: false` in seeds).
+- For production, real mail delivery (e.g. SMTP) and a real certificate are still missing.
 
-## Nachtrag (2026-10-21)
+## Addendum (2026-10-21)
 
-Die „eine gemeinsame Sammlung für alle angemeldeten Benutzer“ ist durch eigene Sammlungen
-pro Benutzer ersetzt, die alle anderen lesen dürfen ([ADR 0013](0013-eigene-sammlungen.md)).
+The "one shared collection for all signed-in users" is replaced by an own collection per user
+that all others may read ([ADR 0013](0013-own-collections.md)).

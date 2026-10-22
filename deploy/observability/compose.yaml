@@ -1,6 +1,6 @@
 # Prometheus, Tempo and Grafana for the app's metrics and traces (ADR 0019).
 # TrueNAS 25.10: Apps → Discover Apps → ⋮ → Install via YAML (see deploy/README.md,
-# "Metriken und Traces"). Replace /mnt/POOL/apps/observability with your dataset.
+# "Metrics and traces"). Replace /mnt/POOL/apps/observability with your dataset.
 services:
   prometheus:
     image: prom/prometheus:v3.15.0

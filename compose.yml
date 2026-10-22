@@ -1,11 +1,11 @@
-# Datenbank für die lokale Entwicklung (siehe docs/adr/0003-postgresql-mit-podman.md)
-# Starten:  podman compose up -d
-# Stoppen:  podman compose down   (Daten bleiben im Volume erhalten)
+# Database for local development (see docs/adr/0003-postgresql-with-podman.md)
+# Start:  podman compose up -d
+# Stop:   podman compose down   (the data stays in the volume)
 #
-# Optional Prometheus, Tempo und Grafana (ADR 0019), nur mit dem Profil:
+# Optional Prometheus, Tempo and Grafana (ADR 0019), only with the profile:
 #   podman compose --profile observability up -d
-#   Grafana: http://localhost:3000 (ohne Anmeldung), Prometheus: http://localhost:9090
-# Konfiguration wie auf dem NAS aus deploy/observability/
+#   Grafana: http://localhost:3000 (no sign-in), Prometheus: http://localhost:9090
+# Same configuration as on the NAS, from deploy/observability/
 services:
   db:
     image: docker.io/library/postgres:18
@@ -15,7 +15,7 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      # Ab Postgres 18 liegt das Datenverzeichnis versioniert unter /var/lib/postgresql
+      # From Postgres 18 on the data directory is versioned under /var/lib/postgresql
       - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]

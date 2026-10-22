@@ -1,20 +1,20 @@
-# NNNN. Titel der Entscheidung
+# NNNN. Title of the decision
 
-- **Status:** Vorgeschlagen | Angenommen | Abgelehnt | Ersetzt durch [ADR NNNN](NNNN-titel.md)
-- **Datum:** JJJJ-MM-TT
+- **Status:** Proposed | Accepted | Rejected | Superseded by [ADR NNNN](NNNN-title.md)
+- **Date:** YYYY-MM-DD
 
-## Kontext
+## Context
 
-Welches Problem gibt es? Welche Rahmenbedingungen und Kräfte wirken?
+What is the problem? Which constraints and forces apply?
 
-## Entscheidung
+## Decision
 
-Was wird gemacht?
+What is done?
 
-## Betrachtete Alternativen
+## Alternatives considered
 
-- **Alternative A**: warum nicht
+- **Alternative A**: why not
 
-## Konsequenzen
+## Consequences
 
-Was wird dadurch einfacher, was schwieriger? Welche Folgearbeiten entstehen?
+What becomes easier, what harder? What follow-up work arises?

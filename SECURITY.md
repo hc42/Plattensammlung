@@ -1,118 +1,117 @@
-# Sicherheit
+# Security
 
-Plattensammlung ist eine private Anwendung für einen kleinen, bekannten Personenkreis. Dieses
-Dokument beschreibt, wie Sicherheitsprobleme gemeldet werden, welches Sicherheitsmodell gilt
-und welche Grenzen bekannt sind. Die Begründungen stehen in den ADRs unter [docs/adr/](docs/adr/).
+Plattensammlung is a private application for a small, known group of people. This document
+describes how to report security problems, which security model applies and which limits are
+known. The reasoning is in the ADRs under [docs/adr/](docs/adr/).
 
-## Sicherheitslücken melden
+## Reporting vulnerabilities
 
-- Bitte **nicht** öffentlich melden (kein Issue, kein Chat), sondern vertraulich per E-Mail an
+- Please do **not** report publicly (no issue, no chat), but confidentially by e-mail to
   **plattensammlung-hc@halfbrodt.org**.
-- Hilfreich sind: betroffene Seite oder API-Route, Schritte zum Nachstellen, erwartetes und
-  tatsächliches Verhalten, Einschätzung der Auswirkung.
-- Keine Tests gegen fremde Instanzen und keine Daten anderer Benutzer abrufen oder verändern,
-  um eine Lücke zu belegen.
+- Helpful: affected page or API route, steps to reproduce, expected and actual behaviour,
+  assessment of the impact.
+- Don't test against other people's instances, and don't read or change other users' data to
+  prove a vulnerability.
 
-## Unterstützte Versionen
+## Supported versions
 
-Es gibt keine Versionszweige. Sicherheitskorrekturen kommen in `main` und werden mit einem
-neuen Image ausgerollt (siehe [deploy/README.md](deploy/README.md)).
+There are no release branches. Security fixes go into `main` and are rolled out with a new
+image (see [deploy/README.md](deploy/README.md)).
 
-## Sicherheitsmodell
+## Security model
 
-### Anmeldung ([ADR 0005](docs/adr/0005-passkey-login.md))
+### Sign-in ([ADR 0005](docs/adr/0005-passkey-login.md))
 
-- Anmelden können nur Adressen aus `ALLOWED_EMAILS`. Es gibt keine offene Registrierung.
-- **Passkeys** (WebAuthn) als Hauptweg, **Anmeldelink** per E-Mail als Rückfallebene. Es gibt
-  keine Passwörter.
-- Die Anmeldeseite verrät nicht, ob eine Adresse freigeschaltet ist.
-- **API-Keys** werden nur als Hash gespeichert, einmalig angezeigt und laufen nach 30 Tagen oder
-  einem Jahr ab.
-- Sitzungen liegen in einem signierten Cookie (`SameSite=Lax`, in Produktion `Secure`).
-  AshAuthentication prüft zusätzlich, dass das Sitzungstoken in der Datenbank existiert.
+- Only addresses from `ALLOWED_EMAILS` can sign in. There is no open registration.
+- **Passkeys** (WebAuthn) as the main way, a **magic link** by e-mail as fallback. There are
+  no passwords.
+- The sign-in page doesn't reveal whether an address is allowed.
+- **API keys** are stored only as a hash, shown once and expire after 30 days or one year.
+- Sessions live in a signed cookie (`SameSite=Lax`, `Secure` in production). AshAuthentication
+  also checks that the session token exists in the database.
 
-### Berechtigungen ([ADR 0013](docs/adr/0013-eigene-sammlungen.md), [0015](docs/adr/0015-gemeinsame-kuenstler.md), [0016](docs/adr/0016-gemeinsame-alben.md))
+### Authorization ([ADR 0013](docs/adr/0013-own-collections.md), [0015](docs/adr/0015-shared-artists.md), [0016](docs/adr/0016-shared-albums.md))
 
-- Alle Zugriffe laufen über Ash-Actions mit Policies; ohne Anmeldung ist nichts lesbar.
-- Alben und Künstler sind gemeinsam. Albumdaten ändert, wer das Album in Sammlung oder
-  Wunschliste hat. Gelöscht wird ein Album erst, wenn es niemand mehr hat. Einen Künstler
-  umbenennen oder löschen darf man nur, solange niemand sonst ein Album von ihm hat.
-- Exemplare und Wünsche gehören einer Person; nur sie ändert oder löscht sie.
-- **Kaufdatum und Notizen** eines Exemplars sind per Field Policy nur für den Besitzer lesbar,
-  auch über die API.
-- Andere Benutzer sehen nur ID und Anzeigenamen, nie die E-Mail-Adresse.
+- All access goes through Ash actions with policies; without signing in nothing is readable.
+- Albums and artists are shared. Album data is changed by whoever has the album in collection
+  or wishlist. An album is deleted only once no one has it any more. An artist can only be
+  renamed or deleted while no one else has an album of theirs.
+- Copies and wishes belong to one person; only they change or delete them.
+- A copy's **purchase date and notes** are readable only by its owner (field policy), also
+  through the API.
+- Other users only see ID and display name, never the e-mail address.
 
-### Eingaben und Ausgaben ([ADR 0006](docs/adr/0006-datenmodell.md), [ADR 0014](docs/adr/0014-cover-quellen-und-csp.md))
+### Input and output ([ADR 0006](docs/adr/0006-data-model.md), [ADR 0014](docs/adr/0014-cover-sources-and-csp.md))
 
-- HEEx escapt alle Ausgaben; es gibt kein `raw` und kein `innerHTML` in JavaScript.
-- Alle Felder haben Typ-, Längen- und Wertgrenzen; Barcodes werden normalisiert und geprüft.
-- **Cover** werden nur per HTTPS von bekannten Quellen geladen (Discogs, Cover Art Archive),
-  auch bei Weiterleitungen (Schutz vor SSRF). Lokale Cover-Pfade setzt nur die App selbst.
-  Hochgeladene Bilder werden am Inhalt erkannt (Magic Bytes), höchstens 10 MB.
-- **Content-Security-Policy:** Skripte nur von der App (Nonce für das Inline-Skript),
-  Bilder nur von der App und den Cover-Quellen, keine Frames, Formulare nur an die App.
-- CSRF-Schutz für alle Formulare und LiveView; die API akzeptiert nur Bearer-Keys, keine
-  Sitzungs-Cookies.
+- HEEx escapes all output; there is no `raw` and no `innerHTML` in JavaScript.
+- All fields have type, length and value limits; barcodes are normalized and validated.
+- **Covers** are only downloaded via HTTPS from known sources (Discogs, Cover Art Archive),
+  also across redirects (protection against SSRF). Local cover paths are only set by the app
+  itself. Uploaded images are recognized by their content (magic bytes), at most 10 MB.
+- **Content Security Policy:** scripts only from the app (nonce for the inline script), images
+  only from the app and the cover sources, no frames, forms only to the app.
+- CSRF protection for all forms and LiveView; the API only accepts bearer keys, no session
+  cookies.
 
-### Missbrauch begrenzen ([ADR 0017](docs/adr/0017-rate-limits.md))
+### Limiting abuse ([ADR 0017](docs/adr/0017-rate-limits.md))
 
-- Anmeldelinks: höchstens 3 pro Adresse in 15 Minuten und 10 pro IP-Adresse pro Stunde.
-- Abfragen bei MusicBrainz werden auf 1 pro Sekunde gedrosselt.
-- Optionales `limit_req` in nginx-proxy-manager als Grobschutz.
+- Magic links: at most 3 per address in 15 minutes and 10 per IP address per hour.
+- Requests to MusicBrainz are throttled to 1 per second.
+- Optional `limit_req` in nginx-proxy-manager as coarse protection.
 
-### Betrieb ([ADR 0011](docs/adr/0011-betrieb-auf-truenas.md), [ADR 0019](docs/adr/0019-metriken-und-traces.md))
+### Operations ([ADR 0011](docs/adr/0011-running-on-truenas.md), [ADR 0019](docs/adr/0019-metrics-and-traces.md))
 
-- TLS endet bei nginx-proxy-manager; die App erzwingt HTTPS (HSTS) über `X-Forwarded-Proto`.
-- Geheimnisse (`SECRET_KEY_BASE`, `TOKEN_SIGNING_SECRET`, Datenbank- und SMTP-Passwörter)
-  stehen nur in `app.env`/`db.env`/`grafana.env` auf dem NAS (`chmod 600`), nie im Git oder im
-  Image. Das Image enthält keine Uploads und keine Zertifikate.
-- Nur Port 4000 (über den Proxy) ist aus dem Internet erreichbar. Metriken (9568), Traces
-  (4318), Prometheus (9090) und Grafana (3000) sind nur fürs LAN gedacht.
-- `/dev` (Postfach mit Anmeldelinks, LiveDashboard) gibt es nur in der Entwicklung und nur von
-  `localhost` aus.
-- Traces schicken keine Trace-Header an Discogs, MusicBrainz oder Wikidata.
-- Die App schickt keine personenbezogenen Daten an externe Dienste; der MusicBrainz-Kontakt im
-  User-Agent ist optional (`MUSICBRAINZ_CONTACT`).
+- TLS ends at nginx-proxy-manager; the app enforces HTTPS (HSTS) via `X-Forwarded-Proto`.
+- Secrets (`SECRET_KEY_BASE`, `TOKEN_SIGNING_SECRET`, database and SMTP passwords) are only in
+  `app.env`/`db.env`/`grafana.env` on the NAS (`chmod 600`), never in Git or the image. The
+  image contains no uploads and no certificates.
+- Only port 4000 (through the proxy) is reachable from the internet. Metrics (9568), traces
+  (4318), Prometheus (9090) and Grafana (3000) are meant for the LAN only.
+- `/dev` (mailbox with sign-in links, LiveDashboard) only exists in development and only from
+  `localhost`.
+- Traces send no trace headers to Discogs, MusicBrainz or Wikidata.
+- The app sends no personal data to external services; the MusicBrainz contact in the user
+  agent is optional (`MUSICBRAINZ_CONTACT`).
 
-## Bekannte Grenzen
+## Known limits
 
-- **`X-Forwarded-For`** wird ohne Liste vertrauenswürdiger Proxys gelesen. Wer Port 4000 direkt
-  erreicht (im LAN), kann die eigene IP-Adresse fälschen und das Limit pro IP umgehen; das
-  Limit pro Adresse gilt trotzdem. Port 4000 darf deshalb nicht ins Internet.
-- **Rate Limits** liegen im Arbeitsspeicher und beginnen nach einem Neustart neu.
-- **Angemeldeten Benutzern wird vertraut:** Für sie gibt es keine Rate Limits, und wer ein
-  Album hat, kann dessen gemeinsame Daten (Cover, Links) für alle ändern.
-- **Passkeys** gelten für die ganze Domain. Läuft die App unter einem Pfad einer gemeinsamen
-  Domain ([ADR 0018](docs/adr/0018-pfad-praefix.md)), sehen andere Apps dort den Passkey in der
-  Auswahl.
-- Der **Metrik-Port** und **Grafana** haben keine eigene Anmeldung bzw. nur das Admin-Passwort;
-  sie verlassen sich auf das LAN. Metriken enthalten Benutzer-IDs, aber keine E-Mail-Adressen.
-- Die API liefert `cover_url` als Pfad relativ zur App.
+- **`X-Forwarded-For`** is read without a list of trusted proxies. Whoever reaches port 4000
+  directly (in the LAN) can fake their IP address and get around the per-IP limit; the
+  per-address limit still applies. Port 4000 must therefore not be exposed to the internet.
+- **Rate limits** are kept in memory and start over after a restart.
+- **Signed-in users are trusted:** there are no rate limits for them, and whoever has an album
+  can change its shared data (cover, links) for everyone.
+- **Passkeys** are bound to the whole domain. If the app runs under a path of a shared domain
+  ([ADR 0018](docs/adr/0018-path-prefix.md)), other apps there see the passkey in the
+  selection.
+- The **metrics port** has no authentication and **Grafana** only the admin password; both
+  rely on the LAN. Metrics contain user IDs, but no e-mail addresses.
+- The API returns `cover_url` as a path relative to the app.
 
-## Für Entwickler
+## For developers
 
-- Neue Actions brauchen Policies; Daten nur über Ash lesen und schreiben (siehe
-  [AGENTS.md](AGENTS.md)).
-- Neue Felder bekommen Längen- bzw. Wertgrenzen, private Felder eine Field Policy.
-- Pfade nie als feste Zeichenkette, URLs zu Bildern nur von erlaubten Quellen.
-- `mix precommit` enthält **Sobelow** (Sicherheitsscanner für Phoenix, `mix sobelow --config`).
-  Jeder Fund lässt den Lauf scheitern. Geprüfte Fehlalarme werden direkt am Code mit
-  `# sobelow_skip [...]` und einer Begründung markiert; global ausgenommen sind nur die
-  CSP- und HTTPS-Prüfung (`.sobelow-conf` erklärt, warum).
-- Vor einem Release zusätzlich `mix hex.audit` (zurückgezogene oder als unsicher gemeldete
-  Pakete).
+- New actions need policies; read and write data only through Ash (see [AGENTS.md](AGENTS.md)).
+- New fields get length or value limits, private fields a field policy.
+- Never write paths as fixed strings; image URLs only from allowed sources.
+- `mix precommit` includes **Sobelow** (security scanner for Phoenix, `mix sobelow --config`).
+  Any finding fails the run. Reviewed false positives are marked in the code with
+  `# sobelow_skip [...]` and a reason; only the CSP and HTTPS checks are ignored globally
+  (`.sobelow-conf` explains why).
+- Before a release also run `mix hex.audit` (retired packages or packages with security
+  advisories).
 
-## Automatische Prüfungen auf GitHub
+## Automated checks on GitHub
 
-- **Dependabot** (`.github/dependabot.yml`): wöchentliche Update-PRs für Elixir-Pakete,
-  npm (`assets/`), die Images in den Compose-Dateien und GitHub Actions; Sicherheitsupdates
-  sofort, sobald sie in den Repository-Einstellungen aktiviert sind. Die Basis-Images im
-  `Dockerfile` (Elixir/Erlang/Debian, per `ARG` zusammengesetzt) erkennt Dependabot nicht;
-  sie werden von Hand aktualisiert.
-- **CodeQL** (`.github/workflows/codeql.yml`): Code Scanning bei jedem Push, Pull Request und
-  wöchentlich. CodeQL unterstützt **kein Elixir**; geprüft werden das JavaScript in
-  `assets/js` und die Workflows. Ergebnisse unter **Security → Code scanning**.
-- **CI** (`.github/workflows/ci.yml`) bei jedem Push und Pull Request, auch Dependabots:
-  Kompilieren ohne Warnungen, Formatierung, ungenutzte Pakete, Ash-Snapshots
-  (`ash.codegen --check`), Sobelow, `hex.audit` und Tests gegen Postgres 18. Sobelow lädt
-  seine Ergebnisse zusätzlich ins Code Scanning (Kategorie `sobelow`), neben CodeQL.
+- **Dependabot** (`.github/dependabot.yml`): weekly update PRs for Elixir packages, npm
+  (`assets/`), the images in the Compose files and GitHub Actions; security updates
+  immediately once enabled in the repository settings. Dependabot doesn't recognize the base
+  images in the `Dockerfile` (Elixir/Erlang/Debian, assembled with `ARG`); they are updated by
+  hand. The CI doesn't start the Compose files: check major updates of Prometheus, Tempo or
+  Grafana locally before merging.
+- **CodeQL** (`.github/workflows/codeql.yml`): code scanning on every push, pull request and
+  weekly. CodeQL does **not support Elixir**; it checks the JavaScript in `assets/js` and the
+  workflows. Results under **Security → Code scanning**.
+- **CI** (`.github/workflows/ci.yml`) on every push and pull request, including Dependabot's:
+  compiling without warnings, formatting, unused packages, Ash snapshots (`ash.codegen --check`),
+  Sobelow, `hex.audit` and tests against Postgres 18. Sobelow also uploads its results to code
+  scanning (category `sobelow`), next to CodeQL.

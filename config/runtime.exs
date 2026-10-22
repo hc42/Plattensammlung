@@ -23,7 +23,7 @@ end
 config :plattensammlung, PlattensammlungWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
-# Album lookup (see docs/adr/0007-barcode-scan-und-import.md).
+# Album lookup (see docs/adr/0007-barcode-scan-and-import.md).
 # DISCOGS_TOKEN: personal access token from discogs.com/settings/developers (optional).
 # MUSICBRAINZ_CONTACT: e-mail or URL sent in the User-Agent, as MusicBrainz asks (optional).
 if config_env() != :test do

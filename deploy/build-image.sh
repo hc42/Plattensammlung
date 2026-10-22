@@ -11,7 +11,7 @@ VERSION="${1:-$(date +%Y%m%d)-$(git rev-parse --short HEAD)}"
 IMAGE="localhost/plattensammlung:$VERSION"
 
 if [ -n "$(git status --porcelain)" ]; then
-  echo "Hinweis: Es gibt nicht committete Änderungen; sie landen trotzdem im Image." >&2
+  echo "Note: there are uncommitted changes; they end up in the image anyway." >&2
 fi
 
 # Docker format keeps the HEALTHCHECK (OCI images drop it)
@@ -23,12 +23,12 @@ podman save --format docker-archive "$IMAGE" | gzip > "$ARCHIVE"
 
 cat <<INFO
 
-Fertig: $ARCHIVE ($(du -h "$ARCHIVE" | cut -f1))
-Image:  $IMAGE
+Done:  $ARCHIVE ($(du -h "$ARCHIVE" | cut -f1))
+Image: $IMAGE
 
-Auf das NAS kopieren und laden:
+Copy it to the NAS and load it:
   scp $ARCHIVE <nas>:/mnt/POOL/apps/plattensammlung/images/
   ssh <nas> sudo docker load -i /mnt/POOL/apps/plattensammlung/images/$(basename "$ARCHIVE")
 
-Danach in der TrueNAS-App die Zeile "image:" auf $IMAGE setzen und speichern.
+Then set the line "image:" in the TrueNAS app to $IMAGE and save.
 INFO

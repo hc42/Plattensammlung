@@ -1,28 +1,28 @@
-# 0002. Elixir, Phoenix und Ash als Technologiebasis
+# 0002. Elixir, Phoenix and Ash as the technology base
 
-- **Status:** Angenommen
-- **Datum:** 2026-10-21
+- **Status:** Accepted
+- **Date:** 2026-10-21
 
-## Kontext
+## Context
 
-Gebraucht wird eine Web-Anwendung mit Datenbank, Weboberfläche und API für eine private
-Plattensammlung. Ein wichtiges Ziel ist auch, Elixir, Phoenix und Ash kennenzulernen.
+What's needed is a web application with a database, web interface and API for a private record
+collection. Another important goal is to get to know Elixir, Phoenix and Ash.
 
-## Entscheidung
+## Decision
 
-- **Elixir** (1.20 / OTP 29) als Sprache
-- **Phoenix** als Web-Framework
-- **Ash 3.x** als deklaratives Anwendungs-Framework: Resources, Actions, Relationships
-  und Policies werden einmal beschrieben, und daraus entstehen Datenbankzugriff,
-  Formulare (AshPhoenix) und API (AshJsonApi).
-- Projekt wird mit **Igniter** angelegt und erweitert.
+- **Elixir** (1.20 / OTP 29) as the language
+- **Phoenix** as the web framework
+- **Ash 3.x** as a declarative application framework: resources, actions, relationships and
+  policies are described once, and database access, forms (AshPhoenix) and API (AshJsonApi)
+  follow from them.
+- The project is created and extended with **Igniter**.
 
-## Betrachtete Alternativen
+## Alternatives considered
 
-- **Phoenix mit reinem Ecto**: mehr Handarbeit für Formulare, API und Berechtigungen.
-  Für das Lernziel „Ash“ ungeeignet.
+- **Phoenix with plain Ecto**: more manual work for forms, API and permissions. Unsuitable for
+  the goal of learning Ash.
 
-## Konsequenzen
+## Consequences
 
-- Wenig Boilerplate: API und Formulare entstehen größtenteils aus den Resource-Definitionen.
-- Ash hat eine eigene Lernkurve, und Abweichungen vom „Ash-Weg“ kosten Aufwand.
+- Little boilerplate: API and forms mostly follow from the resource definitions.
+- Ash has its own learning curve, and leaving "the Ash way" costs effort.

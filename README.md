@@ -1,153 +1,155 @@
 # Plattensammlung
 
-Web-Anwendung zum Erfassen und Verwalten einer privaten Schallplattensammlung.
+Web application for cataloguing and managing a private vinyl record collection
+("Plattensammlung" is German for record collection; the user interface is in German).
 
-> **Status:** Der Fahrplan ist umgesetzt: Sammlung, Wunschliste, Import, Barcode-Scan, JSON-API, Login per Passkey oder Magic Link, Statistik und Export.
+> **Status:** The roadmap is done: collection, wishlist, import, barcode scan, JSON API, sign-in with a passkey or magic link, statistics and export.
 
-## Ziele
+## Goals
 
-- **Erfassen mit minimalem Aufwand**: Pflicht sind nur Artist und Albumtitel, alles andere ist optional
-  und erscheint erst auf Wunsch (⊕/⊖ wie in Apples Kontakte-App); Genres als Tags
-- Barcode scannen (oder nach Artist und Titel suchen), Daten und Cover von Discogs und MusicBrainz übernehmen, ohne eine Pressungsvariante auswählen zu müssen
-- Schnell beantworten: „Habe ich diese Platte?“, mit Links zu Discogs
-- **Wunschliste**: Alben merken, die man noch sucht. Der Scan im Plattenladen zeigt sofort „habe ich“ oder „steht auf der Wunschliste“
-- Sammlung durchsuchen und filtern, z. B. nach Artist, Genre oder Jahr
-- **Gemeinsamer Katalog, eigene Sammlung pro Person:** Alben gibt es nur einmal, jede Person
-  hat eigene Exemplare und eine eigene Wunschliste, für die anderen sichtbar (Seite „Sammler“,
-  „Auch bei …“ auf der Albumseite). Albumdaten pflegen alle, die das Album haben; gelöscht wird
-  es erst, wenn es niemand mehr hat. Kaufdatum und Notizen bleiben privat, auch in der API
-- Zugriff über eine Weboberfläche **und** eine JSON-API
-- Anmeldung per Passkey
-- **Alle Alben**: der gemeinsame Katalog, filterbar auf „Nicht bei mir“
-- **Abgleichen** bestehender Alben mit Discogs/MusicBrainz, auch per nachträglichem Barcode-Scan; Pressungsdaten wandern dabei ins Exemplar
-- **Spotify und Tidal**: Links werden automatisch gefunden (Wikidata, MusicBrainz) oder eingefügt;
-  Alben lassen sich auch über einen Spotify-Link oder dessen QR-Code erfassen
-- **Cover** hochladen (auch per Handykamera), ersetzen oder entfernen; verwaiste Bilddateien werden aufgeräumt
-- Statistik (Umfang, Genres, Jahrzehnte, Zustand) und Export als CSV oder JSON-LD (schema.org)
-- **Sicherheit:** Cover nur von Discogs und dem Cover Art Archive (oder per Upload),
-  Content-Security-Policy für alle Seiten ([ADR 0014](docs/adr/0014-cover-quellen-und-csp.md)),
-  begrenzte Anmeldelinks und gedrosselte MusicBrainz-Abfragen ([ADR 0017](docs/adr/0017-rate-limits.md))
+- **Capturing with minimal effort**: only artist and album title are required, everything else is
+  optional and only appears on request (⊕/⊖ like in Apple's Contacts app); genres as tags
+- Scan a barcode (or search by artist and title) and take over data and cover from Discogs and MusicBrainz, without having to pick a pressing
+- Answer quickly: "Do I have this record?", with links to Discogs
+- **Wishlist**: remember albums you are still looking for. Scanning in a record shop immediately shows "have it" or "on the wishlist"
+- Search and filter the collection, e.g. by artist, genre or year
+- **Shared catalogue, own collection per person:** every album exists once, each person has
+  their own copies and their own wishlist, visible to the others (page "Sammler", "Auch bei …" on
+  the album page). Everyone who has an album maintains its data; it is deleted only once no one
+  has it any more. Purchase date and notes stay private, also in the API
+- Access through a web interface **and** a JSON API
+- Sign-in with passkeys
+- **All albums**: the shared catalogue, filterable to "Nicht bei mir" (not mine)
+- **Matching** existing albums with Discogs/MusicBrainz, also by scanning a barcode later; pressing details go into the copy
+- **Spotify and Tidal**: links are found automatically (Wikidata, MusicBrainz) or pasted;
+  albums can also be added from a Spotify link or its QR code
+- **Covers**: upload (also with the phone camera), replace or remove; orphaned image files are cleaned up
+- Statistics (size, genres, decades, condition) and export as CSV or JSON-LD (schema.org)
+- **Security:** covers only from Discogs and the Cover Art Archive (or uploaded),
+  Content Security Policy on all pages ([ADR 0014](docs/adr/0014-cover-sources-and-csp.md)),
+  rate-limited magic links and throttled MusicBrainz requests ([ADR 0017](docs/adr/0017-rate-limits.md));
+  see [SECURITY.md](SECURITY.md)
 
-## Technik
+## Technology
 
-| Bereich | Wahl | Entscheidung |
+| Area | Choice | Decision |
 |---|---|---|
-| Sprache / Web | Elixir, Phoenix | [ADR 0002](docs/adr/0002-elixir-phoenix-ash.md) |
-| Anwendungs-Framework | Ash (AshPostgres, AshPhoenix) | [ADR 0002](docs/adr/0002-elixir-phoenix-ash.md) |
-| Datenbank | PostgreSQL in Podman (Compose) | [ADR 0003](docs/adr/0003-postgresql-mit-podman.md) |
-| Oberfläche | Phoenix LiveView und AshJsonApi | [ADR 0004](docs/adr/0004-liveview-und-json-api.md) |
-| Login | AshAuthentication, Passkeys über `wax_`, Magic Link als Rückfallebene | [ADR 0005](docs/adr/0005-passkey-login.md) |
-| Import | Barcode-Scan im Browser, Discogs API, MusicBrainz und Cover Art Archive | [ADR 0007](docs/adr/0007-barcode-scan-und-import.md) |
+| Language / web | Elixir, Phoenix | [ADR 0002](docs/adr/0002-elixir-phoenix-ash.md) |
+| Application framework | Ash (AshPostgres, AshPhoenix) | [ADR 0002](docs/adr/0002-elixir-phoenix-ash.md) |
+| Database | PostgreSQL in Podman (Compose) | [ADR 0003](docs/adr/0003-postgresql-with-podman.md) |
+| Interfaces | Phoenix LiveView and AshJsonApi | [ADR 0004](docs/adr/0004-liveview-and-json-api.md) |
+| Sign-in | AshAuthentication, passkeys via `wax_`, magic link as fallback | [ADR 0005](docs/adr/0005-passkey-login.md) |
+| Import | Barcode scan in the browser, Discogs API, MusicBrainz and Cover Art Archive | [ADR 0007](docs/adr/0007-barcode-scan-and-import.md) |
+| Operations | Container on TrueNAS behind nginx-proxy-manager | [ADR 0011](docs/adr/0011-running-on-truenas.md) |
+| Observability | Prometheus metrics, OpenTelemetry traces to Tempo, Grafana | [ADR 0019](docs/adr/0019-metrics-and-traces.md) |
 
-## Datenmodell
+## Data model
 
 ```
 Artist ──< Album ──< Copy  >── User
                  └──< Wish  >── User
 ```
 
-- **Album**: das Werk, unabhängig von der Pressung (Pflicht: Titel und Artist; optional: Jahr, Cover, Genres, Wunschliste ja/nein).
-  Entspricht der *Release Group* bei MusicBrainz bzw. dem *Master* bei Discogs.
-- **Copy**: ein Exemplar einer Person. Album mit eigener Copy = „habe ich“. Alle Pressungs- und Sammlerangaben sind optional (Label, Barcode, Zustand, Kaufdatum, Notizen).
-- **Wish**: „suche ich“, ein Eintrag auf der Wunschliste einer Person.
-- Artist und Album sind für alle gemeinsam ([ADR 0015](docs/adr/0015-gemeinsame-kuenstler.md), [ADR 0016](docs/adr/0016-gemeinsame-alben.md)).
+- **Album**: the work, independent of the pressing (required: title and artist; optional: year, cover, genres, links).
+  Corresponds to the *release group* on MusicBrainz and the *master* on Discogs.
+- **Copy**: one person's copy. An album with an own copy = "I have it". All pressing and collector details are optional (label, barcode, condition, purchase date, notes).
+- **Wish**: "I'm looking for it", an entry on one person's wishlist.
+- Artists and albums are shared by everyone ([ADR 0015](docs/adr/0015-shared-artists.md), [ADR 0016](docs/adr/0016-shared-albums.md)).
 
-Details stehen in [ADR 0006](docs/adr/0006-datenmodell.md).
+Details in [ADR 0006](docs/adr/0006-data-model.md).
 
-## Fahrplan
+## Roadmap
 
-1. ✅ Projekt anlegen (Phoenix und Ash über Igniter), Postgres über `compose.yml`
-2. ✅ Domain `Records` mit Artist, Album und Copy, plus Seed-Daten
-3. ✅ LiveView-Oberfläche: Liste, Suche und Filter, Detailseite, Schnellerfassung, Wunschliste
-4. ✅ Import: Suche nach Artist und Titel sowie Barcode bei Discogs und MusicBrainz, Cover lokal speichern
-5. ✅ Barcode-Scan mit der Kamera im Browser (HTTPS im WLAN: [ADR 0008](docs/adr/0008-https-im-lan.md))
-6. ✅ JSON-API (AshJsonApi) mit OpenAPI-Doku ([ADR 0009](docs/adr/0009-gestaltung-der-json-api.md))
-7. ✅ Login per Passkey, Magic Link als Rückfallebene, API-Keys ([ADR 0005](docs/adr/0005-passkey-login.md))
-8. ✅ Statistik und Export als CSV und JSON-LD ([ADR 0010](docs/adr/0010-statistik-und-export.md))
-9. ✅ Betrieb auf dem NAS (TrueNAS, nginx-proxy-manager, SMTP): Anleitung in [deploy/README.md](deploy/README.md), [ADR 0011](docs/adr/0011-betrieb-auf-truenas.md)
+1. ✅ Create the project (Phoenix and Ash via Igniter), Postgres via `compose.yml`
+2. ✅ Domain `Records` with artist, album and copy, plus seed data
+3. ✅ LiveView interface: list, search and filters, detail page, quick capture, wishlist
+4. ✅ Import: search by artist and title and by barcode on Discogs and MusicBrainz, store covers locally
+5. ✅ Barcode scan with the camera in the browser (HTTPS in the LAN: [ADR 0008](docs/adr/0008-https-in-the-lan.md))
+6. ✅ JSON API (AshJsonApi) with OpenAPI docs ([ADR 0009](docs/adr/0009-json-api-design.md))
+7. ✅ Sign-in with passkeys, magic link as fallback, API keys ([ADR 0005](docs/adr/0005-passkey-login.md))
+8. ✅ Statistics and export as CSV and JSON-LD ([ADR 0010](docs/adr/0010-statistics-and-export.md))
+9. ✅ Running on the NAS (TrueNAS, nginx-proxy-manager, SMTP): guide in [deploy/README.md](deploy/README.md), [ADR 0011](docs/adr/0011-running-on-truenas.md)
 
-## Entwicklung
+## Development
 
-Voraussetzungen: Elixir 1.20 / OTP 29, Node.js 24 (für die Scanner-Bibliothek) und Podman (mit laufender `podman machine`).
-Mit nvm wählt `nvm use` im Projektordner die Version aus `.nvmrc`. Wird nvm verzögert
-geladen, muss das vor `mix setup` im jeweiligen Terminal passieren, sonst fehlt `npm`.
+Requirements: Elixir 1.20 / OTP 29, Node.js 24 (for the scanner library) and Podman (with a running `podman machine`).
+With nvm, `nvm use` in the project folder picks the version from `.nvmrc`. If nvm is loaded
+lazily, do this in the terminal before `mix setup`, otherwise `npm` is missing.
 
 ```bash
-podman compose up -d   # Postgres 18 im Container starten (Port 5432, nur localhost)
-mix setup              # Abhängigkeiten, Datenbank anlegen und migrieren, Assets, Seeds
-mix phx.server         # App starten: http://localhost:4000
+podman compose up -d   # start Postgres 18 in a container (port 5432, localhost only)
+mix setup              # dependencies, create and migrate the database, assets, seeds
+mix phx.server         # start the app: http://localhost:4000
 ```
 
-Umgebungsvariablen (vor `mix phx.server` setzen):
+Environment variables (set before `mix phx.server`):
 
-| Variable | Zweck |
+| Variable | Purpose |
 |---|---|
-| `ALLOWED_EMAILS` | **Pflicht.** Kommagetrennte E-Mail-Adressen, die sich anmelden dürfen |
-| `DISCOGS_TOKEN` | Persönliches Token von https://www.discogs.com/settings/developers. Ohne Token wird nur MusicBrainz durchsucht. |
-| `MUSICBRAINZ_CONTACT` | E-Mail oder URL, die MusicBrainz im User-Agent sehen möchte |
-| `COVERS_DIR` | Ablage der heruntergeladenen Cover (Standard: `uploads/covers`, nicht im Git) |
+| `ALLOWED_EMAILS` | **Required.** Comma-separated e-mail addresses that may sign in |
+| `DISCOGS_TOKEN` | Personal token from https://www.discogs.com/settings/developers. Without it only MusicBrainz is searched. |
+| `MUSICBRAINZ_CONTACT` | E-mail address or URL that MusicBrainz asks for in the user agent |
+| `COVERS_DIR` | Where downloaded covers are stored (default: `uploads/covers`, not in Git) |
 
 ```bash
-export ALLOWED_EMAILS=du@example.com DISCOGS_TOKEN=dein-token
+export ALLOWED_EMAILS=you@example.com DISCOGS_TOKEN=your-token
 ```
 
-### Anmelden
+### Signing in
 
-1. http://localhost:4000 öffnen, die E-Mail-Adresse eingeben und „Anmeldelink senden“ wählen.
-2. In der Entwicklung landet die E-Mail im Postfach http://localhost:4000/dev/mailbox.
-   Dort den Link öffnen und „Jetzt anmelden“ klicken.
-3. Unter „Konto“ (Personen-Symbol) einen Passkey hinzufügen. Danach geht die Anmeldung
-   per Fingerabdruck bzw. Face ID.
+1. Open http://localhost:4000, enter your e-mail address and choose "Anmeldelink senden" (send sign-in link).
+2. In development the e-mail lands in the mailbox at http://localhost:4000/dev/mailbox.
+   Open the link there and click "Jetzt anmelden" (sign in now).
+3. Add a passkey under "Konto" (account, person icon). From then on you sign in with
+   fingerprint or Face ID.
 
-Ein Passkey gilt nur für die Adresse, unter der er angelegt wurde (`localhost` oder
-`<name>.local`).
+A passkey only works for the address it was created on (`localhost` or `<name>.local`).
 
-### Vom Handy aus scannen
+### Scanning from a phone
 
-Die Live-Kamera braucht HTTPS. Einmalig ein Zertifikat erzeugen:
+The live camera needs HTTPS. Create a certificate once:
 
 ```bash
 mix phx.gen.cert localhost "$(scutil --get LocalHostName).local"
 ```
 
-Dann den Server mit `LAN=1` starten:
+Then start the server with `LAN=1`:
 
 ```bash
 LAN=1 mix phx.server
 ```
 
-Auf dem Handy (gleiches WLAN) `https://<LocalHostName>.local:4001/import` öffnen und die
-Zertifikatswarnung einmal bestätigen. Den Namen zeigt `scutil --get LocalHostName`.
-Ohne HTTPS funktioniert „Foto aufnehmen“. Die App hat noch keinen Login, deshalb nur in
-einem vertrauenswürdigen Netz verwenden.
+On the phone (same Wi-Fi) open `https://<LocalHostName>.local:4001/import` and accept the
+certificate warning once. `scutil --get LocalHostName` shows the name. Without HTTPS, taking a
+photo ("Foto aufnehmen") still works. Only use this in a trusted network.
 
-### Metriken und Traces lokal
+### Metrics and traces locally
 
-Der Entwicklungsserver liefert Metriken unter http://localhost:9568/metrics. Prometheus,
-Tempo und Grafana laufen auf Wunsch in Podman (Compose-Profil, gleiche Konfiguration und
-gleiches Dashboard wie auf dem NAS):
+The development server serves metrics at http://localhost:9568/metrics. Prometheus, Tempo
+and Grafana run in Podman on request (Compose profile, same configuration and dashboards as on
+the NAS):
 
 ```bash
 podman compose --profile observability up -d
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 mix phx.server
 ```
 
-Grafana: http://localhost:3000 (ohne Anmeldung), Dashboard „Plattensammlung“, Traces unter
-„Explore → Tempo“. Prometheus: http://localhost:9090. Ohne die Variable verschickt die App
-keine Traces. Stoppen: `podman compose --profile observability down`.
+Grafana: http://localhost:3000 (no sign-in), dashboards "Plattensammlung" and "Plattensammlung –
+Traces", traces under "Explore → Tempo". Prometheus: http://localhost:9090. Without the
+variable the app sends no traces. Stop: `podman compose --profile observability down`.
 
-Weitere Befehle:
+More commands:
 
 ```bash
-mix test               # Tests (legt die Testdatenbank automatisch an)
-mix precommit          # Kompilieren mit Warnungen als Fehler, Formatierung, Tests
-podman compose down    # Postgres stoppen (Daten bleiben im Volume erhalten)
+mix test               # tests (creates the test database automatically)
+mix precommit          # compile with warnings as errors, format, Sobelow, tests
+podman compose down    # stop Postgres (data stays in the volume)
 ```
 
-## JSON-API
+## JSON API
 
-JSON:API unter `/api/json`, interaktive Doku in der Swagger-UI unter
-http://localhost:4000/api/json/swaggerui (Spezifikation: `/api/json/open_api`).
+JSON:API at `/api/json`, interactive docs in the Swagger UI at
+http://localhost:4000/api/json/swaggerui (specification: `/api/json/open_api`).
 
 ```bash
 curl -H "Authorization: Bearer $API_KEY" -H "Accept: application/vnd.api+json" "http://localhost:4000/api/json/albums?query=beatles&include=artist"
@@ -157,30 +159,30 @@ curl -H "Authorization: Bearer $API_KEY" -H "Accept: application/vnd.api+json" "
 curl -X POST http://localhost:4000/api/json/albums/collection -H "Authorization: Bearer $API_KEY" -H "Content-Type: application/vnd.api+json" -d '{"data":{"artist_name":"Kraftwerk","title":"Autobahn","copy":{"format":["LP"]}}}'
 ```
 
-Erfassen (`/albums/collection`, `/albums/wishlist`) und Entfernen (`DELETE /albums/:id/mine`)
-sind generische Routen: Die Angaben stehen direkt unter `data`, die Antwort ist das Album als
-einfaches JSON. Ein vorhandenes Album wird dabei wiederverwendet.
+Adding (`/albums/collection`, `/albums/wishlist`) and removing (`DELETE /albums/:id/mine`) are
+generic routes: the arguments sit directly under `data`, the answer is the album as plain JSON.
+An album that already exists is reused.
 
-Jede Anfrage braucht einen API-Key (Seite „Konto“): `-H "Authorization: Bearer <Key>"`.
-Ohne Key antwortet die API mit 403. Die Swagger-UI ist ohne Key lesbar; für „Try it out“
-den Key über „Authorize“ eintragen.
+Every request needs an API key (page "Konto"): `-H "Authorization: Bearer <key>"`.
+Without a key the API answers 403. The Swagger UI can be read without a key; for "Try it out"
+enter the key under "Authorize".
 
-## Betrieb
+## Operations
 
-Die App läuft als Container auf einem TrueNAS-NAS hinter nginx-proxy-manager. Wahlweise unter einer eigenen Domain oder unter
-einem Pfad wie `cloud.example.com/plattensammlung` (`PHX_PATH`, [ADR 0018](docs/adr/0018-pfad-praefix.md)).
-Metriken für Prometheus und Traces für Tempo, mit Grafana-Dashboard: `deploy/observability/`
-([ADR 0019](docs/adr/0019-metriken-und-traces.md)). Image
-bauen, Konfiguration, Backups und Updates: [deploy/README.md](deploy/README.md).
+The app runs as a container on a TrueNAS NAS behind nginx-proxy-manager, either on its own
+domain or under a path such as `cloud.example.com/plattensammlung` (`PHX_PATH`,
+[ADR 0018](docs/adr/0018-path-prefix.md)). Metrics for Prometheus and traces for Tempo, with
+Grafana dashboards and alerts: `deploy/observability/` ([ADR 0019](docs/adr/0019-metrics-and-traces.md)).
+Building the image, configuration, backups and updates: [deploy/README.md](deploy/README.md).
 
-## Dokumentation
+## Documentation
 
-- [AGENTS.md](AGENTS.md): Hinweise für KI-Assistenten und Mitwirkende
-- [SECURITY.md](SECURITY.md): Sicherheitsmodell, bekannte Grenzen, Lücken melden
-- [docs/adr/](docs/adr/): Architekturentscheidungen (Architecture Decision Records)
+- [AGENTS.md](AGENTS.md): notes for AI assistants and contributors
+- [SECURITY.md](SECURITY.md): security model, known limits, reporting vulnerabilities
+- [docs/adr/](docs/adr/): architecture decision records
 
-## Lizenz
+## License
 
-[MIT](LICENSE). Die verwendeten Bibliotheken haben eigene Lizenzen (u. a. MIT und Apache 2.0),
-siehe `deps/` bzw. `assets/node_modules/`. Daten und Cover von Discogs, MusicBrainz, Wikidata
-und dem Cover Art Archive unterliegen deren Nutzungsbedingungen.
+[MIT](LICENSE). The libraries used have their own licenses (among them MIT and Apache 2.0),
+see `deps/` and `assets/node_modules/`. Data and covers from Discogs, MusicBrainz, Wikidata and
+the Cover Art Archive are subject to their terms of use.

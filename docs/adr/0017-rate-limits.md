@@ -1,55 +1,54 @@
-# 0017. Rate Limits
+# 0017. Rate limits
 
-- **Status:** Angenommen
-- **Datum:** 2026-10-22
+- **Status:** Accepted
+- **Date:** 2026-10-22
 
-## Kontext
+## Context
 
-Im Betrieb ist die App aus dem Internet erreichbar. Bisher gab es keine Rate Limits:
+In production the app is reachable from the internet. So far there were no rate limits:
 
-- „Anmeldelink senden“ ist ohne Anmeldung erreichbar. In einer Schleife abgeschickt,
-  überflutet es das Postfach einer freigeschalteten Adresse und kann den SMTP-Zugang beim
-  Mail-Anbieter drosseln oder sperren lassen.
-- MusicBrainz erlaubt etwa eine Anfrage pro Sekunde pro IP-Adresse; eine Suche im Import
-  löst mehrere Anfragen kurz hintereinander aus. Die App wiederholte nur bei 503.
-- Hinter nginx-proxy-manager sah die App als Absender nur den Proxy.
+- "Anmeldelink senden" (send sign-in link) is reachable without signing in. Submitted in a
+  loop, it floods the mailbox of an allowed address and can get the SMTP access throttled or
+  blocked by the mail provider.
+- MusicBrainz allows about one request per second per IP address; one import search triggers
+  several requests in quick succession. The app only retried on 503.
+- Behind nginx-proxy-manager the app only saw the proxy as the sender.
 
-Angemeldeten Benutzern wird vertraut (Freigabeliste); ihre Seiten und die API brauchen
-keine Limits. Passkeys und API-Keys sind gegen Durchprobieren kryptografisch sicher.
+Signed-in users are trusted (allow list); their pages and the API need no limits. Passkeys and
+API keys are cryptographically safe against guessing.
 
-## Entscheidung
+## Decision
 
-- **Bibliothek Hammer** mit ETS-Backend (`Plattensammlung.RateLimit`): im Arbeitsspeicher,
-  kein weiterer Dienst. Die Zähler beginnen nach einem Neustart neu.
-- **Anmeldelinks** (`Accounts.RequestMagicLink`, ersetzt den `run` der Action
-  `request_magic_link`): höchstens 3 pro Adresse in 15 Minuten und 10 pro IP-Adresse pro
-  Stunde (`config :plattensammlung, :magic_link_limits`). Darüber wird nichts gesendet, die
-  Antwort bleibt gleich. Die IP-Adresse kommt über den Action-Kontext (`client_ip`) von der
-  Anmeldeseite.
-- **Client-IP** (`PlattensammlungWeb.ClientIp`): bevorzugt `X-Forwarded-For`, und zwar den
-  letzten Eintrag (den hängt der Proxy selbst an; frühere Einträge kommen vom Client), sonst
-  die Adresse der Verbindung. Als Plug im Endpoint (`conn.remote_ip`), für LiveViews über
+- **The Hammer library** with the ETS backend (`Plattensammlung.RateLimit`): in memory, no
+  further service. The counters start over after a restart.
+- **Magic links** (`Accounts.RequestMagicLink`, replaces the `run` of the action
+  `request_magic_link`): at most 3 per address in 15 minutes and 10 per IP address per hour
+  (`config :plattensammlung, :magic_link_limits`). Beyond that nothing is sent, the answer stays
+  the same. The IP address comes from the sign-in page through the action context
+  (`client_ip`).
+- **Client IP** (`PlattensammlungWeb.ClientIp`): prefers `X-Forwarded-For`, namely its last
+  entry (the proxy appends it itself; earlier entries come from the client), otherwise the
+  address of the connection. As a plug in the endpoint (`conn.remote_ip`), for LiveViews via
   `connect_info` (`:peer_data`, `:x_headers`).
-- **MusicBrainz** (`Lookup.Throttle`): Alle Anfragen der App halten mindestens 1 Sekunde
-  Abstand (`:musicbrainz_interval_ms`). Ein Req-Request-Step wartet auf seinen Zeitschlitz;
-  der GenServer vergibt nur die Schlitze, gewartet wird im aufrufenden Prozess.
-- **Proxy:** Ein optionaler `limit_req`-Schnipsel für nginx-proxy-manager steht in
-  `deploy/README.md` (10 Anfragen pro Sekunde pro IP, Spitzen bis 50).
+- **MusicBrainz** (`Lookup.Throttle`): all of the app's requests keep at least 1 second apart
+  (`:musicbrainz_interval_ms`). A Req request step waits for its time slot; the GenServer only
+  hands out slots, waiting happens in the calling process.
+- **Proxy:** an optional `limit_req` snippet for nginx-proxy-manager is in `deploy/README.md`
+  (10 requests per second per IP, bursts up to 50).
 
-## Betrachtete Alternativen
+## Alternatives considered
 
-- **`X-Forwarded-For` nur von bekannten Proxy-Adressen** (`TRUSTED_PROXIES`): sicherer gegen
-  gefälschte Header, aber mehr Konfiguration. Da Port 4000 nur im LAN erreichbar ist, reicht
-  der letzte Eintrag.
-- **Limits nur im Proxy:** NPM kennt die Bedeutung der Anfragen nicht (ein Anmeldelink ist
-  über die LiveView-Verbindung nur eine Websocket-Nachricht).
-- **Rate Limits für angemeldete Benutzer und die API:** nicht nötig, ihnen wird vertraut.
+- **`X-Forwarded-For` only from known proxy addresses** (`TRUSTED_PROXIES`): safer against
+  faked headers, but more configuration. As port 4000 is only reachable in the LAN, the last
+  entry is enough.
+- **Limits only in the proxy:** NPM doesn't know what requests mean (a magic link is just a
+  websocket message over the LiveView connection).
+- **Rate limits for signed-in users and the API:** not needed, they are trusted.
 
-## Konsequenzen
+## Consequences
 
-- Eine Importsuche dauert mit MusicBrainz ein paar Sekunden länger, bleibt aber innerhalb
-  der Regeln.
-- Wer Port 4000 direkt erreicht, kann `X-Forwarded-For` fälschen und so das Limit pro IP
-  umgehen; das Limit pro Adresse gilt trotzdem.
-- Mehrere App-Instanzen hätten getrennte Zähler und Drosseln (derzeit gibt es nur eine).
-- Tests setzen hohe Limits und keinen MusicBrainz-Abstand (`config/test.exs`).
+- An import search with MusicBrainz takes a few seconds longer, but stays within the rules.
+- Whoever reaches port 4000 directly can fake `X-Forwarded-For` and so get around the per-IP
+  limit; the per-address limit still applies.
+- Several app instances would have separate counters and throttles (currently there is one).
+- Tests set high limits and no MusicBrainz gap (`config/test.exs`).

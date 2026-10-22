@@ -1,313 +1,318 @@
 # AGENTS.md
 
-Hinweise für KI-Assistenten (Claude Code, Codex usw.) und Mitwirkende an diesem Projekt.
+Notes for AI assistants (Claude Code, Codex, etc.) and contributors to this project.
 
-## Projekt
+## Project
 
-Web-Anwendung zur Verwaltung einer privaten Schallplattensammlung mit Elixir, Phoenix
-und dem Ash Framework. Überblick und Fahrplan stehen in der [README.md](README.md), die
-Begründungen für Entscheidungen in [docs/adr/](docs/adr/).
+Web application for managing a private vinyl record collection with Elixir, Phoenix and the
+Ash Framework. Overview and roadmap are in the [README.md](README.md), the reasons behind
+decisions in [docs/adr/](docs/adr/).
 
-## Zusammenarbeit
+## Working together
 
-- Der Besitzer lernt Ash und Phoenix mit diesem Projekt kennen. Schritte und Ash-Konzepte
-  daher kurz erklären, wenn sie neu sind, z. B. Resources, Actions, Relationships,
-  Calculations, Aggregates und Policies.
-- Die Oberfläche ist auf Deutsch, Texte stehen derzeit direkt in den Templates (noch kein Gettext).
-- Mit dem Besitzer wird auf **Deutsch** kommuniziert. Code, Bezeichner und
-  Commit-Messages sind auf Englisch, die Dokumentation (README, ADRs) auf Deutsch.
-- Erst planen und besprechen, dann bauen. Größere Designentscheidungen vorher abstimmen.
+- The owner is learning Ash and Phoenix with this project. Briefly explain steps and Ash
+  concepts when they are new, e.g. resources, actions, relationships, calculations,
+  aggregates and policies.
+- The user interface is in German; texts currently live directly in the templates (no
+  Gettext yet).
+- Talk to the owner in **German**. Code, identifiers, commit messages and **all documentation**
+  (README, AGENTS.md, SECURITY.md, ADRs, deploy guide, comments) are in **English**.
+- Plan and discuss first, then build. Agree on larger design decisions beforehand.
 
-## Dokumentation aktuell halten (Pflicht)
+## Keeping the documentation current (mandatory)
 
-Diese Dokumente **ohne Aufforderung** mitpflegen, sobald sich etwas ändert:
+Update these documents **without being asked** as soon as something changes:
 
-- **README.md**: Status, Funktionsumfang, Technik, Fahrplan, Befehle für die Entwicklung.
-- **SECURITY.md**: Sicherheitsmodell und bekannte Grenzen, bei jeder Änderung an Anmeldung,
-  Berechtigungen, Eingabeprüfung, Rate Limits oder offenen Ports.
-- **AGENTS.md**: Konventionen, Befehle, Projektstruktur und Stolperfallen.
-- **docs/adr/**: Jede architekturrelevante Entscheidung (Technik, Datenmodell,
-  Authentifizierung, Schnittstellen, Deployment) bekommt einen neuen ADR. Dafür die
-  Vorlage [docs/adr/template.md](docs/adr/template.md) verwenden und fortlaufend
-  nummerieren (`NNNN-kurzer-titel.md`). Bestehende ADRs nicht umschreiben: Wird eine
-  Entscheidung geändert, einen neuen ADR anlegen und den alten auf
-  „Ersetzt durch ADR NNNN“ setzen. Status-Updates sind erlaubt
-  (Vorgeschlagen → Angenommen) und ebenso die Pflege offener Fragen, solange ein ADR
-  noch „Vorgeschlagen“ ist.
-- Den Index in [docs/adr/README.md](docs/adr/README.md) aktuell halten.
+- **README.md**: status, features, technology, roadmap, development commands.
+- **SECURITY.md**: security model and known limits, on every change to sign-in,
+  authorization, input validation, rate limits or open ports.
+- **AGENTS.md**: conventions, commands, project structure and pitfalls.
+- **docs/adr/**: every architecturally relevant decision (technology, data model,
+  authentication, interfaces, deployment) gets a new ADR. Use the template
+  [docs/adr/template.md](docs/adr/template.md) and number consecutively
+  (`NNNN-short-title.md`). Don't rewrite existing ADRs: when a decision changes, add a new
+  ADR and set the old one to "Superseded by ADR NNNN". Status updates are allowed
+  (Proposed → Accepted), as are addenda and the open questions of a "Proposed" ADR.
+- Keep the index in [docs/adr/README.md](docs/adr/README.md) current.
 
-## Technik und Konventionen
+## Technology and conventions
 
-- Elixir 1.20 / OTP 29, Phoenix 1.8, Ash 3.x, PostgreSQL 18 (`min_pg_version` im Repo)
-- Projekt mit Igniter anlegen und erweitern (`mix igniter.install …`), wo möglich,
-  statt Konfiguration von Hand zu schreiben.
-- Datenzugriff **nur über Ash**: Code Interfaces der Domain (`define`) statt direktem
-  `Ecto.Repo`-Zugriff.
-- Migrationen mit `mix ash.codegen <name>` erzeugen, nicht von Hand schreiben.
-- Geschäftslogik gehört in Ash Actions, Changes und Validations, nicht in LiveViews
-  oder Controller.
-- Domain: `Plattensammlung.Records` (Schallplatten), später `Plattensammlung.Accounts`
-  (Benutzer und Login).
-- Postgres läuft in Podman (`compose.yml`), die Phoenix-App lokal auf dem Mac.
+- Elixir 1.20 / OTP 29, Phoenix 1.8, Ash 3.x, PostgreSQL 18 (`min_pg_version` in the repo)
+- Create and extend the project with Igniter (`mix igniter.install …`) where possible instead
+  of writing configuration by hand.
+- Data access **only through Ash**: the domains' code interfaces (`define`) instead of direct
+  `Ecto.Repo` access.
+- Generate migrations with `mix ash.codegen <name>`, don't write them by hand (data steps may
+  be added to a generated migration).
+- Business logic belongs in Ash actions, changes and validations, not in LiveViews or
+  controllers.
+- Domains: `Plattensammlung.Records` (records), `Plattensammlung.Accounts` (users and sign-in).
+- Postgres runs in Podman (`compose.yml`), the Phoenix app locally on the Mac.
 
-## Befehle
+## Commands
 
-- `podman compose up -d`: Postgres starten (vor allem anderen nötig)
-- `podman compose --profile observability up -d`: Prometheus, Tempo, Grafana lokal
-  (http://localhost:3000); Traces mit `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 mix phx.server`
-- `mix setup`: Abhängigkeiten, Datenbank, Assets, Seeds
-- `mix phx.server`: Entwicklungsserver auf http://localhost:4000
-- `mix test`: Tests
-- `mix precommit`: **vor jedem Commit ausführen** und alle Probleme beheben (enthält Sobelow)
-- `mix sobelow --config`: Sicherheitsscan; geprüfte Fehlalarme mit `# sobelow_skip ["Check"]`
-  und Begründung direkt über der Funktion markieren, nicht global ausnehmen
-- `mix ash.codegen <name>`: Migrationen aus Ash-Resources erzeugen, danach `mix ash.migrate`
-- `mix ash.reset`: Entwicklungsdatenbank neu aufbauen, danach `mix run priv/repo/seeds.exs`
+- `podman compose up -d`: start Postgres (needed before anything else)
+- `podman compose --profile observability up -d`: Prometheus, Tempo, Grafana locally
+  (http://localhost:3000); traces with `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 mix phx.server`
+- `mix setup`: dependencies, database, assets, seeds
+- `mix phx.server`: development server at http://localhost:4000
+- `mix test`: tests
+- `mix precommit`: **run before every commit** and fix all problems (includes Sobelow)
+- `mix sobelow --config`: security scan; mark reviewed false positives with
+  `# sobelow_skip ["Check"]` and a reason directly above the function, don't ignore globally
+- `mix ash.codegen <name>`: generate migrations from Ash resources, then `mix ash.migrate`
+- `mix ash.reset`: rebuild the development database, then `mix run priv/repo/seeds.exs`
 
-## Projektstruktur
+## Project structure
 
-- `lib/plattensammlung/`: Geschäftslogik (Ash-Domains und -Resources, `Repo`)
-- `lib/plattensammlung_web/`: Phoenix (Router, LiveViews, Komponenten)
-  - `live/album_live/`: `Index` (Sammlung `/` und Wunschliste `/wishlist`, Suche über `?q=`),
-    `Show` (`/albums/:id`, „Auf meine Wunschliste“ = `Records.copy_to_wishlist/2`),
-    `Form` (Schnellerfassung `/albums/new`, Bearbeiten `/albums/:id/edit`)
-  - `live/copy_live/form.ex`: Exemplar anlegen (`/albums/:id/copies/new`) und bearbeiten (`/copies/:id/edit`)
-  - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: Passkeys, API-Keys)
-  - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: Anmeldung
-  - `live/stats_live.ex` (`/stats`), `controllers/export_controller.ex`: Statistik und Export
-  - `live/import_live.ex`: Import-Seite `/import` (Barcode oder Text, Ergebnis per Klick übernehmen)
-  - `ash_json_api_router.ex`: JSON:API unter `/api/json`, Swagger-UI unter `/api/json/swaggerui`
-  - `components/album_components.ex`: `cover`, `status_badge`, Zustands-Helfer (in allen Views importiert)
-- `priv/repo/migrations/`: generierte Migrationen, `priv/resource_snapshots/`: Ash-Snapshots dazu
-- `docs/adr/`: Architekturentscheidungen
-- `.github/`: Dependabot (`dependabot.yml`), CodeQL (`workflows/codeql.yml`) und CI mit Sobelow
-  (`workflows/ci.yml`), siehe SECURITY.md
-- `docs/agents/phoenix.md`: Phoenix-1.8-Richtlinien für KI-Assistenten (vom Generator erzeugt)
+- `lib/plattensammlung/`: business logic (Ash domains and resources, `Repo`)
+- `lib/plattensammlung_web/`: Phoenix (router, LiveViews, components)
+  - `live/album_live/`: `Index` (collection `/`, wishlist `/wishlist`, catalogue `/albums`,
+    search via `?q=`), `Show` (`/albums/:id`), `Form` (quick capture `/albums/new`, edit
+    `/albums/:id/edit`), `Match` (`/albums/:id/match`)
+  - `live/copy_live/form.ex`: add a copy (`/albums/:id/copies/new`) and edit it (`/copies/:id/edit`)
+  - `live/sign_in_live.ex` (`/sign-in`), `live/account_live.ex` (`/account`: display name, passkeys, API keys)
+  - `controllers/passkey_controller.ex`, `controllers/auth_controller.ex`: sign-in
+  - `live/stats_live.ex` (`/stats`), `controllers/export_controller.ex`: statistics and export
+  - `live/import_live.ex`: import page `/import` (barcode or text, take over a result with a click)
+  - `live/collectors_live.ex`: other users' collections and wishlists (`/collectors`)
+  - `ash_json_api_router.ex`: JSON:API at `/api/json`, Swagger UI at `/api/json/swaggerui`
+  - `components/album_components.ex`: `cover`, `status_badge`, condition helpers (imported in all views)
+- `priv/repo/migrations/`: generated migrations, `priv/resource_snapshots/`: their Ash snapshots
+- `docs/adr/`: architecture decision records
+- `.github/`: Dependabot (`dependabot.yml`), CodeQL (`workflows/codeql.yml`) and CI with Sobelow
+  (`workflows/ci.yml`), see SECURITY.md
+- `docs/agents/phoenix.md`: Phoenix 1.8 guidelines for AI assistants (from the generator)
 
-## Anmeldung und Autorisierung (`Plattensammlung.Accounts`, ADR 0005)
+## Sign-in and authorization (`Plattensammlung.Accounts`, ADR 0005)
 
-- AshAuthentication: `User` (Magic Link, API-Key), `Token`, `ApiKey`. Passkeys sind selbst
-  gebaut: Resource `Passkey`, Protokoll in `Accounts.WebAuthn` (wax_), Endpunkte im
+- AshAuthentication: `User` (magic link, API key), `Token`, `ApiKey`. Passkeys are built in
+  the project: resource `Passkey`, protocol in `Accounts.WebAuthn` (wax_), endpoints in
   `PasskeyController`, JS in `assets/js/hooks/passkey.js`.
-- Nur Adressen aus `ALLOWED_EMAILS` (`config :plattensammlung, :allowed_emails`) können sich
-  anmelden (`Accounts.allowed_email?/1`).
-- **Gemeinsame Alben (ADR 0016):** Alben und Künstler sind gemeinsam, `Copy` und `Wish`
-  gehören einem User (`owner`). Albumdaten ändert, wer das Album in Sammlung oder Wunschliste
-  hat; Exemplare nur ihr Besitzer. `owned`, `wanted`, `copy_count` sind Berechnungen aus Sicht
-  des Actors (immer mit `actor:` laden, sonst `false`). Sammlung/Wunschliste/Statistik zeigen
-  ohne `owner_id` die des Actors (Preparation `ScopeToOwner`), ohne Status den ganzen Katalog.
-  Bearbeiten-Seiten prüfen mit `Ownership.require_holder/2` bzw. `require_copy_owner/2`;
-  `album.copies` enthält Exemplare aller User, eigene mit `Ownership.own_copies(user)` laden.
-  Anderen Usern nur `Accounts.list_collectors` (ID + Anzeigename) zeigen, nie die E-Mail.
-- `Copy.purchased_on` und `Copy.notes` sind per Field Policy nur für den Besitzer lesbar.
-  Andere bekommen `%Ash.ForbiddenField{}` (truthy!), in der API fehlen die Felder.
-  Neue private Felder dort in `field_policies` eintragen.
-- **Alle Records-Actions brauchen einen Actor.** In LiveViews `actor: socket.assigns.current_user`
-  übergeben, AshPhoenix-Formulare mit `actor:` erzeugen. In Changes die Optionen mit
-  `Ash.Context.to_opts(context)` weiterreichen. Nur Seeds und Test-Vorbereitung nutzen
-  `authorize?: false`.
-- LiveViews liegen in `ash_authentication_live_session :authenticated` im Router. Neue
-  Seiten gehören dort hinein und übergeben `current_user={@current_user}` an `Layouts.app`.
-- Testdaten in Web-Tests mit `actor: user` anlegen (sonst fehlt der Besitzer);
-  Lesen zum Prüfen darf `authorize?: false` nutzen.
+- Only addresses from `ALLOWED_EMAILS` (`config :plattensammlung, :allowed_emails`) can sign
+  in (`Accounts.allowed_email?/1`).
+- **Shared albums (ADR 0016):** albums and artists are shared, `Copy` and `Wish` belong to one
+  user (`owner`). Album data is changed by whoever has the album in collection or wishlist;
+  copies only by their owner. `owned`, `wanted`, `copy_count` are calculations from the actor's
+  point of view (always load them with `actor:`, otherwise they are `false`). Collection,
+  wishlist and statistics show the actor's without `owner_id` (preparation `ScopeToOwner`),
+  without a status the whole catalogue. Edit pages check with `Ownership.require_holder/2`
+  or `require_copy_owner/2`; `album.copies` holds the copies of all users, load your own with
+  `Ownership.own_copies(user)`. Show other users only `Accounts.list_collectors` (ID + display
+  name), never the e-mail address.
+- `Copy.purchased_on` and `Copy.notes` are readable only by the owner (field policy). Others
+  get `%Ash.ForbiddenField{}` (truthy!); in the API the fields are missing. Add new private
+  fields to `field_policies` there.
+- **All Records actions need an actor.** In LiveViews pass `actor: socket.assigns.current_user`,
+  create AshPhoenix forms with `actor:`. In changes pass the options on with
+  `Ash.Context.to_opts(context)`. Only seeds, test setup and system tasks (startup cleanup,
+  metrics) use `authorize?: false`.
+- LiveViews live in `ash_authentication_live_session :authenticated` in the router. New pages
+  go there and pass `current_user={@current_user}` to `Layouts.app`.
+- Create test data in web tests with `actor: user` (otherwise the owner is missing); reading
+  for assertions may use `authorize?: false`.
 - Tests: `register_and_sign_in_user` / `sign_in_user/2` (ConnCase), `user_fixture/1`,
-  `api_key_fixture/1` (`test/support/accounts_fixtures.ex`), `SoftAuthenticator` für
-  Passkeys. `test@example.com` ist in der Test-Freigabeliste.
+  `api_key_fixture/1` (`test/support/accounts_fixtures.ex`), `SoftAuthenticator` for
+  passkeys. `test@example.com` is on the test allow list.
 
 ## Domain `Plattensammlung.Records`
 
-Dateien: `lib/plattensammlung/records.ex` (Domain mit Code Interface),
-`lib/plattensammlung/records/` (Resources `Artist`, `Album`, `Copy`, Enum `Condition`,
+Files: `lib/plattensammlung/records.ex` (domain with code interface),
+`lib/plattensammlung/records/` (resources `Artist`, `Album`, `Copy`, `Wish`, enum `Condition`,
 `changes/`).
 
-Wichtigste Funktionen des Code Interface (jeweils auch mit `!`):
+Most important code interface functions (each also with `!`):
 
-- `add_to_collection(artist_name, title, attrs)`: Album wiederverwenden oder anlegen
-  (`Records.AddAlbum`: Discogs-ID, MusicBrainz-ID, Künstler + Titel) und eine eigene Copy anlegen.
-  Pressungsdetails stehen unter `attrs.copy`.
-- `add_to_wishlist(artist_name, title, attrs)`: Album wiederverwenden oder anlegen, eigenen Wish anlegen.
-  Beide sind generische Actions (keine Transaktion drumherum) und füllen beim
-  Wiederverwenden nur Lücken (`Album.complete`).
-- `remove_album(album_id)`: eigene Copies und eigenen Wish löschen, das Album erst, wenn es niemand mehr hat.
-- `mark_wanted(album)` / `unmark_wanted(album)`, `add_wish(album_id)`: eigener Wunsch.
-- `add_copy(album_id, attrs)`: weiteres Exemplar anlegen, entfernt das Album von der Wunschliste.
+- `add_to_collection(artist_name, title, attrs)`: reuse or create the album
+  (`Records.AddAlbum`: Discogs ID, MusicBrainz ID, artist + title) and add an own copy.
+  Pressing details go under `attrs.copy`.
+- `add_to_wishlist(artist_name, title, attrs)`: reuse or create the album, add an own wish.
+  Both are generic actions (no surrounding transaction) and only fill gaps when reusing an
+  album (`Album.complete`).
+- `remove_album(album_id)`: delete the own copies and wish, the album only once no one has it.
+- `mark_wanted(album)` / `unmark_wanted(album)`, `add_wish(album_id)`: the own wish.
+- `add_copy(album_id, attrs)`: add another copy; removes the album from the own wishlist.
 - `search_albums(query \\ nil, status \\ nil)`, `list_collection()`, `list_wishlist()`.
-  Achtung: Bei optionalen Argumenten immer alle angeben, bevor Optionen folgen
-  (`search_albums(nil, nil, actor: user)`), sonst wird die Keyword-Liste als Argument gelesen.
+  Careful: with optional arguments always pass all of them before the options
+  (`search_albums(nil, nil, actor: user)`), otherwise the keyword list is read as an argument.
 - `get_album(id, load: [:artist, :copies, :owned, :copy_count, :discogs_url])`
 
-Regeln:
+Rules:
 
-- Artists werden über den Namen gefunden oder angelegt (Change `FindOrCreateArtist`),
-  ohne Beachtung der Groß- und Kleinschreibung (`:ci_string` = citext).
-- **Künstler sind gemeinsam (ADR 0015):** umbenennen/löschen nur, wenn kein anderer User ein
-  Album davon hat; löschen nur ohne Alben. Künstler ohne Alben räumt `RemoveOrphanedArtist`
-  bzw. `Records.ArtistCleanup` auf (auch beim App-Start).
-- „Besitze ich“ ist das Aggregate `owned` (existiert eine Copy?). Es wird nie gespeichert.
-- Eine eigene Copy anzulegen löscht den eigenen Wish (Change `RemoveFromWishlist`, `Records.Wishlist`).
-- Such-Status `:other`: Alben ohne eigene Copy und ohne eigenen Wish („Nicht bei mir“).
-- Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr. `Copy.format` ist eine Liste.
-- Ein Album wird nur gelöscht, wenn es niemand mehr hat (Destroy-Policy); dabei gehen Cover und
-  gegebenenfalls der nun unbenutzte Artist mit. Direkt `destroy_album` nur für solche Alben.
-- **Grenzen (ADR 0006, Nachtrag):** Textfelder und Listen haben `constraints max_length`, Jahre
-  1900–2100, Discogs-IDs `min: 1`, Barcode 8–14 Ziffern (Change `NormalizeBarcode` + `validate match`).
-  Neue Felder bekommen immer eine Grenze, das Formularfeld ein passendes `maxlength`.
-  URL-Parameter in LiveViews nur als String annehmen und kürzen (siehe `AlbumLive.Index.blank_to_nil/1`).
+- Artists are found or created by name (change `FindOrCreateArtist`), case-insensitively
+  (`:ci_string` = citext).
+- **Artists are shared (ADR 0015):** rename/delete only while no other user has an album of
+  theirs; delete only without albums. `RemoveOrphanedArtist` and `Records.ArtistCleanup`
+  remove artists without albums (also at app start).
+- "Do I own it" is the calculation `owned` (does an own copy exist?). It is never stored.
+- Adding an own copy deletes the own wish (change `RemoveFromWishlist`, `Records.Wishlist`).
+- Search status `:other`: albums without own copy and without own wish ("Nicht bei mir").
+- A copy deliberately has no storage location and no purchase price. `Copy.format` is a list.
+- An album is deleted only once no one has it (destroy policy); its cover and, if now unused,
+  its artist go with it. Use `destroy_album` directly only for such albums.
+- **Limits (ADR 0006, addendum):** text fields and lists have `constraints max_length`, years
+  1900–2100, Discogs IDs `min: 1`, barcode 8–14 digits (change `NormalizeBarcode` +
+  `validate match`). New fields always get a limit, the form field a matching `maxlength`.
+  Accept URL parameters in LiveViews only as strings and cut them (see
+  `AlbumLive.Index.blank_to_nil/1`).
 
 ## Import (`Plattensammlung.Lookup`)
 
-- `Plattensammlung.Lookup.search/1` ist die Fassade: 8–14 Ziffern sind ein Barcode
-  (erste Quelle mit Treffer gewinnt, Discogs vor MusicBrainz), alles andere ist eine
-  Textsuche in allen Quellen, zusammengeführt pro Album.
-- Clients: `Lookup.Discogs` (Token nötig) und `Lookup.MusicBrainz` (+ Cover Art Archive).
-  Alle HTTP-Aufrufe laufen über `Lookup.HTTP.new/1` (Req).
-- In Ash ist der Import die **generische Action** `Album.lookup` (`Records.lookup_albums/1`).
-  Sie liefert `Records.LookupResult`, eine Embedded Resource, die nicht gespeichert wird.
-- Übernahme: `Lookup.album_attrs/1` und `Lookup.copy_attrs/1` → `add_to_collection`/`add_to_wishlist`.
-- Cover: Der Change `StoreCover` lädt Remote-URLs vor der Transaktion herunter
-  (`Plattensammlung.Covers`, ausgeliefert unter `/covers`). Schlägt das fehl, bleibt die Remote-URL.
-- Kamera-Scan: JS-Hook `BarcodeScanner` in `assets/js/hooks/barcode_scanner.js` (registriert in
-  `app.js`). Er sendet das LiveView-Event `"scanned"` an `ImportLive`.
-- **Tests gehen nie ins Netz**: `config/test.exs` leitet Req auf den Stub
-  `Plattensammlung.LookupStub` (`test/support/lookup_stub.ex`) um.
+- `Plattensammlung.Lookup.search/1` is the facade: 8–14 digits are a barcode (the first
+  source with a hit wins, Discogs before MusicBrainz), anything else is a text search in all
+  sources, merged per album.
+- Clients: `Lookup.Discogs` (token required) and `Lookup.MusicBrainz` (+ Cover Art Archive).
+  All HTTP calls go through `Lookup.HTTP.new/1` (Req).
+- In Ash the import is the **generic action** `Album.lookup` (`Records.lookup_albums/1`). It
+  returns `Records.LookupResult`, an embedded resource that is never stored.
+- Taking over a result: `Lookup.album_attrs/1` and `Lookup.copy_attrs/1` →
+  `add_to_collection`/`add_to_wishlist`.
+- Covers: the change `StoreCover` downloads remote URLs before the transaction
+  (`Plattensammlung.Covers`, served at `/covers`). If that fails, the remote URL stays.
+- Camera scan: JS hook `BarcodeScanner` in `assets/js/hooks/barcode_scanner.js` (registered in
+  `app.js`). It sends the LiveView event `"scanned"` to `ImportLive`.
+- **Tests never go to the network**: `config/test.exs` routes Req to the stub
+  `Plattensammlung.LookupStub` (`test/support/lookup_stub.ex`).
 
-## JSON-API (AshJsonApi)
+## JSON API (AshJsonApi)
 
-- Routen stehen in `Plattensammlung.Records` unter `json_api do routes … end`. Jede Route ruft
-  eine vorhandene Action auf, keine API-eigene Logik. Neue Actions, die die API braucht,
-  dort eintragen.
-- Serialisierung pro Resource in `json_api do`: `type`, `includes`, `default_fields`.
-  Aggregate und Berechnungen erscheinen nur, wenn sie in `default_fields` stehen.
-  Private Attribute (z. B. Timestamps) dürfen dort **nicht** stehen, sonst lehnt
-  `fields[…]` sie ab.
-- Router: `lib/plattensammlung_web/ash_json_api_router.ex` (OpenAPI-Titel, Server-URL,
-  vorerst ohne Bearer-Auth).
-- PATCH-Routen laufen zuerst atomar. Wenn die Antwort Aggregate lädt, muss die Action
-  nicht atomar sein (siehe `mark_wanted`).
-- Tests: `test/plattensammlung_web/api/`, mit den Headern `accept` und `content-type`
-  auf `application/vnd.api+json`.
+- Routes are in `Plattensammlung.Records` under `json_api do routes … end`. Every route calls an
+  existing action, no API-specific logic. Add new actions the API needs there.
+- Serialization per resource in `json_api do`: `type`, `includes`, `default_fields`.
+  Aggregates and calculations only appear when listed in `default_fields`. Private
+  attributes (e.g. timestamps) must **not** be listed there, otherwise `fields[…]` rejects them.
+- Generic actions (`add_to_collection`, `add_to_wishlist`, `remove`) answer with plain JSON;
+  `Album.id` is public and in `default_fields` so the answer contains it.
+- Router: `lib/plattensammlung_web/ash_json_api_router.ex` (OpenAPI title, server URL, bearer auth).
+- PATCH routes run atomically first. If the response loads calculations, the action must not
+  be atomic (see `mark_wanted`).
+- Tests: `test/plattensammlung_web/api/`, with the headers `accept` and `content-type` set to
+  `application/vnd.api+json`.
 
 ## Assets
 
-- npm-Pakete liegen in `assets/package.json` (`mix setup` führt über `npm_install/1` in
-  `mix.exs` `npm install` aus und bricht mit Hinweis ab, wenn npm fehlt), derzeit nur
-  `@zxing/browser`. Node-Version in `.nvmrc`. Beim Besitzer wird nvm verzögert geladen:
-  In frischen Terminals ist `npm` erst nach `nvm use` verfügbar.
-- esbuild baut ES-Module mit Code-Splitting. Große, selten gebrauchte Bibliotheken per
-  `await import("…")` laden, damit sie in einem eigenen Chunk landen.
+- npm packages are in `assets/package.json` (`mix setup` runs `npm install` via `npm_install/1`
+  in `mix.exs` and stops with a hint if npm is missing), currently only `@zxing/*`. Node
+  version in `.nvmrc`. The owner loads nvm lazily: in fresh terminals `npm` is only available
+  after `nvm use`.
+- esbuild builds ES modules with code splitting. Load large, rarely used libraries with
+  `await import("…")` so they end up in their own chunk.
 
-## Abgleich und Cover
+## Matching and covers
 
-- `Album.find_matches` / `Album.apply_match` (ADR 0007, Nachtrag): Änderungen berechnet
-  `Records.AlbumMatch` (`changes/3`, `copy_changes/3`, `labels/1`), sowohl für die Vorschau
-  als auch fürs Speichern. Seite: `AlbumLive.Match` (`/albums/:id/match`).
-- Cover: `Album.upload_cover` (Argument `:image`, Typ `:file`, Bildtyp per Magic Bytes in
-  `Covers.store_file/1`) und `Album.remove_cover`. Upload in `AlbumLive.Show` per LiveView
-  `allow_upload` mit `auto_upload`.
-- **Cover-Quellen (ADR 0014):** `cover_url` von außen nur leer oder https von `:cover_hosts`
-  (Validation `CoverSource`, `Covers.allowed_url?/1`). Lokale `/covers/…`-Pfade setzt nur die App
-  (Download, Upload, `copy_to_wishlist`). Neue Import-Quellen mit Bildern dort eintragen.
-- Beim Fehlschlag nur Dateien löschen, die die Action selbst angelegt hat
-  (`changeset.context[:stored_cover]`), nie einen Pfad aus der Eingabe.
-- Cover-Dateien: neue Datei vor der Transaktion speichern, alte erst nach erfolgreichem Commit
-  löschen, bei Fehlern die neue wieder entfernen. `Covers.cleanup_orphans/0` löscht
-  unreferenzierte Dateien (älter als 1 h) beim App-Start (`:cleanup_covers_on_start`, in Tests aus).
+- `Album.find_matches` / `Album.apply_match` (ADR 0007, addendum): `Records.AlbumMatch`
+  computes the changes (`changes/3`, `copy_changes/3`, `labels/1`), both for the preview and
+  for saving. Page: `AlbumLive.Match` (`/albums/:id/match`).
+- Covers: `Album.upload_cover` (argument `:image`, type `:file`, image type by magic bytes in
+  `Covers.store_file/1`) and `Album.remove_cover`. Upload in `AlbumLive.Show` with LiveView
+  `allow_upload` and `auto_upload`.
+- **Cover sources (ADR 0014):** `cover_url` from outside only empty or https from
+  `:cover_hosts` (validation `CoverSource`, `Covers.allowed_url?/1`). Local `/covers/…` paths
+  are only set by the app (download, upload). Add new import sources with images there.
+- On failure only delete files the action stored itself (`changeset.context[:stored_cover]`),
+  never a path from the input.
+- Cover files: store the new file before the transaction, delete the old one only after a
+  successful commit, remove the new one again on errors. `Covers.cleanup_orphans/0` deletes
+  unreferenced files (older than 1 h) at app start (`:cleanup_covers_on_start`, off in tests).
 
-## Streaming-Links (ADR 0012)
+## Streaming links (ADR 0012)
 
-- `Album.spotify_album_id` / `tidal_album_id` speichern IDs; Links über `Records.Streaming`
-  bzw. die Calculations `spotify_url` / `tidal_url`.
-- Suche: `Lookup.StreamingLinks.find/1` (Discogs→MusicBrainz, sonst Künstler + Titel; Wikidata, MusicBrainz-Releases),
-  ausgelöst vom Change `FillStreamingLinks` (Import, Abgleich, geänderte Verknüpfung,
-  `Album.find_streaming_links`). Spotify-Links im Import: `Lookup.Spotify`.
-- Tests: `LookupStub` beantwortet Wikidata und MusicBrainz; er ist in DataCase/ConnCase
-  standardmäßig aktiv, damit kein Test ins Netz geht.
+- `Album.spotify_album_id` / `tidal_album_id` store IDs; links via `Records.Streaming` or the
+  calculations `spotify_url` / `tidal_url`.
+- Lookup: `Lookup.StreamingLinks.find/1` (Discogs → MusicBrainz, otherwise artist + title;
+  Wikidata, MusicBrainz releases), triggered by the change `FillStreamingLinks` (import,
+  matching, changed link, `Album.find_streaming_links`). Spotify links in the import:
+  `Lookup.Spotify`.
+- Tests: `LookupStub` answers Wikidata and MusicBrainz; it is active by default in
+  DataCase/ConnCase so no test goes to the network.
 
-## Statistik und Export (ADR 0010)
+## Statistics and export (ADR 0010)
 
-- `Album.statistics` ist eine generische Action, implementiert in `Records.Statistics`
-  (`use Ash.Resource.Actions.Implementation`). Summen per `Ash.count/2` / `Ash.sum/3`,
-  Aufschlüsselungen als Listen von `%{label, count}`.
-- `Records.Export`: `csv/1` (alle Felder) und `json_ld/2` (schema.org, ohne private Felder).
-  Downloads über den `ExportController` (`/export/plattensammlung.csv|.jsonld`).
-- Diagramme: `PlattensammlungWeb.StatsComponents` (`stat_tile`, `bar_chart`). Balken in einer
-  Farbe, Werte immer als Text, Diagramm als `<table>`.
-- Drill-down: Statistik-Einträge haben `filter` (Argumente für `Album.search`: `genre`,
-  `decade`, `artist`, `condition`); die Albenliste liest sie aus der URL und zeigt sie als Chips.
+- `Album.statistics` is a generic action implemented in `Records.Statistics`
+  (`use Ash.Resource.Actions.Implementation`). Totals with `Ash.count/2` / `Ash.sum/3`,
+  breakdowns as lists of `%{label, count, filter}`.
+- `Records.Export`: `csv/1` (all fields) and `json_ld/2` (schema.org, without private fields),
+  the actor's collection and wishlist with only their own copies. Downloads via
+  `ExportController` (`/export/plattensammlung.csv|.jsonld`).
+- Charts: `PlattensammlungWeb.StatsComponents` (`stat_tile`, `bar_chart`). Bars in one colour,
+  values always as text, chart as a `<table>`.
+- Drill-down: statistics entries have a `filter` (arguments for `Album.search`: `genre`,
+  `decade`, `artist`, `condition`); the album list reads them from the URL and shows them as chips.
 
-## Betrieb (ADR 0011, `deploy/`)
+## Operations (ADR 0011, `deploy/`)
 
-- Produktion: Release-Image (Dockerfile, `rel/overlays/bin/start` = migrieren + starten),
-  TrueNAS Custom App (`deploy/truenas-compose.yaml`), TLS bei nginx-proxy-manager.
-- **Optionaler Pfad-Präfix (`PHX_PATH`, ADR 0018):** Der Proxy schneidet ihn ab, die App setzt
-  ihn in Links. Pfade nur über `~p`, in JavaScript über `appPath()` (`assets/js/app_path.js`),
-  absolute URLs mit Pfad über `PublicUrl.url/2`. Lokale Cover-Pfade beim Anzeigen mit
-  `Endpoint.path/1` versehen. Nie `"/…"` fest in JS oder Strings schreiben.
-- **Öffentliche Adresse immer über `PlattensammlungWeb.PublicUrl.base_url/1`** bilden,
-  nie aus `conn.host`/`conn.port`: Hinter dem Proxy sieht die App nur `http://nas:4000`.
-  In prod kommt sie aus `PHX_HOST` (`:public_url`).
-- Mail in prod per SMTP (`runtime.exs`, `gen_smtp`), Absender aus `MAIL_FROM` (`:mail_from`).
-- Neue Pflicht-Umgebungsvariablen in `deploy/app.env.example` und `deploy/README.md` eintragen.
-- Nichts Lokales ins Image: `.dockerignore` schließt `uploads/`, `priv/cert/` und `deploy/` aus.
+- Production: release image (Dockerfile, `rel/overlays/bin/start` = migrate + start), TrueNAS
+  custom app (`deploy/truenas-compose.yaml`), TLS at nginx-proxy-manager.
+- **Optional path prefix (`PHX_PATH`, ADR 0018):** the proxy strips it, the app adds it to
+  links. Paths only via `~p`, in JavaScript via `appPath()` (`assets/js/app_path.js`), absolute
+  URLs with a path via `PublicUrl.url/2`. Prefix local cover paths with `Endpoint.path/1` when
+  displaying them. Never write `"/…"` as a fixed string in JS or strings.
+- **Always build the public address with `PlattensammlungWeb.PublicUrl.base_url/1`**, never
+  from `conn.host`/`conn.port`: behind the proxy the app only sees `http://nas:4000`. In prod it
+  comes from `PHX_HOST` (`:public_url`).
+- Mail in prod via SMTP (`runtime.exs`, `gen_smtp`), sender from `MAIL_FROM` (`:mail_from`).
+- Add new required environment variables to `deploy/app.env.example` and `deploy/README.md`.
+- Nothing local in the image: `.dockerignore` excludes `uploads/`, `priv/cert/` and `deploy/`.
 
-## Metriken und Traces (ADR 0019)
+## Metrics and traces (ADR 0019)
 
-- `Plattensammlung.Metrics`: alle Prometheus-Metriken (Peep), eigene Ereignisse (`sign_in/2`,
-  `magic_link_request/1`, `[:plattensammlung, :data]` jede Minute). `/metrics` liefert
-  `PlattensammlungWeb.MetricsPlug` auf eigenem Port (`METRICS_PORT`, aus = nil).
-- Tags nur mit wenigen Werten: Routen-Muster, View, Action, User-ID; nie Pfade, Album-IDs, IPs.
-- Zähler, auf die Alarme mit `increase()` schauen, als `sum` anlegen und in
-  `Metrics.init_counters/0` mit 0 starten (sonst sieht Prometheus den ersten Anstieg nicht).
-- Alarme: `deploy/observability/grafana/provisioning/alerting/` (in Grafana nur lesbar).
-  `$` in Annotationen als `$$` schreiben, Grafana ersetzt sonst Umgebungsvariablen.
-- Traces: OpenTelemetry für Bandit, Phoenix/LiveView, Ecto, Ash (`config :ash, :tracer`) und Req
-  (`OpentelemetryReq.attach` in `Lookup.HTTP`). Export nur mit `OTEL_EXPORTER_OTLP_ENDPOINT`.
-- Betrieb: `deploy/observability/` (Prometheus, Tempo, Grafana mit Dashboard); lokal dieselben
-  Dateien über das Compose-Profil `observability` (`prometheus.local.yml` fragt
-  `host.containers.internal:9568` ab).
-- Der Metrik-Port startet nur, wenn die App HTTP bedient (`mix phx.server`), nicht bei
-  `mix run` oder Seeds. In dev auf 9568, nur an `127.0.0.1`.
-- Tests: Datenmessung im Hintergrund aus (`measure_data?: false`), Tests rufen
-  `Metrics.measure_data/0` selbst auf.
+- `Plattensammlung.Metrics`: all Prometheus metrics (Peep), own events (`sign_in/2`,
+  `magic_link_request/1`, `[:plattensammlung, :data]` every minute). `PlattensammlungWeb.MetricsPlug`
+  serves `/metrics` on its own port (`METRICS_PORT`, off = nil).
+- Tags only with few values: route pattern, view, action, user ID; never paths, album IDs, IPs.
+- Counters that alerts check with `increase()`: define them as `sum` and start them at 0 in
+  `Metrics.init_counters/0` (otherwise Prometheus doesn't see the first increase).
+- Alerts: `deploy/observability/grafana/provisioning/alerting/` (read-only in Grafana). Write
+  `$` in annotations as `$$`, otherwise Grafana replaces it with environment variables.
+- Traces: OpenTelemetry for Bandit, Phoenix/LiveView, Ecto, Ash (`config :ash, :tracer`) and Req
+  (`OpentelemetryReq.attach` in `Lookup.HTTP`). Export only with `OTEL_EXPORTER_OTLP_ENDPOINT`.
+  The minute data measurement is not traced (non-sampled parent span).
+- Operations: `deploy/observability/` (Prometheus, Tempo, Grafana with dashboards); locally the
+  same files via the Compose profile `observability` (`prometheus.local.yml` scrapes
+  `host.containers.internal:9568`). Tempo 3: retention is under `backend_scheduler`/`backend_worker`.
+- The metrics port only starts when the app serves HTTP (`mix phx.server`), not with `mix run`
+  or seeds. In dev on 9568, bound to `127.0.0.1` only.
+- Tests: background data measurement off (`measure_data?: false`); tests call
+  `Metrics.measure_data/0` themselves.
+- Dependabot also updates the observability images; major updates (e.g. Tempo 3) can change the
+  configuration. Start the local stack before merging such a PR.
 
-## Phoenix-Richtlinien
+## Phoenix guidelines
 
-Bei Arbeit an Web-Code (LiveView, HEEx, Komponenten, Router) **unbedingt
-[docs/agents/phoenix.md](docs/agents/phoenix.md) lesen und befolgen**. Die Datei stammt
-vom Phoenix-Generator. Abweichend davon gilt hier: Datenzugriff über Ash statt über
-Ecto-Contexts.
+When working on web code (LiveView, HEEx, components, router) **read and follow
+[docs/agents/phoenix.md](docs/agents/phoenix.md)**. The file comes from the Phoenix generator.
+Deviating from it: data access goes through Ash instead of Ecto contexts.
 
-## Stolperfallen
+## Pitfalls
 
-- **CSP** (`Plugs.ContentSecurityPolicy`, ADR 0014): Inline-Skripte brauchen
-  `nonce={assigns[:csp_nonce]}`, inline `<style>` ist verboten, `style`-Attribute sind erlaubt.
-  Bilder nur von der App und den Cover-Quellen. `/dev` läuft ohne CSP (Pipeline `:dev_browser`).
-
-- AshAuthentication hat keine eingebaute Passkey-Strategie, siehe [ADR 0005](docs/adr/0005-passkey-login.md).
-- Formulare nutzen `AshPhoenix.Form` (`for_create`/`for_update`, `validate`, `submit`), keine Ecto-Changesets.
-- Optionale Formularfelder wie in Apples Kontakte-App: `PlattensammlungWeb.OptionalFields`
-  (`optional_field`, `add_field_buttons`, `show/3`, `hide/3`). Ausgeblendete Felder werden als
-  leerer Wert gesendet, "−" löscht also den Wert. Pflichtfelder bleiben immer sichtbar.
-- Tag-Felder mit Vorschlägen: `PlattensammlungWeb.TagInput` (`tag_input`, `tag_entry_forms`,
-  `add/4`, `remove/4`, `clear/2`). `multiple: true` für Listen (Genres, Format), sonst genau ein
-  Wert (Label, Land). Die Eingabe gehört zu einem eigenen Formular `#<feld>-entry` außerhalb des
-  Hauptformulars, damit Enter einen Tag hinzufügt statt zu speichern. Listen kommen als
-  `form[feld][]` an und werden per `prepare_params` bereinigt.
-- Buttons mit Icon: kein `phx-disable-with` (stellt nur den Text wieder her, das Icon
-  verschwindet). Stattdessen `<.loading_icon name="…" />` und am Button
-  `phx-click-loading:pointer-events-none`.
-- Die Cover-URL wird nicht von Hand bearbeitet; das Formular zeigt nur eine Vorschau.
-- MusicBrainz erlaubt etwa 1 Anfrage pro Sekunde: `Lookup.Throttle` hält den Abstand für alle
-  Anfragen der App (Req-Step in `MusicBrainz.get/2`, ADR 0017). Bei 503 wiederholt Req automatisch.
-- **Rate Limits (ADR 0017):** Anmeldelinks pro Adresse und IP (`Accounts.RequestMagicLink`,
-  `Plattensammlung.RateLimit` = Hammer/ETS). Client-IP immer über `PlattensammlungWeb.ClientIp`
-  (`X-Forwarded-For`, letzter Eintrag; in LiveViews `from_socket/1` im Mount).
-- Die Bilder des Cover Art Archive liegen auf archive.org, das zeitweise nicht erreichbar ist.
-  Dann bleibt die Remote-URL stehen und die Oberfläche zeigt die Platzhalter-Platte.
-- `LAN=1 mix phx.server` öffnet HTTPS auf Port 4001 für das ganze WLAN (ADR 0008). Das
-  Zertifikat liegt in `priv/cert/` (nicht im Git). `/dev` (Postfach mit Anmeldelinks) ist
-  nur von localhost aus erreichbar.
-- Code Interfaces mit optionalen Argumenten: Optionen erst nach allen Argumenten angeben,
-  sonst wird die Keyword-Liste als Argument gelesen.
-- Bei `podman compose` übernimmt das externe `docker-compose` die Ausführung. Der Hinweis
-  dazu in der Ausgabe ist harmlos.
+- **CSP** (`Plugs.ContentSecurityPolicy`, ADR 0014): inline scripts need
+  `nonce={assigns[:csp_nonce]}`, inline `<style>` is forbidden, `style` attributes are allowed.
+  Images only from the app and the cover sources. `/dev` runs without CSP (pipeline `:dev_browser`).
+- AshAuthentication has no built-in passkey strategy, see [ADR 0005](docs/adr/0005-passkey-login.md).
+- Forms use `AshPhoenix.Form` (`for_create`/`for_update`/`for_action`, `validate`, `submit`),
+  no Ecto changesets.
+- Optional form fields like in Apple's Contacts app: `PlattensammlungWeb.OptionalFields`
+  (`optional_field`, `add_field_buttons`, `show/3`, `hide/3`). Hidden fields are sent as an empty
+  value, so "−" clears the value. Required fields are always visible.
+- Tag fields with suggestions: `PlattensammlungWeb.TagInput` (`tag_input`, `tag_entry_forms`,
+  `add/4`, `remove/4`, `clear/2`). `multiple: true` for lists (genres, format), otherwise exactly
+  one value (label, country). The input belongs to its own form `#<field>-entry` outside the main
+  form, so Enter adds a tag instead of saving. Lists arrive as `form[field][]` and are cleaned up
+  with `prepare_params`.
+- Buttons with an icon: no `phx-disable-with` (it only restores the text, the icon disappears).
+  Use `<.loading_icon name="…" />` and `phx-click-loading:pointer-events-none` on the button.
+- The cover URL is not edited by hand; the form only shows a preview.
+- MusicBrainz allows about 1 request per second: `Lookup.Throttle` keeps the gap for all of the
+  app's requests (Req step in `MusicBrainz.get/2`, ADR 0017). On 503 Req retries automatically.
+- **Rate limits (ADR 0017):** magic links per address and IP (`Accounts.RequestMagicLink`,
+  `Plattensammlung.RateLimit` = Hammer/ETS). Always get the client IP via
+  `PlattensammlungWeb.ClientIp` (`X-Forwarded-For`, last entry; in LiveViews `from_socket/1` in mount).
+- The Cover Art Archive images are hosted on archive.org, which is sometimes unreachable. Then
+  the remote URL stays and the interface shows the placeholder record.
+- `LAN=1 mix phx.server` opens HTTPS on port 4001 for the whole Wi-Fi (ADR 0008). The
+  certificate is in `priv/cert/` (not in Git). `/dev` (mailbox with sign-in links) is only
+  reachable from localhost.
+- Code interfaces with optional arguments: pass options only after all arguments, otherwise the
+  keyword list is read as an argument.
+- With `podman compose`, the external `docker-compose` does the work. The note about it in the
+  output is harmless.

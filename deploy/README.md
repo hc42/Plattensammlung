@@ -1,72 +1,72 @@
-# Betrieb auf TrueNAS
+# Running on TrueNAS
 
-Anleitung für den Betrieb auf einem NAS mit **TrueNAS 25.10** hinter
-**nginx-proxy-manager** (NPM). Hintergrund und Entscheidungen: [ADR 0011](../docs/adr/0011-betrieb-auf-truenas.md).
+Guide for running the app on a NAS with **TrueNAS 25.10** behind **nginx-proxy-manager** (NPM).
+Background and decisions: [ADR 0011](../docs/adr/0011-running-on-truenas.md).
 
 ```
 Internet ──443──▶ nginx-proxy-manager ──http──▶ NAS:4000 (app) ──▶ db (Postgres 18)
 ```
 
-`POOL` steht im Folgenden für den Namen deines Pools, `platten.example.de` für deine Domain.
+Below, `POOL` stands for the name of your pool and `platten.example.de` for your domain.
 
-## 1. Datasets anlegen (einmalig)
+## 1. Create datasets (once)
 
-In TrueNAS unter **Datasets** (Preset „Apps“):
+In TrueNAS under **Datasets** (preset "Apps"):
 
 ```
 POOL/apps/plattensammlung
-├── postgres   Datenbank
-├── covers     Cover-Bilder
-├── backups    Datenbank-Dumps
-└── images     Image-Dateien zum Laden
+├── postgres   database
+├── covers     cover images
+├── backups    database dumps
+└── images     image files to load
 ```
 
-Die App läuft im Container als Benutzer `nobody` (UID 65534) und muss in `covers` schreiben.
-In der TrueNAS-Shell (**System → Shell**):
+The app runs in the container as user `nobody` (UID 65534) and must write to `covers`. In the
+TrueNAS shell (**System → Shell**):
 
 ```bash
 sudo chown 65534:65534 /mnt/POOL/apps/plattensammlung/covers
 ```
 
-## 2. Konfiguration (einmalig)
+## 2. Configuration (once)
 
-Zwei Secrets auf dem Mac erzeugen (im Projektordner, zweimal ausführen):
+Create two secrets on the Mac (in the project folder, run it twice):
 
 ```bash
 mix phx.gen.secret
 ```
 
-Auf dem NAS die Dateien `app.env` und `db.env` nach den Vorlagen
-[`app.env.example`](app.env.example) und [`db.env.example`](db.env.example) anlegen,
-ausfüllen und schützen:
+On the NAS create the files `app.env` and `db.env` from the templates
+[`app.env.example`](app.env.example) and [`db.env.example`](db.env.example), fill them in and
+protect them:
 
 ```bash
 sudo chmod 600 /mnt/POOL/apps/plattensammlung/app.env /mnt/POOL/apps/plattensammlung/db.env
 ```
 
-- `PHX_HOST` ist genau die Domain aus nginx-proxy-manager. Davon hängen Passkeys und
-  Anmeldelinks ab.
-- Das Datenbank-Passwort steht zweimal: in `db.env` (`POSTGRES_PASSWORD`) und in der
+- `PHX_HOST` is exactly the domain from nginx-proxy-manager. Passkeys and sign-in links depend
+  on it.
+- The database password appears twice: in `db.env` (`POSTGRES_PASSWORD`) and in the
   `DATABASE_URL` in `app.env`.
-- SMTP: Zugangsdaten deines Mailanbieters. Port 587 nutzt STARTTLS, Port 465 TLS.
-  `MAIL_FROM` ist meist deine eigene Adresse.
+- SMTP: credentials of your mail provider. Port 587 uses STARTTLS, port 465 TLS. `MAIL_FROM` is
+  usually your own address.
 
-Das Backup-Skript aufs NAS kopieren:
+Copy the backup script to the NAS:
 
 ```bash
 scp deploy/backup.sh <nas>:/mnt/POOL/apps/plattensammlung/
 ```
 
-## 3. Image bauen und aufs NAS laden
+## 3. Build the image and load it on the NAS
 
-Auf dem Mac (Podman muss laufen). Der Build für amd64 läuft per Emulation und dauert
-einige Minuten:
+On the Mac (Podman must be running). The build for amd64 runs under emulation and takes a few
+minutes:
 
 ```bash
 deploy/build-image.sh
 ```
 
-Das Skript zeigt am Ende den Dateinamen und die Befehle zum Kopieren und Laden, etwa:
+At the end the script shows the file name and the commands to copy and load it, e.g.:
 
 ```bash
 scp dist/plattensammlung-20261021-abc1234.tar.gz <nas>:/mnt/POOL/apps/plattensammlung/images/
@@ -76,17 +76,17 @@ scp dist/plattensammlung-20261021-abc1234.tar.gz <nas>:/mnt/POOL/apps/plattensam
 ssh <nas> sudo docker load -i /mnt/POOL/apps/plattensammlung/images/plattensammlung-20261021-abc1234.tar.gz
 ```
 
-## 4. App in TrueNAS installieren (einmalig)
+## 4. Install the app in TrueNAS (once)
 
-**Apps → Discover Apps → ⋮ → Install via YAML**, Name `plattensammlung`, Inhalt von
-[`truenas-compose.yaml`](truenas-compose.yaml) einfügen und darin ersetzen:
+**Apps → Discover Apps → ⋮ → Install via YAML**, name `plattensammlung`, paste the content of
+[`truenas-compose.yaml`](truenas-compose.yaml) and replace in it:
 
-- `/mnt/POOL/apps/plattensammlung` durch deinen Pfad
-- `VERSION` durch die Version aus Schritt 3 (`localhost/plattensammlung:20261021-abc1234`)
-- bei Bedarf den Port `4000:4000` (links der Port auf dem NAS)
+- `/mnt/POOL/apps/plattensammlung` with your path
+- `VERSION` with the version from step 3 (`localhost/plattensammlung:20261021-abc1234`)
+- if needed the port `4000:4000` (left: the port on the NAS)
 
-Beim Start legt die App die Datenbanktabellen automatisch an. In den App-Logs sollte
-`Running PlattensammlungWeb.Endpoint` erscheinen. Prüfen im LAN:
+On start the app creates the database tables automatically. The app logs should show
+`Running PlattensammlungWeb.Endpoint`. Check in the LAN:
 
 ```bash
 curl http://<NAS-IP>:4000/health
@@ -94,31 +94,31 @@ curl http://<NAS-IP>:4000/health
 
 ## 5. nginx-proxy-manager
 
-Neuer **Proxy Host**:
+New **proxy host**:
 
-| Feld | Wert |
+| Field | Value |
 |---|---|
 | Domain Names | `platten.example.de` |
-| Scheme / Forward Hostname / Port | `http` / NAS-IP / `4000` |
-| **Websockets Support** | **an** (sonst funktioniert die Oberfläche nicht) |
-| Block Common Exploits | an |
-| SSL | neues Let's-Encrypt-Zertifikat, **Force SSL**, HTTP/2 |
+| Scheme / Forward Hostname / Port | `http` / NAS IP / `4000` |
+| **Websockets Support** | **on** (otherwise the interface doesn't work) |
+| Block Common Exploits | on |
+| SSL | new Let's Encrypt certificate, **Force SSL**, HTTP/2 |
 
-Die Portfreigabe im Router (443, für Let's Encrypt meist auch 80) zeigt auf
-nginx-proxy-manager, **nicht** auf Port 4000 der App.
+The port forwarding in the router (443, for Let's Encrypt usually also 80) points to
+nginx-proxy-manager, **not** to port 4000 of the app.
 
-NPM setzt den Header `X-Forwarded-For`; daraus liest die App die IP-Adresse der Besucher
-(für Rate Limits und Logs, ADR 0017). Wer Port 4000 direkt erreicht (im LAN), könnte
-den Header selbst setzen. Deshalb Port 4000 nicht ins Internet freigeben.
+NPM sets the header `X-Forwarded-For`; the app reads the visitors' IP address from it (for rate
+limits and logs, ADR 0017). Whoever reaches port 4000 directly (in the LAN) could set the header
+themselves. So don't expose port 4000 to the internet.
 
-### Unter einem Pfad statt einer eigenen Domain (optional)
+### Under a path instead of an own domain (optional)
 
-Soll die App unter `https://cloud.example.com/plattensammlung` laufen, neben anderen Apps
-auf derselben Domain (ADR 0018):
+To run the app at `https://cloud.example.com/plattensammlung`, next to other apps on the same
+domain (ADR 0018):
 
-1. In `app.env`: `PHX_HOST=cloud.example.com` und `PHX_PATH=/plattensammlung`, dann die
-   App neu starten.
-2. Im Proxy Host von `cloud.example.com` unter **Advanced → Custom Nginx Configuration**:
+1. In `app.env`: `PHX_HOST=cloud.example.com` and `PHX_PATH=/plattensammlung`, then restart the
+   app.
+2. In the proxy host of `cloud.example.com` under **Advanced → Custom Nginx Configuration**:
 
    ```nginx
    location /plattensammlung/ {
@@ -137,117 +137,119 @@ auf derselben Domain (ADR 0018):
    }
    ```
 
-   Wichtig sind der Schrägstrich am Ende von `proxy_pass` (er schneidet das Präfix ab) und
-   die beiden Upgrade-Zeilen (Websockets für die Oberfläche).
-3. Passkeys hängen nur an der Domain, nicht am Pfad. Ein Passkey für `cloud.example.com`
-   gilt also auch für andere Apps auf dieser Domain, die Passkeys anbieten. Das ist
-   harmlos, sie sehen ihn nur in der Auswahl.
+   What matters is the trailing slash of `proxy_pass` (it strips the prefix) and the two upgrade
+   lines (websockets for the interface).
+3. Passkeys are bound to the domain only, not the path. A passkey for `cloud.example.com` also
+   applies to other apps on this domain that offer passkeys. That's harmless, they only see it
+   in the selection.
 
-Ohne `PHX_PATH` läuft die App wie bisher unter `/`.
+Without `PHX_PATH` the app runs under `/` as before.
 
-### Grobschutz gegen Massenanfragen (optional, empfohlen)
+### Coarse protection against mass requests (optional, recommended)
 
-Die App begrenzt Anmeldelinks selbst. Zusätzlich kann NPM jede IP-Adresse drosseln:
+The app limits sign-in links itself. In addition NPM can throttle each IP address:
 
-1. Auf dem NAS die Datei `/data/nginx/custom/http_top.conf` im Datenordner von NPM
-   anlegen (bei der TrueNAS-App von NPM im Volume für `/data`):
+1. On the NAS create the file `/data/nginx/custom/http_top.conf` in NPM's data folder (for the
+   TrueNAS NPM app in the volume for `/data`):
 
    ```nginx
    limit_req_zone $binary_remote_addr zone=plattensammlung:10m rate=10r/s;
    ```
 
-2. Im Proxy Host unter **Advanced → Custom Nginx Configuration**:
+2. In the proxy host under **Advanced → Custom Nginx Configuration**:
 
    ```nginx
    limit_req zone=plattensammlung burst=50 nodelay;
    limit_req_status 429;
    ```
 
-3. NPM neu starten. Der erste Seitenaufruf lädt einige Dateien auf einmal; `burst=50`
-   lässt das zu, dauerhaft mehr als 10 Anfragen pro Sekunde werden mit 429 abgewiesen.
+3. Restart NPM. The first page load fetches several files at once; `burst=50` allows that,
+   sustained rates above 10 requests per second are rejected with 429.
 
-## Metriken und Traces (optional)
+## Metrics and traces (optional)
 
-Die App liefert Metriken für Prometheus auf Port **9568** (`METRICS_PORT`, in
-`truenas-compose.yaml` schon gesetzt) und auf Wunsch Traces per OpenTelemetry an Tempo
-(ADR 0019). Grafana zeigt beides; ein fertiges Dashboard liegt bei.
+The app serves metrics for Prometheus on port **9568** (`METRICS_PORT`, already set in
+`truenas-compose.yaml`) and, on request, traces via OpenTelemetry to Tempo (ADR 0019). Grafana
+shows both; dashboards and alerts are included.
 
-1. Dataset `POOL/apps/observability` anlegen und hineinkopieren:
-   `deploy/observability/prometheus.yml`, `tempo.yaml` und den Ordner `grafana/`
-   (mit `provisioning/` und `dashboards/`). In `prometheus.yml` `NAS-IP` ersetzen.
-2. Leere Ordner `prometheus-data`, `tempo-data`, `grafana-data` anlegen. Die Container laufen
-   nicht als root: Besitzer setzen (Prometheus `65534`, Tempo `10001`, Grafana `472`), z. B.
+1. Create the dataset `POOL/apps/observability` and copy into it:
+   `deploy/observability/prometheus.yml`, `tempo.yaml` and the folder `grafana/` (with
+   `provisioning/` and `dashboards/`). Replace `NAS-IP` in `prometheus.yml`.
+2. Create empty folders `prometheus-data`, `tempo-data`, `grafana-data`. The containers don't
+   run as root: set the owners (Prometheus `65534`, Tempo `10001`, Grafana `472`), e.g.
    `chown -R 472:472 grafana-data`.
-3. **Apps → Discover Apps → ⋮ → Install via YAML** mit `deploy/observability/compose.yaml`
-   (Pfade und `GF_SECURITY_ADMIN_PASSWORD` anpassen).
-4. Für Traces in `app.env` `OTEL_EXPORTER_OTLP_ENDPOINT=http://NAS-IP:4318` eintragen und die
-   App neu starten.
-5. Grafana unter `http://NAS-IP:3000` öffnen (Benutzer `admin`): Dashboard
-   **Plattensammlung**, Traces unter **Explore → Tempo**.
+3. Copy `deploy/observability/grafana.env.example` to `/mnt/POOL/apps/observability/grafana.env`
+   and fill it in (admin password, `ALERT_EMAIL`, SMTP access as in `app.env`).
+4. **Apps → Discover Apps → ⋮ → Install via YAML** with `deploy/observability/compose.yaml`
+   (adjust the paths).
+5. For traces add `OTEL_EXPORTER_OTLP_ENDPOINT=http://NAS-IP:4318` to `app.env` and restart the
+   app.
+6. Open Grafana at `http://NAS-IP:3000` (user `admin`): dashboards **Plattensammlung** and
+   **Plattensammlung – Traces** (service graph, figures from the traces, lists of slow or failed
+   traces), traces under **Explore → Tempo**.
+7. **Alerts by e-mail:** the rules are in `grafana/provisioning/alerting/rules.yaml` (app
+   unreachable, many requests, many anonymous requests, failed sign-ins, rate-limited magic
+   links, server errors, slow responses, external services failing). Adjust thresholds there,
+   not in Grafana. Test: in Grafana under **Alerting → Contact points → E-Mail → Test**.
 
-6. **Alarme per E-Mail:** `deploy/observability/grafana.env.example` nach
-   `/mnt/POOL/apps/observability/grafana.env` kopieren und ausfüllen (Admin-Passwort,
-   `ALERT_EMAIL`, SMTP-Zugang wie in `app.env`). Die Regeln liegen in
-   `grafana/provisioning/alerting/rules.yaml` (App nicht erreichbar, viele Anfragen, viele
-   anonyme Anfragen, fehlgeschlagene Anmeldungen, gedrosselte Anmeldelinks, Serverfehler,
-   langsame Antworten, externe Dienste gestört). Schwellen dort anpassen, nicht in Grafana.
-   Testen: in Grafana unter **Alerting → Contact points → E-Mail → Test**.
-7. Dashboard **Plattensammlung – Traces**: Service-Grafik, Kennzahlen aus den Traces und
-   Listen langsamer bzw. fehlerhafter Traces. Die Kennzahlen berechnet Tempo selbst und
-   schreibt sie in Prometheus (`--web.enable-remote-write-receiver`, schon in `compose.yaml`).
+Tempo computes the figures from the traces itself and writes them into Prometheus
+(`--web.enable-remote-write-receiver`, already in `compose.yaml`).
 
-**Speicher:** Traces bleiben 14 Tage (etwa 100 MB), Metriken 90 Tage, höchstens 2 GB.
-Verbrauch prüfen: `du -sh /mnt/POOL/apps/observability/*`.
+**Storage:** traces stay 14 days (about 100 MB), metrics 90 days, at most 2 GB. Check the usage:
+`du -sh /mnt/POOL/apps/observability/*`.
 
-Port 9568 (Metriken), 4318 (Traces), 9090 (Prometheus) und 3000 (Grafana) nur im LAN nutzen,
-nicht in nginx-proxy-manager oder im Router freigeben. Prüfen:
-`curl http://NAS-IP:9568/metrics`.
+**Updates:** Dependabot also updates the Prometheus, Tempo and Grafana images. Major versions can
+change the configuration (Tempo 3 did); check them locally with
+`podman compose --profile observability up -d` before updating the NAS.
 
-## 6. Erste Anmeldung
+Use ports 9568 (metrics), 4318 (traces), 9090 (Prometheus) and 3000 (Grafana) only in the LAN;
+don't expose them in nginx-proxy-manager or the router. Check: `curl http://NAS-IP:9568/metrics`.
 
-1. `https://platten.example.de` öffnen, deine Adresse aus `ALLOWED_EMAILS` eingeben.
-2. Den Link aus der E-Mail öffnen und „Jetzt anmelden“ klicken.
-3. Unter **Konto** einen Passkey anlegen. Passkeys von `localhost` aus der Entwicklung
-   gelten hier nicht.
+## 6. First sign-in
+
+1. Open `https://platten.example.de` and enter your address from `ALLOWED_EMAILS`.
+2. Open the link from the e-mail and click "Jetzt anmelden" (sign in now).
+3. Create a passkey under **Konto** (account). Passkeys from `localhost` in development don't
+   apply here.
 
 ## 7. Backups
 
-- **Datenbank:** **System → Advanced Settings → Cron Jobs → Add**, Benutzer `root`, z. B.
-  täglich 3:00:
+- **Database:** **System → Advanced Settings → Cron Jobs → Add**, user `root`, e.g. daily at
+  3:00:
 
   ```bash
   /mnt/POOL/apps/plattensammlung/backup.sh /mnt/POOL/apps/plattensammlung/backups 30
   ```
 
-- **Cover und Dumps:** **Data Protection → Periodic Snapshot Tasks** für
-  `POOL/apps/plattensammlung` (rekursiv), optional mit Replikation auf ein anderes Gerät.
-- Zusätzlich als lesbare Sicherung: CSV-Export auf der Statistikseite.
-- Verwaiste Cover-Dateien räumt die App bei jedem Start auf. Von Hand:
+- **Covers and dumps:** **Data Protection → Periodic Snapshot Tasks** for
+  `POOL/apps/plattensammlung` (recursive), optionally with replication to another device.
+- In addition, as a readable backup: the CSV export on the statistics page.
+- The app cleans up orphaned cover files on every start. By hand:
 
   ```bash
   sudo docker exec $(sudo docker ps -q --filter label=com.docker.compose.project=ix-plattensammlung --filter label=com.docker.compose.service=app) /app/bin/plattensammlung rpc "Plattensammlung.Covers.cleanup_orphans()"
   ```
 
-Wiederherstellen eines Dumps (App vorher stoppen, dann nur `db` starten oder die App kurz
-laufen lassen):
+Restoring a dump (stop the app first, then start only `db`, or let the app run briefly):
 
 ```bash
-gunzip -c /mnt/POOL/apps/plattensammlung/backups/plattensammlung-DATUM.sql.gz | sudo docker exec -i $(sudo docker ps -q --filter label=com.docker.compose.project=ix-plattensammlung --filter label=com.docker.compose.service=db) psql -U postgres plattensammlung
+gunzip -c /mnt/POOL/apps/plattensammlung/backups/plattensammlung-DATE.sql.gz | sudo docker exec -i $(sudo docker ps -q --filter label=com.docker.compose.project=ix-plattensammlung --filter label=com.docker.compose.service=db) psql -U postgres plattensammlung
 ```
 
 ## 8. Updates
 
-1. Auf dem Mac `deploy/build-image.sh` ausführen und das neue Image wie in Schritt 3 laden.
-2. In TrueNAS die App bearbeiten, die Zeile `image:` auf die neue Version setzen und speichern.
-   Migrationen laufen beim Start automatisch.
-3. Alte Images auf dem NAS gelegentlich aufräumen: `sudo docker image prune`.
+1. Run `deploy/build-image.sh` on the Mac and load the new image as in step 3.
+2. In TrueNAS edit the app, set the `image:` line to the new version and save. Migrations run
+   automatically on start.
+3. Clean up old images on the NAS now and then: `sudo docker image prune`.
 
-## Fehlersuche
+## Troubleshooting
 
-| Symptom | Ursache |
+| Symptom | Cause |
 |---|---|
-| Seite lädt, reagiert aber nicht / „Verbindung wird wiederhergestellt“ | Websockets Support in NPM fehlt |
-| Passkey-Fehler | `PHX_HOST` stimmt nicht exakt mit der Domain überein |
-| Keine Anmelde-E-Mail | App-Logs prüfen (SMTP-Fehler), Adresse in `ALLOWED_EMAILS`? |
-| App startet nicht | App-Logs: meist eine fehlende Variable in `app.env` |
-| Cover werden nicht gespeichert | Rechte von `covers` (Schritt 1) |
+| Page loads but doesn't react / "Verbindung wird wiederhergestellt" (reconnecting) | websockets support missing in NPM |
+| Passkey errors | `PHX_HOST` doesn't exactly match the domain |
+| No sign-in e-mail | check the app logs (SMTP error); is the address in `ALLOWED_EMAILS`? |
+| App doesn't start | app logs: usually a missing variable in `app.env` |
+| Covers aren't stored | permissions of `covers` (step 1) |
+| Tempo doesn't start after an update | `tempo.yaml` doesn't match the new major version (see ADR 0019) |

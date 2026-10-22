@@ -17,7 +17,7 @@ CONTAINER=$(docker ps -q \
   --filter "label=com.docker.compose.service=db")
 
 if [ -z "$CONTAINER" ]; then
-  echo "Datenbank-Container von $PROJECT läuft nicht" >&2
+  echo "Database container of $PROJECT is not running" >&2
   exit 1
 fi
 

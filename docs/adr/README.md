@@ -1,26 +1,27 @@
 # Architecture Decision Records
 
-Hier werden wichtige Architekturentscheidungen festgehalten, jeweils mit Kontext,
-Alternativen und Konsequenzen. Neue ADRs entstehen aus der [Vorlage](template.md).
+Important architecture decisions are recorded here, each with context, alternatives and
+consequences. New ADRs start from the [template](template.md).
 
-| Nr. | Titel | Status |
+| No. | Title | Status |
 |---|---|---|
-| [0001](0001-adrs-verwenden.md) | Architekturentscheidungen als ADRs festhalten | Angenommen |
-| [0002](0002-elixir-phoenix-ash.md) | Elixir, Phoenix und Ash als Technologiebasis | Angenommen |
-| [0003](0003-postgresql-mit-podman.md) | PostgreSQL in Podman per Compose | Angenommen |
-| [0004](0004-liveview-und-json-api.md) | LiveView-Oberfläche und JSON-API | Angenommen |
-| [0005](0005-passkey-login.md) | Login per Passkey | Angenommen |
-| [0006](0006-datenmodell.md) | Datenmodell der Sammlung | Angenommen |
-| [0007](0007-barcode-scan-und-import.md) | Barcode-Scan und Import aus Discogs und MusicBrainz | Angenommen |
-| [0008](0008-https-im-lan.md) | HTTPS im lokalen Netz für den Kamera-Scan | Angenommen |
-| [0009](0009-gestaltung-der-json-api.md) | Gestaltung der JSON-API | Angenommen |
-| [0010](0010-statistik-und-export.md) | Statistik und Export | Angenommen |
-| [0011](0011-betrieb-auf-truenas.md) | Betrieb auf TrueNAS hinter nginx-proxy-manager | Angenommen |
-| [0012](0012-streaming-links.md) | Spotify- und Tidal-Verknüpfungen | Angenommen |
-| [0013](0013-eigene-sammlungen.md) | Eigene Sammlungen, für andere sichtbar | Angenommen, teilweise ersetzt durch 0016 |
-| [0014](0014-cover-quellen-und-csp.md) | Cover-Quellen und Content-Security-Policy | Angenommen |
-| [0015](0015-gemeinsame-kuenstler.md) | Gemeinsame Künstler schützen | Angenommen |
-| [0016](0016-gemeinsame-alben.md) | Gemeinsame Alben, persönliche Exemplare und Wünsche | Angenommen |
-| [0017](0017-rate-limits.md) | Rate Limits | Angenommen |
-| [0018](0018-pfad-praefix.md) | Optionaler Pfad-Präfix | Angenommen |
-| [0019](0019-metriken-und-traces.md) | Metriken (Prometheus) und Traces (OpenTelemetry) | Angenommen |
+| [0001](0001-use-adrs.md) | Record architecture decisions as ADRs | Accepted, language rule superseded by 0020 |
+| [0002](0002-elixir-phoenix-ash.md) | Elixir, Phoenix and Ash as the technology base | Accepted |
+| [0003](0003-postgresql-with-podman.md) | PostgreSQL in Podman via Compose | Accepted |
+| [0004](0004-liveview-and-json-api.md) | LiveView interface and JSON API | Accepted |
+| [0005](0005-passkey-login.md) | Sign-in with passkeys | Accepted |
+| [0006](0006-data-model.md) | Data model of the collection | Accepted |
+| [0007](0007-barcode-scan-and-import.md) | Barcode scan and import from Discogs and MusicBrainz | Accepted |
+| [0008](0008-https-in-the-lan.md) | HTTPS in the local network for the camera scan | Accepted |
+| [0009](0009-json-api-design.md) | Design of the JSON API | Accepted |
+| [0010](0010-statistics-and-export.md) | Statistics and export | Accepted |
+| [0011](0011-running-on-truenas.md) | Running on TrueNAS behind nginx-proxy-manager | Accepted |
+| [0012](0012-streaming-links.md) | Spotify and Tidal links | Accepted |
+| [0013](0013-own-collections.md) | Own collections, visible to others | Accepted, partly superseded by 0016 |
+| [0014](0014-cover-sources-and-csp.md) | Cover sources and Content Security Policy | Accepted |
+| [0015](0015-shared-artists.md) | Protect shared artists | Accepted |
+| [0016](0016-shared-albums.md) | Shared albums, personal copies and wishes | Accepted |
+| [0017](0017-rate-limits.md) | Rate limits | Accepted |
+| [0018](0018-path-prefix.md) | Optional path prefix | Accepted |
+| [0019](0019-metrics-and-traces.md) | Metrics (Prometheus) and traces (OpenTelemetry) | Accepted |
+| [0020](0020-documentation-in-english.md) | Documentation in English | Accepted |
