@@ -67,6 +67,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
               suggestions={@suggestions[field]}
               multiple={field == :format}
               placeholder={tag_placeholder(field)}
+              maxlength={if field == :format, do: 50, else: 100}
             />
             <.copy_input :if={field not in @tag_fields} form={@form} field={field} label={label} />
           </.optional_field>
@@ -205,7 +206,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
   defp copy_input(%{field: :pressing_year} = assigns) do
     ~H"""
-    <.input field={@form[:pressing_year]} type="number" label={@label} />
+    <.input field={@form[:pressing_year]} type="number" label={@label} min="1900" max="2100" />
     """
   end
 
@@ -217,6 +218,7 @@ defmodule PlattensammlungWeb.CopyLive.Form do
       type="text"
       inputmode="numeric"
       autocomplete="off"
+      maxlength="12"
       label={@label}
     />
     """
@@ -230,19 +232,19 @@ defmodule PlattensammlungWeb.CopyLive.Form do
 
   defp copy_input(%{field: :notes} = assigns) do
     ~H"""
-    <.input field={@form[:notes]} type="textarea" label={@label} rows="3" />
+    <.input field={@form[:notes]} type="textarea" label={@label} rows="3" maxlength="2000" />
     """
   end
 
   defp copy_input(%{field: :barcode} = assigns) do
     ~H"""
-    <.input field={@form[:barcode]} label={@label} inputmode="numeric" />
+    <.input field={@form[:barcode]} label={@label} inputmode="numeric" maxlength="20" />
     """
   end
 
   defp copy_input(assigns) do
     ~H"""
-    <.input field={@form[@field]} label={@label} />
+    <.input field={@form[@field]} label={@label} maxlength="100" />
     """
   end
 

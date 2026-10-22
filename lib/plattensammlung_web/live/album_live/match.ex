@@ -34,6 +34,7 @@ defmodule PlattensammlungWeb.AlbumLive.Match do
             <.icon name="hero-magnifying-glass" class="size-4 opacity-50" />
             <input
               type="search"
+              maxlength="200"
               name="query"
               id="match-query"
               value={@search_form[:query].value}

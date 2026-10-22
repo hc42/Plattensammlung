@@ -25,6 +25,7 @@ defmodule PlattensammlungWeb.TagInput do
   attr :suggestions, :list, default: []
   attr :multiple, :boolean, default: true
   attr :placeholder, :string, default: nil
+  attr :maxlength, :integer, default: 50, doc: "per tag, as in the resource's constraints"
 
   def tag_input(assigns) do
     assigns =
@@ -73,6 +74,7 @@ defmodule PlattensammlungWeb.TagInput do
             form={"#{@field}-entry"}
             list={"#{@field}-suggestions"}
             placeholder={@placeholder}
+            maxlength={@maxlength}
             autocomplete="off"
             class="input input-sm w-44"
             phx-mounted={@key > 0 && JS.focus()}
@@ -105,8 +107,11 @@ defmodule PlattensammlungWeb.TagInput do
     """
   end
 
+  # As in the resources: at most 20 genres or format tags
+  @max_tags 20
+
   @doc """
-  Adds tags typed into `field` (comma separated). Matching suggestions win, so
+  Adds tags typed into `field` (comma separated), at most #{@max_tags}. Matching suggestions win, so
   "rock" becomes "Rock". `config` maps each field to `%{multiple: bool, suggestions: list}`.
   """
   def add(socket, field, text, config) do
@@ -121,9 +126,14 @@ defmodule PlattensammlungWeb.TagInput do
 
       values =
         cond do
-          new == [] -> current
-          opts.multiple -> Enum.uniq_by(current ++ new, &String.downcase/1)
-          true -> [hd(new)]
+          new == [] ->
+            current
+
+          opts.multiple ->
+            (current ++ new) |> Enum.uniq_by(&String.downcase/1) |> Enum.take(@max_tags)
+
+          true ->
+            [hd(new)]
         end
 
       socket

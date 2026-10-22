@@ -35,8 +35,12 @@ defmodule Plattensammlung.Records.Preparations.AlbumFilters do
 
   defp decade(query, value) do
     case Integer.parse(value) do
-      {from, ""} -> Ash.Query.filter(query, year >= ^from and year < ^(from + 10))
-      _ -> query
+      # Albums have years 1900–2100; anything else is not a decade of ours
+      {from, ""} when from in 1900..2100//10 ->
+        Ash.Query.filter(query, year >= ^from and year < ^(from + 10))
+
+      _ ->
+        query
     end
   end
 

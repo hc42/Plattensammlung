@@ -98,3 +98,25 @@ späterer Export ohne Umbau.
 - **Gegen Schreibvarianten:** Genres und Format (mehrere Tags) sowie Label und Land (genau
   ein Tag) werden über eine Tag-Eingabe mit Vorschlägen aus der Sammlung erfasst; gleiche
   Werte in anderer Schreibweise übernehmen die vorhandene.
+
+## Nachtrag (2026-10-22): Grenzen für Eingaben
+
+Seit Sammlungen für andere sichtbar sind ([ADR 0013](0013-eigene-sammlungen.md)), haben die
+Felder feste Grenzen (Ash-`constraints`, ohne Migration):
+
+| Feld | Grenze |
+|---|---|
+| Albumtitel, Künstlername, Sortiername | 200 Zeichen |
+| Label, Katalognummer, Land | 100 Zeichen |
+| Notizen | 2000 Zeichen |
+| Genres, Format | höchstens 20 Tags mit je 50 Zeichen |
+| Erscheinungs- und Pressungsjahr | 1900–2100 |
+| Discogs-IDs | ab 1 |
+| Barcode | Leerzeichen und Bindestriche werden entfernt, danach 8–14 Ziffern (EAN/UPC) |
+| Suchbegriffe (Liste, Import, Abgleich) | 200 Zeichen |
+
+Zeichen zählt Ash als Unicode-Codepoints, wie Postgres. Die Datenbank ist UTF-8 und speichert
+alle Zeichen einschließlich Emojis (anders als `utf8` bei MySQL gibt es hier keine
+3-Byte-Grenze). Ein zusammengesetztes Emoji wie 👨‍👩‍👧 zählt als fünf Codepoints. Die
+Formulare setzen passende `maxlength`-Attribute; Browser zählen dabei UTF-16-Einheiten,
+ein Emoji also doppelt, sodass die Oberfläche nie mehr zulässt als die Resource.

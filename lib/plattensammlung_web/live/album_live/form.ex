@@ -75,6 +75,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             label="Künstler"
             list="artist-names"
             autocomplete="off"
+            maxlength="200"
             phx-debounce="300"
             required
           />
@@ -82,7 +83,13 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             <option :for={name <- @artist_names} value={name} />
           </datalist>
 
-          <.input field={@form[:title]} label="Titel" phx-debounce="300" required />
+          <.input
+            field={@form[:title]}
+            label="Titel"
+            maxlength="200"
+            phx-debounce="300"
+            required
+          />
 
           <div
             :if={@duplicates != []}
@@ -140,6 +147,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             <.input
               field={@form[:spotify_album_id]}
               label="Spotify (Link oder ID)"
+              maxlength="200"
               placeholder="https://open.spotify.com/album/…"
             />
           </.optional_field>
@@ -154,6 +162,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
             <.input
               field={@form[:tidal_album_id]}
               label="Tidal (Link oder ID)"
+              maxlength="200"
               placeholder="https://tidal.com/album/…"
             />
           </.optional_field>
@@ -171,6 +180,7 @@ defmodule PlattensammlungWeb.AlbumLive.Form do
               type="text"
               inputmode="numeric"
               autocomplete="off"
+              maxlength="12"
               label="Discogs-Master-ID"
             />
           </.optional_field>

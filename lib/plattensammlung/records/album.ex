@@ -82,7 +82,7 @@ defmodule Plattensammlung.Records.Album do
       description "Adds an album together with one owned copy."
       accept @fields
 
-      argument :artist_name, :ci_string, allow_nil?: false
+      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
 
       argument :copy, :map do
         description "Optional pressing details for the copy"
@@ -103,7 +103,7 @@ defmodule Plattensammlung.Records.Album do
       description "Adds an album without a copy, marked as wanted."
       accept @fields
 
-      argument :artist_name, :ci_string, allow_nil?: false
+      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
 
       change set_attribute(:wanted, true)
       change relate_actor(:owner)
@@ -118,7 +118,7 @@ defmodule Plattensammlung.Records.Album do
       description "Puts an album (usually someone else's) on the actor's wishlist, with an own copy of its cover."
       argument :album_id, :uuid, allow_nil?: false
       # Set by CopyAlbum from the source album, read by FindOrCreateArtist
-      argument :artist_name, :ci_string, public?: false
+      argument :artist_name, :ci_string, public?: false, constraints: [max_length: 200]
 
       change set_attribute(:wanted, true)
       change relate_actor(:owner)
@@ -128,7 +128,7 @@ defmodule Plattensammlung.Records.Album do
 
     update :update do
       accept @fields ++ [:wanted]
-      argument :artist_name, :ci_string
+      argument :artist_name, :ci_string, constraints: [max_length: 200]
       require_atomic? false
       validate Plattensammlung.Records.Validations.CoverSource
 
@@ -170,11 +170,11 @@ defmodule Plattensammlung.Records.Album do
 
       argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
       prepare Plattensammlung.Records.Preparations.ScopeToOwner
-      argument :query, :ci_string
-      argument :genre, :string
-      argument :decade, :string
-      argument :artist, :ci_string
-      argument :condition, :string
+      argument :query, :ci_string, constraints: [max_length: 200]
+      argument :genre, :string, constraints: [max_length: 200]
+      argument :decade, :string, constraints: [max_length: 200]
+      argument :artist, :ci_string, constraints: [max_length: 200]
+      argument :condition, :string, constraints: [max_length: 200]
 
       argument :status, :atom do
         # :other = neither owned nor wanted (e.g. after deleting the last copy)
@@ -199,7 +199,7 @@ defmodule Plattensammlung.Records.Album do
 
     read :by_barcode do
       description "Albums that have a copy with this barcode."
-      argument :barcode, :string, allow_nil?: false
+      argument :barcode, :string, allow_nil?: false, constraints: [max_length: 20]
       argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
       prepare Plattensammlung.Records.Preparations.ScopeToOwner
       filter expr(exists(copies, barcode == ^arg(:barcode)))
@@ -211,7 +211,7 @@ defmodule Plattensammlung.Records.Album do
       A generic action: it runs custom code instead of reading or writing rows.
       """
 
-      argument :query, :string, allow_nil?: false
+      argument :query, :string, allow_nil?: false, constraints: [max_length: 200]
 
       run fn input, _context ->
         Plattensammlung.Lookup.search(input.arguments.query)
@@ -225,7 +225,7 @@ defmodule Plattensammlung.Records.Album do
       """
 
       argument :album_id, :uuid, allow_nil?: false
-      argument :query, :string
+      argument :query, :string, constraints: [max_length: 200]
 
       run fn input, context ->
         opts = Ash.Context.to_opts(context)
@@ -296,8 +296,8 @@ defmodule Plattensammlung.Records.Album do
 
     read :duplicates do
       description "Albums with exactly this artist and title (case-insensitive)."
-      argument :artist_name, :ci_string, allow_nil?: false
-      argument :title, :ci_string, allow_nil?: false
+      argument :artist_name, :ci_string, allow_nil?: false, constraints: [max_length: 200]
+      argument :title, :ci_string, allow_nil?: false, constraints: [max_length: 200]
       argument :owner_id, :uuid, description: "Whose albums (default: the actor's)"
       prepare Plattensammlung.Records.Preparations.ScopeToOwner
 
@@ -338,6 +338,7 @@ defmodule Plattensammlung.Records.Album do
 
     attribute :title, :ci_string do
       allow_nil? false
+      constraints max_length: 200
       public? true
     end
 
@@ -350,6 +351,7 @@ defmodule Plattensammlung.Records.Album do
     attribute :cover_url, :string, public?: true
 
     attribute :genres, {:array, :string} do
+      constraints max_length: 20, items: [max_length: 50]
       default []
       allow_nil? false
       public? true
@@ -362,15 +364,17 @@ defmodule Plattensammlung.Records.Album do
       public? true
     end
 
-    attribute :discogs_master_id, :integer, public?: true
+    attribute :discogs_master_id, :integer, constraints: [min: 1], public?: true
     attribute :musicbrainz_release_group_id, :uuid, public?: true
 
     attribute :spotify_album_id, :string do
+      constraints max_length: 100
       description "Spotify album id (a pasted link is reduced to the id)"
       public? true
     end
 
     attribute :tidal_album_id, :string do
+      constraints max_length: 100
       description "Tidal album id (a pasted link is reduced to the id)"
       public? true
     end

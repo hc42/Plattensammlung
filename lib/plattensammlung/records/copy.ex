@@ -75,13 +75,24 @@ defmodule Plattensammlung.Records.Copy do
       :notes
     ]
 
-    defaults [:read, :destroy, update: @fields]
+    defaults [:read, :destroy]
 
     create :create do
       primary? true
       accept @fields ++ [:album_id]
 
+      change Plattensammlung.Records.Changes.NormalizeBarcode
+      validate match(:barcode, ~r/^\d{8,14}$/), message: "must be 8 to 14 digits (EAN/UPC)"
       change Plattensammlung.Records.Changes.RemoveFromWishlist
+    end
+
+    update :update do
+      primary? true
+      accept @fields
+      require_atomic? false
+
+      change Plattensammlung.Records.Changes.NormalizeBarcode
+      validate match(:barcode, ~r/^\d{8,14}$/), message: "must be 8 to 14 digits (EAN/UPC)"
     end
   end
 
@@ -105,31 +116,32 @@ defmodule Plattensammlung.Records.Copy do
   attributes do
     uuid_v7_primary_key :id
 
-    attribute :label, :string, public?: true
-    attribute :catalog_number, :string, public?: true
+    attribute :label, :string, constraints: [max_length: 100], public?: true
+    attribute :catalog_number, :string, constraints: [max_length: 100], public?: true
 
     attribute :barcode, :string do
       description "EAN/UPC (GTIN) printed on the sleeve"
       public? true
     end
 
-    attribute :country, :string, public?: true
-    attribute :pressing_year, :integer, public?: true
+    attribute :country, :string, constraints: [max_length: 100], public?: true
+    attribute :pressing_year, :integer, constraints: [min: 1900, max: 2100], public?: true
 
     attribute :format, {:array, :string} do
       description "Format tags, e.g. [\"Vinyl\", \"LP\", \"Album\"] or [\"7\\\"\", \"Single\"]"
+      constraints max_length: 20, items: [max_length: 50]
       default []
       allow_nil? false
       public? true
     end
 
-    attribute :discogs_release_id, :integer, public?: true
+    attribute :discogs_release_id, :integer, constraints: [min: 1], public?: true
     attribute :musicbrainz_release_id, :uuid, public?: true
     attribute :media_condition, Plattensammlung.Records.Condition, public?: true
     attribute :sleeve_condition, Plattensammlung.Records.Condition, public?: true
     attribute :purchased_on, :date, public?: true
 
-    attribute :notes, :string, public?: true
+    attribute :notes, :string, constraints: [max_length: 2000], public?: true
 
     timestamps()
   end

@@ -40,6 +40,14 @@ defmodule PlattensammlungWeb.StatsLiveTest do
       assert has_element?(view, "#albums a", "Autobahn")
     end
 
+    test "odd URL parameters don't break the album list", %{conn: conn} do
+      long = String.duplicate("x", 5000)
+
+      for path <- ["/?q=#{long}", "/?q[]=a", "/?genre=#{long}", "/?decade=99999999999999999999"] do
+        assert {:ok, _view, _html} = live(conn, path)
+      end
+    end
+
     test "search keeps the filters", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/?decade=1960")
 

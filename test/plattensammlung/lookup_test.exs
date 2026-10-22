@@ -135,12 +135,13 @@ defmodule Plattensammlung.LookupTest do
 
   test "find_by_barcode finds albums owning that pressing", %{user: user} do
     album =
-      Records.add_to_collection!("The Beatles", "Abbey Road", %{copy: %{barcode: "123"}},
-        actor: user
-      )
+      Records.add_to_collection!(
+        "The Beatles",
+        "Abbey Road",
+        %{copy: %{barcode: "5 099902-987620"}}, actor: user)
 
-    assert [%{id: id}] = Records.find_by_barcode!("123", actor: user)
+    assert [%{id: id}] = Records.find_by_barcode!("5099902987620", actor: user)
     assert id == album.id
-    assert Records.find_by_barcode!("456", actor: user) == []
+    assert Records.find_by_barcode!("4006381333931", actor: user) == []
   end
 end

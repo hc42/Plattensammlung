@@ -129,6 +129,10 @@ Regeln:
 - Ein Album ohne Copy und ohne `wanted` ist „nicht zugeordnet“ (Such-Status `:other`).
 - Copy hat bewusst keinen Lagerort und keinen Kaufpreis mehr. `Copy.format` ist eine Liste.
 - Ein Album zu löschen löscht seine Copies. Ein Artist mit Alben kann nicht gelöscht werden.
+- **Grenzen (ADR 0006, Nachtrag):** Textfelder und Listen haben `constraints max_length`, Jahre
+  1900–2100, Discogs-IDs `min: 1`, Barcode 8–14 Ziffern (Change `NormalizeBarcode` + `validate match`).
+  Neue Felder bekommen immer eine Grenze, das Formularfeld ein passendes `maxlength`.
+  URL-Parameter in LiveViews nur als String annehmen und kürzen (siehe `AlbumLive.Index.blank_to_nil/1`).
 
 ## Import (`Plattensammlung.Lookup`)
 

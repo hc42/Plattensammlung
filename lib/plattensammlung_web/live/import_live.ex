@@ -28,6 +28,7 @@ defmodule PlattensammlungWeb.ImportLive do
             <.icon name="hero-magnifying-glass" class="size-4 opacity-50" />
             <input
               type="search"
+              maxlength="200"
               name="query"
               id="lookup-input"
               value={@search_form[:query].value}

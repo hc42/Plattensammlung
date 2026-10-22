@@ -41,15 +41,17 @@ defmodule Plattensammlung.Records.Artist do
     # :ci_string is case-insensitive (Postgres citext): "the beatles" == "The Beatles"
     attribute :name, :ci_string do
       allow_nil? false
+      constraints max_length: 200
       public? true
     end
 
     attribute :sort_name, :string do
+      constraints max_length: 200
       description "Name used for sorting, e.g. \"Beatles, The\""
       public? true
     end
 
-    attribute :discogs_id, :integer, public?: true
+    attribute :discogs_id, :integer, constraints: [min: 1], public?: true
     attribute :musicbrainz_id, :uuid, public?: true
 
     timestamps()

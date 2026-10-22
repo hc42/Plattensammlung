@@ -51,6 +51,7 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
             <.icon name="hero-magnifying-glass" class="size-4 opacity-50" />
             <input
               type="search"
+              maxlength="200"
               name="q"
               id="search-input"
               value={@search_form[:q].value}
@@ -228,12 +229,16 @@ defmodule PlattensammlungWeb.AlbumLive.Index do
     end
   end
 
-  defp blank_to_nil(value) do
-    case value && String.trim(value) do
+  # URL parameters are user input: only strings, cut to the 200 characters
+  # the search action accepts (?q[]=… or an endless ?q= must not crash the page)
+  defp blank_to_nil(value) when is_binary(value) do
+    case value |> String.trim() |> String.slice(0, 200) do
       "" -> nil
       trimmed -> trimmed
     end
   end
+
+  defp blank_to_nil(_value), do: nil
 
   defp page_title(:collection, _collector), do: "Sammlung"
   defp page_title(:wishlist, _collector), do: "Wunschliste"
