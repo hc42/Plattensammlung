@@ -178,3 +178,9 @@ bauen, Konfiguration, Backups und Updates: [deploy/README.md](deploy/README.md).
 - [AGENTS.md](AGENTS.md): Hinweise für KI-Assistenten und Mitwirkende
 - [SECURITY.md](SECURITY.md): Sicherheitsmodell, bekannte Grenzen, Lücken melden
 - [docs/adr/](docs/adr/): Architekturentscheidungen (Architecture Decision Records)
+
+## Lizenz
+
+[MIT](LICENSE). Die verwendeten Bibliotheken haben eigene Lizenzen (u. a. MIT und Apache 2.0),
+siehe `deps/` bzw. `assets/node_modules/`. Daten und Cover von Discogs, MusicBrainz, Wikidata
+und dem Cover Art Archive unterliegen deren Nutzungsbedingungen.
