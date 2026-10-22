@@ -27,7 +27,7 @@ msgstr[1] ""
 
 #: lib/plattensammlung_web/components/stats_components.ex:116
 #: lib/plattensammlung_web/live/album_live/show.ex:77
-#: lib/plattensammlung_web/live/album_live/show.ex:412
+#: lib/plattensammlung_web/live/album_live/show.ex:413
 #, elixir-autogen, elixir-format
 msgid "1 copy"
 msgid_plural "%{count} copies"
@@ -41,19 +41,19 @@ msgid_plural "%{count} wishes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: lib/plattensammlung_web/live/account_live.ex:337
+#: lib/plattensammlung_web/live/account_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "API key deleted."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:161
+#: lib/plattensammlung_web/live/account_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "API keys"
 msgstr ""
 
 #: lib/plattensammlung_web/components/layouts.ex:79
 #: lib/plattensammlung_web/live/account_live.ex:17
-#: lib/plattensammlung_web/live/account_live.ex:225
+#: lib/plattensammlung_web/live/account_live.ex:228
 #: lib/plattensammlung_web/live/collectors_live.ex:44
 #, elixir-autogen, elixir-format
 msgid "Account"
@@ -65,7 +65,7 @@ msgid "Actions"
 msgstr ""
 
 #: lib/plattensammlung_web/components/tag_input.ex:89
-#: lib/plattensammlung_web/live/album_live/form.ex:198
+#: lib/plattensammlung_web/live/album_live/form.ex:200
 #, elixir-autogen, elixir-format
 msgid "Add"
 msgstr ""
@@ -75,10 +75,10 @@ msgstr ""
 msgid "Add a copy"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:254
+#: lib/plattensammlung_web/live/album_live/form.ex:256
 #: lib/plattensammlung_web/live/album_live/index.ex:109
 #: lib/plattensammlung_web/live/import_live.ex:17
-#: lib/plattensammlung_web/live/import_live.ex:119
+#: lib/plattensammlung_web/live/import_live.ex:123
 #, elixir-autogen, elixir-format
 msgid "Add a record"
 msgstr ""
@@ -88,7 +88,7 @@ msgstr ""
 msgid "Add cover"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:153
+#: lib/plattensammlung_web/live/account_live.ex:154
 #, elixir-autogen, elixir-format
 msgid "Add passkey"
 msgstr ""
@@ -98,7 +98,7 @@ msgstr ""
 msgid "Add to wishlist"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:232
+#: lib/plattensammlung_web/live/import_live.ex:236
 #, elixir-autogen, elixir-format
 msgid "Added a copy of “%{title}”."
 msgstr ""
@@ -108,7 +108,7 @@ msgstr ""
 msgid "Album gets:"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:384
+#: lib/plattensammlung_web/live/album_live/form.ex:386
 #, elixir-autogen, elixir-format
 msgid "Album saved."
 msgstr ""
@@ -130,7 +130,7 @@ msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/index.ex:30
 #: lib/plattensammlung_web/live/album_live/index.ex:245
-#: lib/plattensammlung_web/live/album_live/show.ex:432
+#: lib/plattensammlung_web/live/album_live/show.ex:433
 #, elixir-autogen, elixir-format
 msgid "All albums"
 msgstr ""
@@ -201,14 +201,14 @@ msgstr ""
 msgid "Camera access was not allowed."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:102
-#: lib/plattensammlung_web/live/album_live/form.ex:200
+#: lib/plattensammlung_web/live/account_live.ex:103
+#: lib/plattensammlung_web/live/album_live/form.ex:202
 #: lib/plattensammlung_web/live/copy_live/form.ex:86
 #, elixir-autogen, elixir-format
 msgid "Cancel"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:140
+#: lib/plattensammlung_web/live/account_live.ex:141
 #: lib/plattensammlung_web/live/sign_in_live.ex:24
 #, elixir-autogen, elixir-format
 msgid "Cancelled."
@@ -237,9 +237,9 @@ msgstr ""
 #: lib/plattensammlung_web/components/layouts.ex:50
 #: lib/plattensammlung_web/live/album_live/index.ex:38
 #: lib/plattensammlung_web/live/album_live/index.ex:243
-#: lib/plattensammlung_web/live/album_live/show.ex:430
+#: lib/plattensammlung_web/live/album_live/show.ex:431
 #: lib/plattensammlung_web/live/collectors_live.ex:34
-#: lib/plattensammlung_web/live/import_live.ex:88
+#: lib/plattensammlung_web/live/import_live.ex:92
 #, elixir-autogen, elixir-format
 msgid "Collection"
 msgstr ""
@@ -271,18 +271,18 @@ msgstr ""
 msgid "Copies"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:442
-#: lib/plattensammlung_web/live/import_live.ex:88
+#: lib/plattensammlung_web/live/album_live/show.ex:443
+#: lib/plattensammlung_web/live/import_live.ex:91
 #, elixir-autogen, elixir-format
 msgid "Copy"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:275
+#: lib/plattensammlung_web/live/album_live/match.ex:277
 #, elixir-autogen, elixir-format
 msgid "Copy %{number}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:321
+#: lib/plattensammlung_web/live/album_live/show.ex:322
 #, elixir-autogen, elixir-format
 msgid "Copy deleted."
 msgstr ""
@@ -312,27 +312,27 @@ msgstr ""
 msgid "Cover"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:288
+#: lib/plattensammlung_web/live/album_live/show.ex:289
 #, elixir-autogen, elixir-format
 msgid "Cover removed."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:338
+#: lib/plattensammlung_web/live/album_live/show.ex:339
 #, elixir-autogen, elixir-format
 msgid "Cover saved."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:212
+#: lib/plattensammlung_web/live/account_live.ex:215
 #, elixir-autogen, elixir-format
 msgid "Create API key"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:278
+#: lib/plattensammlung_web/live/album_live/match.ex:280
 #, elixir-autogen, elixir-format
 msgid "Create a new copy"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:220
+#: lib/plattensammlung_web/live/album_live/match.ex:222
 #, elixir-autogen, elixir-format
 msgid "Data applied."
 msgstr ""
@@ -342,27 +342,27 @@ msgstr ""
 msgid "Decades"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:199
+#: lib/plattensammlung_web/live/account_live.ex:202
 #, elixir-autogen, elixir-format
 msgid "Delete API key"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:214
+#: lib/plattensammlung_web/live/album_live/show.ex:215
 #, elixir-autogen, elixir-format
 msgid "Delete copy"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:211
+#: lib/plattensammlung_web/live/album_live/show.ex:212
 #, elixir-autogen, elixir-format
 msgid "Delete copy?"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:415
+#: lib/plattensammlung_web/live/album_live/show.ex:416
 #, elixir-autogen, elixir-format
 msgid "Delete the album? No one else has it in their collection or wishlist."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:196
+#: lib/plattensammlung_web/live/account_live.ex:199
 #, elixir-autogen, elixir-format
 msgid "Delete this API key? Programs using it lose access."
 msgstr ""
@@ -377,9 +377,9 @@ msgstr ""
 msgid "Discogs link"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:170
-#: lib/plattensammlung_web/live/album_live/form.ex:181
-#: lib/plattensammlung_web/live/album_live/form.ex:217
+#: lib/plattensammlung_web/live/album_live/form.ex:172
+#: lib/plattensammlung_web/live/album_live/form.ex:183
+#: lib/plattensammlung_web/live/album_live/form.ex:219
 #, elixir-autogen, elixir-format
 msgid "Discogs master ID"
 msgstr ""
@@ -400,12 +400,12 @@ msgstr ""
 msgid "Display name"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:262
+#: lib/plattensammlung_web/live/account_live.ex:264
 #, elixir-autogen, elixir-format
 msgid "Display name saved."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:278
+#: lib/plattensammlung_web/live/album_live/match.ex:280
 #, elixir-autogen, elixir-format
 msgid "Do not apply"
 msgstr ""
@@ -430,18 +430,18 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:276
+#: lib/plattensammlung_web/live/album_live/form.ex:278
 #, elixir-autogen, elixir-format
 msgid "Edit album"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:204
+#: lib/plattensammlung_web/live/album_live/show.ex:205
 #: lib/plattensammlung_web/live/copy_live/form.ex:147
 #, elixir-autogen, elixir-format
 msgid "Edit copy"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:107
+#: lib/plattensammlung_web/live/import_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Enter manually"
 msgstr ""
@@ -471,7 +471,7 @@ msgstr ""
 msgid "Find streaming links"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:163
+#: lib/plattensammlung_web/live/account_live.ex:164
 #, elixir-autogen, elixir-format
 msgid "For scripts and apps:"
 msgstr ""
@@ -481,15 +481,15 @@ msgstr ""
 msgid "Format"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:278
+#: lib/plattensammlung_web/live/album_live/show.ex:279
 #, elixir-autogen, elixir-format
 msgid "Found: %{links}."
 msgstr ""
 
 #: lib/plattensammlung_web/components/album_components.ex:175
-#: lib/plattensammlung_web/live/album_live/form.ex:122
-#: lib/plattensammlung_web/live/album_live/form.ex:129
-#: lib/plattensammlung_web/live/album_live/form.ex:214
+#: lib/plattensammlung_web/live/album_live/form.ex:124
+#: lib/plattensammlung_web/live/album_live/form.ex:131
+#: lib/plattensammlung_web/live/album_live/form.ex:216
 #: lib/plattensammlung_web/live/stats_live.ex:47
 #, elixir-autogen, elixir-format
 msgid "Genres"
@@ -526,7 +526,7 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:281
+#: lib/plattensammlung_web/live/account_live.ex:283
 #, elixir-autogen, elixir-format
 msgid "Language saved."
 msgstr ""
@@ -542,12 +542,12 @@ msgid "Match"
 msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/match.ex:25
-#: lib/plattensammlung_web/live/album_live/match.ex:170
+#: lib/plattensammlung_web/live/album_live/match.ex:172
 #, elixir-autogen, elixir-format
 msgid "Match data"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:455
+#: lib/plattensammlung_web/live/album_live/show.ex:456
 #: lib/plattensammlung_web/live/copy_live/form.ex:27
 #, elixir-autogen, elixir-format
 msgid "Media condition"
@@ -568,22 +568,22 @@ msgstr ""
 msgid "MusicBrainz pressing"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:97
+#: lib/plattensammlung_web/live/account_live.ex:98
 #, elixir-autogen, elixir-format
 msgid "Name of the passkey"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:148
+#: lib/plattensammlung_web/live/account_live.ex:149
 #, elixir-autogen, elixir-format
 msgid "Name, e.g. MacBook or iPhone"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:174
+#: lib/plattensammlung_web/live/account_live.ex:175
 #, elixir-autogen, elixir-format
 msgid "New key – copy it now, it is shown only once:"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:180
+#: lib/plattensammlung_web/live/account_live.ex:182
 #, elixir-autogen, elixir-format
 msgid "No API keys yet."
 msgstr ""
@@ -633,7 +633,7 @@ msgstr ""
 msgid "No records in this collection yet."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:277
+#: lib/plattensammlung_web/live/album_live/show.ex:278
 #, elixir-autogen, elixir-format
 msgid "No streaming links found. You can add them yourself under “Edit”."
 msgstr ""
@@ -653,7 +653,7 @@ msgstr ""
 msgid "Not mine"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:105
+#: lib/plattensammlung_web/live/import_live.ex:109
 #, elixir-autogen, elixir-format
 msgid "Not there?"
 msgstr ""
@@ -664,7 +664,7 @@ msgid "Notes"
 msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/index.ex:259
-#: lib/plattensammlung_web/live/import_live.ex:68
+#: lib/plattensammlung_web/live/import_live.ex:70
 #, elixir-autogen, elixir-format
 msgid "Nothing found for “%{query}”."
 msgstr ""
@@ -674,13 +674,13 @@ msgstr ""
 msgid "Nothing found. Try another search term."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:189
+#: lib/plattensammlung_web/live/album_live/form.ex:191
 #, elixir-autogen, elixir-format
 msgid "On the wishlist"
 msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/show.ex:82
-#: lib/plattensammlung_web/live/import_live.ex:249
+#: lib/plattensammlung_web/live/import_live.ex:253
 #, elixir-autogen, elixir-format
 msgid "On your wishlist"
 msgstr ""
@@ -710,38 +710,38 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:139
+#: lib/plattensammlung_web/live/album_live/match.ex:141
 #, elixir-autogen, elixir-format
 msgid "Overwrite"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:135
+#: lib/plattensammlung_web/live/album_live/match.ex:136
 #, elixir-autogen, elixir-format
 msgid "Overwrites: %{fields}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:245
+#: lib/plattensammlung_web/live/account_live.ex:247
 #, elixir-autogen, elixir-format
 msgid "Passkey added."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:319
+#: lib/plattensammlung_web/live/account_live.ex:321
 #, elixir-autogen, elixir-format
 msgid "Passkey removed."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:141
+#: lib/plattensammlung_web/live/account_live.ex:142
 #: lib/plattensammlung_web/live/sign_in_live.ex:25
 #, elixir-autogen, elixir-format
 msgid "Passkeys need HTTPS or localhost."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:352
+#: lib/plattensammlung_web/live/album_live/show.ex:353
 #, elixir-autogen, elixir-format
 msgid "Please choose a JPEG, PNG, WebP or GIF image."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:353
+#: lib/plattensammlung_web/live/album_live/show.ex:354
 #, elixir-autogen, elixir-format
 msgid "Please choose only one image."
 msgstr ""
@@ -751,7 +751,7 @@ msgstr ""
 msgid "Please sign in first."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:236
+#: lib/plattensammlung_web/live/album_live/show.ex:237
 #, elixir-autogen, elixir-format
 msgid "Pressing on Discogs"
 msgstr ""
@@ -761,7 +761,7 @@ msgstr ""
 msgid "Pressing year"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:457
+#: lib/plattensammlung_web/live/album_live/show.ex:458
 #: lib/plattensammlung_web/live/copy_live/form.ex:29
 #, elixir-autogen, elixir-format
 msgid "Purchased on"
@@ -773,8 +773,8 @@ msgid "Reading the photo …"
 msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/form.ex:108
-#: lib/plattensammlung_web/live/album_live/form.ex:113
-#: lib/plattensammlung_web/live/album_live/form.ex:213
+#: lib/plattensammlung_web/live/album_live/form.ex:115
+#: lib/plattensammlung_web/live/album_live/form.ex:215
 #, elixir-autogen, elixir-format
 msgid "Release year"
 msgstr ""
@@ -806,35 +806,35 @@ msgstr ""
 msgid "Remove from wishlist"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:130
+#: lib/plattensammlung_web/live/account_live.ex:131
 #, elixir-autogen, elixir-format
 msgid "Remove passkey"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:127
+#: lib/plattensammlung_web/live/account_live.ex:128
 #, elixir-autogen, elixir-format
 msgid "Remove this passkey?"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:418
+#: lib/plattensammlung_web/live/album_live/show.ex:419
 #, elixir-autogen, elixir-format
 msgid "Remove your copies and your wish? The others keep the album."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:119
+#: lib/plattensammlung_web/live/account_live.ex:120
 #, elixir-autogen, elixir-format
 msgid "Rename passkey"
 msgstr ""
 
 #: lib/plattensammlung_web/live/account_live.ex:42
-#: lib/plattensammlung_web/live/account_live.ex:100
-#: lib/plattensammlung_web/live/album_live/form.ex:198
+#: lib/plattensammlung_web/live/account_live.ex:101
+#: lib/plattensammlung_web/live/album_live/form.ex:200
 #: lib/plattensammlung_web/live/copy_live/form.ex:84
 #, elixir-autogen, elixir-format
 msgid "Save"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:197
+#: lib/plattensammlung_web/live/album_live/form.ex:199
 #: lib/plattensammlung_web/live/copy_live/form.ex:83
 #, elixir-autogen, elixir-format
 msgid "Saving …"
@@ -862,7 +862,7 @@ msgid "Search artist or album"
 msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/match.ex:57
-#: lib/plattensammlung_web/live/import_live.ex:49
+#: lib/plattensammlung_web/live/import_live.ex:51
 #, elixir-autogen, elixir-format
 msgid "Searching …"
 msgstr ""
@@ -893,11 +893,6 @@ msgstr ""
 msgid "Sign in with a passkey"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:68
-#, elixir-autogen, elixir-format
-msgid "Sign in with fingerprint, face or device PIN instead of an e-mail link. A passkey only works for the address you create it on (%{host})."
-msgstr ""
-
 #: lib/plattensammlung_web/live/account_live.ex:21
 #, elixir-autogen, elixir-format
 msgid "Sign out"
@@ -919,7 +914,7 @@ msgstr ""
 msgid "Signing in with this passkey is not possible."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:456
+#: lib/plattensammlung_web/live/album_live/show.ex:457
 #: lib/plattensammlung_web/live/copy_live/form.ex:28
 #, elixir-autogen, elixir-format
 msgid "Sleeve condition"
@@ -930,7 +925,7 @@ msgstr ""
 msgid "Something went wrong!"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:146
+#: lib/plattensammlung_web/live/album_live/form.ex:148
 #, elixir-autogen, elixir-format
 msgid "Spotify (link or ID)"
 msgstr ""
@@ -952,13 +947,13 @@ msgstr ""
 msgid "Take a photo"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:192
-#: lib/plattensammlung_web/live/import_live.ex:149
+#: lib/plattensammlung_web/live/album_live/match.ex:194
+#: lib/plattensammlung_web/live/import_live.ex:153
 #, elixir-autogen, elixir-format
 msgid "That does not look like a barcode."
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:164
+#: lib/plattensammlung_web/live/import_live.ex:168
 #, elixir-autogen, elixir-format
 msgid "The album could not be created."
 msgstr ""
@@ -968,27 +963,27 @@ msgstr ""
 msgid "The camera could not be started."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:224
+#: lib/plattensammlung_web/live/album_live/match.ex:226
 #, elixir-autogen, elixir-format
 msgid "The data could not be applied."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:341
+#: lib/plattensammlung_web/live/album_live/show.ex:342
 #, elixir-autogen, elixir-format
 msgid "The image could not be read."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:354
+#: lib/plattensammlung_web/live/album_live/show.ex:355
 #, elixir-autogen, elixir-format
 msgid "The image could not be uploaded."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:351
+#: lib/plattensammlung_web/live/album_live/show.ex:352
 #, elixir-autogen, elixir-format
 msgid "The image is larger than 10 MB."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:285
+#: lib/plattensammlung_web/live/account_live.ex:287
 #, elixir-autogen, elixir-format
 msgid "The language could not be saved."
 msgstr ""
@@ -1003,7 +998,7 @@ msgstr ""
 msgid "The live camera needs HTTPS. Take a photo instead."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:265
+#: lib/plattensammlung_web/live/account_live.ex:267
 #, elixir-autogen, elixir-format
 msgid "The name could not be saved."
 msgstr ""
@@ -1013,7 +1008,7 @@ msgstr ""
 msgid "The others' collections and wishlists."
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:311
+#: lib/plattensammlung_web/live/account_live.ex:313
 #, elixir-autogen, elixir-format
 msgid "The passkey could not be renamed."
 msgstr ""
@@ -1029,7 +1024,7 @@ msgid "The photo could not be read."
 msgstr ""
 
 #: lib/plattensammlung_web/live/album_live/match.ex:61
-#: lib/plattensammlung_web/live/import_live.ex:63
+#: lib/plattensammlung_web/live/import_live.ex:65
 #, elixir-autogen, elixir-format
 msgid "The search did not work. Please try again later."
 msgstr ""
@@ -1059,7 +1054,7 @@ msgstr ""
 msgid "This wishlist is empty."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:161
+#: lib/plattensammlung_web/live/album_live/form.ex:163
 #, elixir-autogen, elixir-format
 msgid "Tidal (link or ID)"
 msgstr ""
@@ -1089,7 +1084,7 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:142
+#: lib/plattensammlung_web/live/account_live.ex:143
 #: lib/plattensammlung_web/live/sign_in_live.ex:26
 #, elixir-autogen, elixir-format
 msgid "Unknown error"
@@ -1120,7 +1115,7 @@ msgstr ""
 msgid "We can't find the internet"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:98
+#: lib/plattensammlung_web/live/import_live.ex:102
 #, elixir-autogen, elixir-format
 msgid "Wish"
 msgstr ""
@@ -1129,8 +1124,8 @@ msgstr ""
 #: lib/plattensammlung_web/components/layouts.ex:53
 #: lib/plattensammlung_web/live/album_live/index.ex:44
 #: lib/plattensammlung_web/live/album_live/index.ex:244
-#: lib/plattensammlung_web/live/album_live/show.ex:411
-#: lib/plattensammlung_web/live/album_live/show.ex:431
+#: lib/plattensammlung_web/live/album_live/show.ex:412
+#: lib/plattensammlung_web/live/album_live/show.ex:432
 #: lib/plattensammlung_web/live/collectors_live.ex:37
 #: lib/plattensammlung_web/live/stats_live.ex:33
 #, elixir-autogen, elixir-format
@@ -1142,7 +1137,7 @@ msgstr ""
 msgid "Wishlist of %{name}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:250
+#: lib/plattensammlung_web/live/import_live.ex:254
 #, elixir-autogen, elixir-format
 msgid "With other collectors"
 msgstr ""
@@ -1162,12 +1157,12 @@ msgstr ""
 msgid "Year"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:55
+#: lib/plattensammlung_web/live/import_live.ex:57
 #, elixir-autogen, elixir-format
 msgid "You already have exactly this pressing:"
 msgstr ""
 
-#: lib/plattensammlung_web/live/import_live.ex:248
+#: lib/plattensammlung_web/live/import_live.ex:252
 #, elixir-autogen, elixir-format
 msgid "You already have it"
 msgstr ""
@@ -1182,7 +1177,7 @@ msgstr ""
 msgid "You have it – %{copies}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:188
+#: lib/plattensammlung_web/live/album_live/show.ex:189
 #, elixir-autogen, elixir-format
 msgid "Your copies"
 msgstr ""
@@ -1207,8 +1202,8 @@ msgstr ""
 msgid "close"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:108
-#: lib/plattensammlung_web/live/account_live.ex:185
+#: lib/plattensammlung_web/live/account_live.ex:109
+#: lib/plattensammlung_web/live/account_live.ex:188
 #, elixir-autogen, elixir-format
 msgid "created %{date}"
 msgstr ""
@@ -1230,32 +1225,32 @@ msgstr ""
 msgid "e.g. Hans"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:133
+#: lib/plattensammlung_web/live/album_live/form.ex:135
 #, elixir-autogen, elixir-format
 msgid "e.g. Rock"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:190
+#: lib/plattensammlung_web/live/account_live.ex:193
 #, elixir-autogen, elixir-format
 msgid "expired on %{date}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:303
+#: lib/plattensammlung_web/live/album_live/match.ex:305
 #, elixir-autogen, elixir-format
 msgid "gets %{fields}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:380
+#: lib/plattensammlung_web/live/album_live/form.ex:382
 #, elixir-autogen, elixir-format
 msgid "in your collection."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/match.ex:293
+#: lib/plattensammlung_web/live/album_live/match.ex:295
 #, elixir-autogen, elixir-format
 msgid "is created as a new copy"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:110
+#: lib/plattensammlung_web/live/account_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "last used %{date}"
 msgstr ""
@@ -1265,7 +1260,7 @@ msgstr ""
 msgid "not yours"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:381
+#: lib/plattensammlung_web/live/album_live/form.ex:383
 #, elixir-autogen, elixir-format
 msgid "on your wishlist."
 msgstr ""
@@ -1275,22 +1270,22 @@ msgstr ""
 msgid "or by e-mail"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:209
+#: lib/plattensammlung_web/live/account_live.ex:212
 #, elixir-autogen, elixir-format
 msgid "valid for 1 year"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:208
+#: lib/plattensammlung_web/live/account_live.ex:211
 #, elixir-autogen, elixir-format
 msgid "valid for 30 days"
 msgstr ""
 
-#: lib/plattensammlung_web/live/account_live.ex:189
+#: lib/plattensammlung_web/live/account_live.ex:192
 #, elixir-autogen, elixir-format
 msgid "valid until %{date}"
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:382
+#: lib/plattensammlung_web/live/album_live/form.ex:384
 #, elixir-autogen, elixir-format
 msgid "with other collectors; it will be reused."
 msgstr ""
@@ -1300,19 +1295,19 @@ msgstr ""
 msgid "you choose the name the others see you by."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:390
-#: lib/plattensammlung_web/live/import_live.ex:233
+#: lib/plattensammlung_web/live/album_live/form.ex:392
+#: lib/plattensammlung_web/live/import_live.ex:237
 #, elixir-autogen, elixir-format
 msgid "“%{title}” is now in your collection."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/form.ex:387
-#: lib/plattensammlung_web/live/import_live.ex:244
+#: lib/plattensammlung_web/live/album_live/form.ex:389
+#: lib/plattensammlung_web/live/import_live.ex:248
 #, elixir-autogen, elixir-format
 msgid "“%{title}” is on the wishlist."
 msgstr ""
 
-#: lib/plattensammlung_web/live/album_live/show.ex:311
+#: lib/plattensammlung_web/live/album_live/show.ex:312
 #, elixir-autogen, elixir-format
 msgid "“%{title}” was removed."
 msgstr ""
@@ -1321,4 +1316,9 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgctxt "navigation"
 msgid "Add"
+msgstr ""
+
+#: lib/plattensammlung_web/live/account_live.ex:68
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Sign in with fingerprint, face or device PIN instead of an e-mail link."
 msgstr ""

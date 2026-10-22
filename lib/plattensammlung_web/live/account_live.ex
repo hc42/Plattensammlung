@@ -65,10 +65,7 @@ defmodule PlattensammlungWeb.AccountLive do
           <div>
             <h2 class="text-lg font-semibold">Passkeys</h2>
             <p class="text-sm opacity-70">
-              {gettext(
-                "Sign in with fingerprint, face or device PIN instead of an e-mail link. A passkey only works for the address you create it on (%{host}).",
-                host: @host
-              )}
+              {gettext("Sign in with fingerprint, face or device PIN instead of an e-mail link.")}
             </p>
           </div>
 
@@ -227,7 +224,6 @@ defmodule PlattensammlungWeb.AccountLive do
     {:ok,
      socket
      |> assign(:page_title, gettext("Account"))
-     |> assign(:host, socket.host_uri.host)
      |> assign(:passkey_error, nil)
      |> assign(:renaming, nil)
      |> assign(:rename_form, to_form(%{}))

@@ -152,5 +152,4 @@ msgid "still has albums; delete or move them first"
 msgstr "hat noch Alben; lösche oder verschiebe sie zuerst"
 
 msgid "is not allowed to sign in"
-
 msgstr "darf sich nicht anmelden"
