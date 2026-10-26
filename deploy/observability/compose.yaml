@@ -20,7 +20,7 @@ services:
       - /mnt/POOL/apps/observability/prometheus-data:/prometheus
 
   tempo:
-    image: grafana/tempo:3.1.0
+    image: grafana/tempo:3.1.1
     restart: unless-stopped
     command: ["-config.file=/etc/tempo.yaml"]
     ports:
