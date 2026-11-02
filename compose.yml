@@ -56,7 +56,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: docker.io/grafana/grafana:13.2.4
+    image: docker.io/grafana/grafana:13.3.0
     profiles: [observability]
     environment:
       # Local only: no login, everyone is admin
