@@ -31,7 +31,7 @@ services:
       - /mnt/POOL/apps/observability/tempo-data:/var/tempo
 
   grafana:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     restart: unless-stopped
     ports:
       - "3000:3000"
